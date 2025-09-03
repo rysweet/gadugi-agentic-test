@@ -34,7 +34,8 @@
       "@orchestrator/*": ["src/orchestrator/*"],
       "@utils/*": ["src/utils/*"],
       "@scenarios/*": ["src/scenarios/*"],
-      "@models/*": ["src/models/*"]
+      "@models/*": ["src/models/*"],
+      "@runners/*": ["src/runners/*"]
     }
   },
   "include": [
