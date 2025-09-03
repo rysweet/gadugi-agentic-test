@@ -574,3 +574,15 @@ export function getConfig(): TestConfig {
 export function updateConfig(updates: Partial<TestConfig>): void {
   globalConfigManager.updateConfig(updates);
 }
+
+/**
+ * Load configuration from a YAML file
+ */
+export async function loadConfigFromYaml(filePath: string): Promise<TestConfig> {
+  return globalConfigManager.loadFromFile(filePath);
+}
+
+/**
+ * Alias for loadConfigFromYaml
+ */
+export const loadConfigFromFile = loadConfigFromYaml;

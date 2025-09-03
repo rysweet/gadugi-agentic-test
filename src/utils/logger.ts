@@ -438,3 +438,12 @@ export const logger = {
   setLevel: (level: LogLevel) => defaultLogger.setLevel(level),
   child: (context: LogContext) => defaultLogger.child(context)
 };
+
+/**
+ * Setup logger with configuration
+ */
+export function setupLogger(config?: Partial<LoggerConfig>): TestLogger {
+  const newLogger = createLogger(config);
+  Object.assign(defaultLogger, newLogger);
+  return defaultLogger;
+}

@@ -85,7 +85,7 @@ async function continuousMonitoringExample() {
 
     agent.on('issues', (issues) => {
       console.log(`⚠️  Issues detected: ${issues.length}`);
-      issues.forEach(issue => {
+      issues.forEach((issue: any) => {
         console.log(`  - ${issue.type.toUpperCase()}: ${issue.message} (${issue.severity})`);
       });
     });

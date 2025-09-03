@@ -34,19 +34,20 @@
       "@orchestrator/*": ["src/orchestrator/*"],
       "@utils/*": ["src/utils/*"],
       "@scenarios/*": ["src/scenarios/*"],
-      "@models/*": ["src/models/*"]
+      "@models/*": ["src/models/*"],
+      "@runners/*": ["src/runners/*"]
     }
   },
   "include": [
-    "src/**/*",
-    "scenarios/**/*.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "tests/**/*"
+    "tests/**/*",
+    "scenarios/**/*"
   ],
   "ts-node": {
     "esm": true
