@@ -570,49 +570,6 @@ npm run lint:fix
 # Build for production
 npm run build
 ```
-
-### Code Standards
-
-- **TypeScript**: Strict mode with comprehensive typing
-- **Testing**: Jest for unit tests, full integration test suite
-- **Linting**: ESLint with TypeScript rules
-- **Formatting**: Prettier with consistent configuration
-- **Documentation**: JSDoc for all public APIs
-
-### Pull Request Process
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Make changes with tests and documentation
-4. Run full test suite (`npm test`)
-5. Submit pull request with detailed description
-
-## 🗺️ Roadmap
-
-### v1.1.0 - NPM Publishing (Q1 2024)
-- [ ] Standalone NPM package publication
-- [ ] CLI binary distribution
-- [ ] Enhanced documentation site
-- [ ] Plugin architecture for custom agents
-
-### v1.2.0 - Advanced AI Integration (Q2 2024)  
-- [ ] Visual element recognition with computer vision
-- [ ] Natural language test generation
-- [ ] Automatic test maintenance and adaptation
-- [ ] Smart element selector evolution
-
-### v1.3.0 - Enterprise Features (Q3 2024)
-- [ ] Test result database integration
-- [ ] Advanced reporting dashboards  
-- [ ] Team collaboration features
-- [ ] Enterprise security compliance
-
-### v2.0.0 - Multi-Platform Support (Q4 2024)
-- [ ] Web application testing support
-- [ ] Mobile application testing (React Native)
-- [ ] Cross-platform test scenario sharing
-- [ ] Cloud execution environment
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
