@@ -39,15 +39,15 @@
     }
   },
   "include": [
-    "src/**/*",
-    "scenarios/**/*.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "tests/**/*"
+    "tests/**/*",
+    "scenarios/**/*"
   ],
   "ts-node": {
     "esm": true
