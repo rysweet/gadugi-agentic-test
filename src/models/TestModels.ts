@@ -255,3 +255,50 @@ export interface TestRun {
   /** Configuration used for this run */
   config?: Record<string, any>;
 }
+
+export interface TestSession {
+  /** Unique session identifier */
+  id: string;
+  /** Session start time */
+  startTime: Date;
+  /** Session end time */
+  endTime?: Date;
+  /** Overall session status */
+  status: TestStatus;
+  /** Test results */
+  results: TestResult[];
+  /** Session summary */
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    skipped: number;
+  };
+  /** Configuration used */
+  config?: any;
+}
+
+export interface TestSuite {
+  /** Suite name */
+  name: string;
+  /** Suite description */
+  description?: string;
+  /** Test scenarios in this suite */
+  scenarios: TestScenario[];
+}
+
+export enum AssertionType {
+  EXISTS = 'EXISTS',
+  EQUALS = 'EQUALS',
+  CONTAINS = 'CONTAINS',
+  MATCHES = 'MATCHES',
+  GREATER_THAN = 'GREATER_THAN',
+  LESS_THAN = 'LESS_THAN'
+}
+
+export interface TestAssertion {
+  type: AssertionType;
+  value: any;
+  expected?: any;
+  operator?: 'equals' | 'contains' | 'exists' | 'gt' | 'lt' | 'gte' | 'lte';
+}

@@ -38,9 +38,19 @@ export interface CliArguments {
 }
 
 /**
+ * Suite configuration for selecting test scenarios
+ */
+interface SuiteConfig {
+  name: string;
+  description: string;
+  patterns: string[];
+  tags: string[];
+}
+
+/**
  * Test suite configuration mapping
  */
-export const TEST_SUITES: Record<string, TestSuite> = {
+export const TEST_SUITES: Record<string, SuiteConfig> = {
   smoke: {
     name: 'smoke',
     description: 'Quick smoke tests for critical functionality',
@@ -674,8 +684,7 @@ export {
   TestSession,
   TestResult,
   TestScenario,
-  createTestOrchestrator,
-  createDefaultConfig
+  createTestOrchestrator
 };
 
 // Execute if called directly

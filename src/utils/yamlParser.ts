@@ -520,3 +520,8 @@ export function parseScenarioFromYaml(yamlContent: string, variables?: VariableC
   const parser = createYamlParser();
   return parser.parseScenario(yamlContent, variables);
 }
+
+/**
+ * Alias for loadScenariosFromFile for backward compatibility
+ */
+export const parseYamlScenarios = loadScenariosFromFile;
