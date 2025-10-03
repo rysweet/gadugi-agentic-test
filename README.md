@@ -462,6 +462,579 @@ steps:
       state: "visible"
 ```
 
+## 🖥️ Terminal UI (TUI) Testing Revolution
+
+Gadugi's **TUI Testing** capabilities represent a paradigm shift in how we test terminal applications, command-line tools, and text-based interfaces. Unlike traditional approaches that rely on brittle scripts and fixed expectations, Gadugi's intelligent agents understand terminal behavior, adapt to dynamic output, and provide human-like interaction with TUI applications.
+
+### Why TUI Testing Matters
+
+Terminal User Interfaces are everywhere:
+- **CLI Tools**: Git, npm, kubectl, terraform
+- **Interactive Applications**: Database CLIs, monitoring tools, setup wizards
+- **Development Tools**: REPL environments, build systems, deployment scripts
+- **System Administration**: System configuration, log analysis, service management
+
+Traditional TUI testing faces unique challenges:
+- **Dynamic Output**: Progress bars, timestamps, varying data
+- **Interactive Prompts**: User input required at runtime
+- **Color/Formatting**: ANSI codes, complex terminal formatting
+- **Timing Dependencies**: Network calls, file operations, async processes
+
+### Gadugi's Intelligent TUI Testing
+
+Our CLIAgent provides revolutionary capabilities for testing terminal applications:
+
+#### 🧠 **Smart Output Parsing**
+Gadugi understands terminal output context, not just text matching:
+
+```yaml
+name: "Intelligent Git Status Parsing"
+steps:
+  - name: "Check Repository Status"
+    agent: "cli-agent"
+    action: "execute"
+    params:
+      command: "git status"
+    expect:
+      type: "smart_parse"
+      conditions:
+        - branch_info: "present"
+        - uncommitted_changes: "any"  # Flexible expectation
+        - output_format: "git_status" # Understands git output structure
+```
+
+#### ⚡ **Interactive Session Management**
+Handle complex interactive scenarios with ease:
+
+```yaml
+name: "Interactive Database Setup"
+steps:
+  - name: "MySQL Configuration Wizard"
+    agent: "cli-agent"
+    action: "interactive_session"
+    params:
+      command: "mysql_secure_installation"
+      interactions:
+        - expect: "Enter current password"
+          send: "${CURRENT_MYSQL_PASSWORD}"
+        - expect: "Set root password"
+          send: "y"
+        - expect: "New password"
+          send: "${NEW_MYSQL_PASSWORD}"
+        - expect: "Remove anonymous users"
+          send: "y"
+        - expect: "Disallow root login remotely"
+          send: "y"
+        - expect: "Remove test database"
+          send: "y"
+        - expect: "Reload privilege tables"
+          send: "y"
+      timeout: 120000
+```
+
+#### 🎨 **Visual Progress Monitoring**
+Track progress bars, spinners, and dynamic output:
+
+```yaml
+name: "Package Installation with Progress Tracking"
+steps:
+  - name: "Install Large Package"
+    agent: "cli-agent"
+    action: "execute_with_monitoring"
+    params:
+      command: "npm install @tensorflow/tfjs"
+      monitor:
+        progress_indicators: true
+        expected_patterns:
+          - "downloading"
+          - "extracting"
+          - "building"
+          - "completed"
+        failure_patterns:
+          - "ENOSPC"
+          - "permission denied"
+          - "network error"
+      timeout: 600000  # 10 minutes for large installs
+```
+
+### Real-World TUI Testing Examples
+
+#### Example 1: Kubernetes Deployment Testing
+
+Test complex kubectl operations with intelligent validation:
+
+```yaml
+name: "Kubernetes Deployment Validation"
+description: "Test complete K8s deployment workflow with intelligent monitoring"
+
+agents:
+  - name: "k8s-agent"
+    type: "cli"
+    config:
+      workingDirectory: "./k8s-manifests"
+      environmentVars:
+        KUBECONFIG: "${KUBECONFIG_PATH}"
+
+steps:
+  # Apply deployment
+  - name: "Deploy Application"
+    agent: "k8s-agent"
+    action: "execute"
+    params:
+      command: "kubectl apply -f deployment.yaml"
+    expect:
+      type: "contains"
+      patterns:
+        - "deployment.apps/myapp created"
+        - "service/myapp created"
+
+  # Monitor rollout with intelligent waiting
+  - name: "Wait for Deployment Ready"
+    agent: "k8s-agent"
+    action: "execute_with_retry"
+    params:
+      command: "kubectl rollout status deployment/myapp"
+      retry_until:
+        success_pattern: "deployment \"myapp\" successfully rolled out"
+        failure_patterns:
+          - "failed"
+          - "timeout"
+        max_attempts: 20
+        retry_delay: 15000
+
+  # Validate with smart output parsing
+  - name: "Verify Pod Status"
+    agent: "k8s-agent"
+    action: "execute"
+    params:
+      command: "kubectl get pods -l app=myapp -o wide"
+    validate:
+      type: "smart_parse"
+      expected_state:
+        pod_count: 3
+        all_ready: true
+        status: "Running"
+        restarts: "≤ 2"  # Allow some restarts
+
+  # Test application endpoint
+  - name: "Port Forward and Test"
+    agent: "k8s-agent"
+    action: "background_process"
+    params:
+      command: "kubectl port-forward svc/myapp 8080:80"
+      run_in_background: true
+
+  - name: "Test Application Response"
+    agent: "k8s-agent"
+    action: "execute"
+    params:
+      command: "curl -f http://localhost:8080/health"
+      timeout: 30000
+    expect:
+      type: "json_response"
+      expected:
+        status: "healthy"
+        service: "myapp"
+
+cleanup:
+  - name: "Cleanup Deployment"
+    agent: "k8s-agent"
+    action: "execute"
+    params:
+      command: "kubectl delete -f deployment.yaml"
+```
+
+#### Example 2: Git Workflow Testing
+
+Test complex Git operations with branching, merging, and conflict resolution:
+
+```yaml
+name: "Git Workflow Integration Test"
+description: "Test complete Git workflow including merge conflicts"
+
+agents:
+  - name: "git-agent"
+    type: "cli"
+    config:
+      workingDirectory: "./test-repo"
+
+steps:
+  # Setup test repository
+  - name: "Initialize Test Repository"
+    agent: "git-agent"
+    action: "multi_command"
+    params:
+      commands:
+        - "git init ."
+        - "git config user.email 'test@example.com'"
+        - "git config user.name 'Test User'"
+        - "echo 'Initial content' > README.md"
+        - "git add README.md"
+        - "git commit -m 'Initial commit'"
+
+  # Create feature branch
+  - name: "Create Feature Branch"
+    agent: "git-agent"
+    action: "execute"
+    params:
+      command: "git checkout -b feature/new-feature"
+
+  # Make changes
+  - name: "Add Feature Code"
+    agent: "git-agent"
+    action: "multi_command"
+    params:
+      commands:
+        - "echo 'Feature code here' >> feature.txt"
+        - "git add feature.txt"
+        - "git commit -m 'Add new feature'"
+
+  # Simulate conflict scenario
+  - name: "Create Conflicting Changes on Main"
+    agent: "git-agent"
+    action: "multi_command"
+    params:
+      commands:
+        - "git checkout main"
+        - "echo 'Different content' >> README.md"
+        - "git add README.md"
+        - "git commit -m 'Update README on main'"
+
+  # Test merge with conflict resolution
+  - name: "Attempt Merge with Conflict"
+    agent: "git-agent"
+    action: "execute"
+    params:
+      command: "git merge feature/new-feature"
+    expect:
+      type: "contains"
+      patterns:
+        - "CONFLICT"
+        - "Automatic merge failed"
+
+  # Intelligent conflict resolution
+  - name: "Resolve Conflict"
+    agent: "git-agent"
+    action: "interactive_session"
+    params:
+      command: "git mergetool"
+      interactions:
+        - expect: "Use merge tool"
+          send: "y"
+        - expect: "Continue merging"
+          send: "y"
+      timeout: 30000
+
+  - name: "Complete Merge"
+    agent: "git-agent"
+    action: "execute"
+    params:
+      command: "git commit --no-edit"
+
+  # Validate final state
+  - name: "Verify Repository State"
+    agent: "git-agent"
+    action: "execute"
+    params:
+      command: "git log --oneline --graph"
+    validate:
+      type: "smart_parse"
+      expected_structure:
+        merge_commit: true
+        feature_branch_merged: true
+        commit_count: "≥ 3"
+```
+
+#### Example 3: Database CLI Testing
+
+Test database operations with dynamic data and transaction handling:
+
+```yaml
+name: "Database CLI Operations Test"
+description: "Test PostgreSQL CLI operations with data validation"
+
+agents:
+  - name: "psql-agent"
+    type: "cli"
+    config:
+      environmentVars:
+        PGPASSWORD: "${TEST_DB_PASSWORD}"
+
+steps:
+  # Connect and create test database
+  - name: "Create Test Database"
+    agent: "psql-agent"
+    action: "execute"
+    params:
+      command: "createdb -h localhost -U testuser testdb"
+
+  # Interactive SQL session
+  - name: "Run SQL Commands"
+    agent: "psql-agent"
+    action: "interactive_session"
+    params:
+      command: "psql -h localhost -U testuser testdb"
+      interactions:
+        - expect: "testdb=#"
+          send: "CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(100));"
+        - expect: "CREATE TABLE"
+          send: "INSERT INTO users (name) VALUES ('Alice'), ('Bob'), ('Charlie');"
+        - expect: "INSERT 0 3"
+          send: "SELECT COUNT(*) FROM users;"
+        - expect: "3"
+          send: "\\q"
+
+  # Validate data with smart parsing
+  - name: "Verify Data"
+    agent: "psql-agent"
+    action: "execute"
+    params:
+      command: "psql -h localhost -U testuser testdb -c 'SELECT * FROM users;'"
+    validate:
+      type: "table_output"
+      expected:
+        row_count: 3
+        columns: ["id", "name"]
+        contains_data:
+          - name: "Alice"
+          - name: "Bob"
+          - name: "Charlie"
+
+  # Test transaction handling
+  - name: "Test Transaction Rollback"
+    agent: "psql-agent"
+    action: "interactive_session"
+    params:
+      command: "psql -h localhost -U testuser testdb"
+      interactions:
+        - expect: "testdb=#"
+          send: "BEGIN;"
+        - expect: "BEGIN"
+          send: "INSERT INTO users (name) VALUES ('David');"
+        - expect: "INSERT 0 1"
+          send: "ROLLBACK;"
+        - expect: "ROLLBACK"
+          send: "SELECT COUNT(*) FROM users;"
+        - expect: "3"  # Should still be 3, not 4
+          send: "\\q"
+
+cleanup:
+  - name: "Drop Test Database"
+    agent: "psql-agent"
+    action: "execute"
+    params:
+      command: "dropdb -h localhost -U testuser testdb"
+```
+
+### Advanced TUI Testing Features
+
+#### Smart Retry Mechanisms
+
+Gadugi's CLIAgent includes intelligent retry logic for unreliable operations:
+
+```yaml
+- name: "Flaky Network Operation"
+  agent: "cli-agent"
+  action: "execute_with_retry"
+  params:
+    command: "curl -f https://api.example.com/status"
+    retry_strategy:
+      max_attempts: 5
+      backoff: "exponential"  # 1s, 2s, 4s, 8s, 16s
+      retry_on:
+        - exit_code: [6, 7, 28]  # Network errors
+        - output_contains: ["timeout", "connection refused"]
+      success_criteria:
+        - exit_code: 0
+        - output_contains: ["status", "ok"]
+```
+
+#### Environment Variable Management
+
+Dynamic environment handling for different test contexts:
+
+```yaml
+- name: "Context-Aware Testing"
+  agent: "cli-agent"
+  action: "execute"
+  params:
+    command: "kubectl get pods"
+    environment:
+      KUBECONFIG: "${TEST_KUBECONFIG}"
+      KUBECTL_NAMESPACE: "test-namespace"
+    context_validation:
+      pre_check:
+        - command: "kubectl config current-context"
+          expected: "test-cluster"
+      post_check:
+        - command: "kubectl config view --minify"
+          validate: "context_is_test"
+```
+
+#### Output Stream Management
+
+Handle complex output patterns and real-time monitoring:
+
+```yaml
+- name: "Monitor Build Process"
+  agent: "cli-agent"
+  action: "stream_monitor"
+  params:
+    command: "docker build -t myapp ."
+    stream_handling:
+      stdout_patterns:
+        success: ["Successfully built", "Successfully tagged"]
+        progress: ["Step \\d+/\\d+", "\\d+%\\|"]
+        warnings: ["WARNING:", "DEPRECATED"]
+        errors: ["ERROR:", "failed", "permission denied"]
+      realtime_callbacks:
+        - pattern: "Step \\d+"
+          action: "log_progress"
+        - pattern: "ERROR"
+          action: "capture_context"
+          context_lines: 10
+```
+
+### TUI Testing Best Practices
+
+#### 1. **Use Semantic Expectations**
+Instead of exact text matching, use semantic understanding:
+
+```yaml
+# ❌ Brittle: Exact match
+expect:
+  type: "exact"
+  text: "Files: 123, Errors: 0, Duration: 45.2s"
+
+# ✅ Robust: Semantic match
+expect:
+  type: "semantic"
+  meaning: "test_completion_success"
+  contains:
+    - file_count: "> 0"
+    - error_count: "0"
+    - duration: "< 60s"
+```
+
+#### 2. **Handle Dynamic Content**
+Account for timestamps, IDs, and varying output:
+
+```yaml
+validate:
+  type: "pattern_match"
+  patterns:
+    - "Container ID: [a-f0-9]{12}"  # Docker container ID
+    - "Timestamp: \\d{4}-\\d{2}-\\d{2}"  # ISO date
+    - "Memory: \\d+\\.\\d+MB"  # Dynamic memory usage
+```
+
+#### 3. **Test Error Conditions**
+Validate error handling and recovery:
+
+```yaml
+- name: "Test Network Failure Handling"
+  agent: "cli-agent"
+  action: "execute"
+  params:
+    command: "npm install --registry=http://invalid-url"
+  expect:
+    type: "error_handling"
+    error_patterns:
+      - "network error"
+      - "ENOTFOUND"
+    recovery_behavior:
+      - "retry attempted"
+      - "fallback to cache"
+```
+
+#### 4. **Performance Validation**
+Monitor command execution performance:
+
+```yaml
+- name: "Performance-Critical Operation"
+  agent: "cli-agent"
+  action: "execute"
+  params:
+    command: "large-data-processing-command"
+  performance:
+    max_duration: 30000  # 30 seconds
+    memory_limit: "512MB"
+    cpu_threshold: 80  # 80% CPU usage
+```
+
+### Integration with Popular Tools
+
+Gadugi provides built-in support for common CLI tools:
+
+#### **Docker/Kubernetes**
+```yaml
+# Specialized Docker agent configuration
+agents:
+  - name: "docker-agent"
+    type: "cli"
+    specialization: "docker"
+    config:
+      docker_host: "unix:///var/run/docker.sock"
+      registry: "private-registry.com"
+```
+
+#### **Git Operations**
+```yaml
+# Git-aware testing with intelligent parsing
+agents:
+  - name: "git-agent"
+    type: "cli"
+    specialization: "git"
+    config:
+      author: "Test Suite <test@example.com>"
+      gpg_signing: false
+```
+
+#### **Package Managers**
+```yaml
+# NPM/Yarn specialized handling
+agents:
+  - name: "npm-agent"
+    type: "cli"
+    specialization: "npm"
+    config:
+      registry: "https://registry.npmjs.org/"
+      cache_dir: "./npm-cache"
+```
+
+### Why Choose Gadugi for TUI Testing?
+
+#### **Traditional Approach:**
+```bash
+# Brittle, exact matching
+expect "Database connection established"
+send "SELECT * FROM users;\r"
+expect "3 rows returned"
+```
+
+#### **Gadugi Approach:**
+```yaml
+# Intelligent, adaptive
+- action: "database_query"
+  params:
+    query: "SELECT * FROM users"
+  expect:
+    type: "tabular_data"
+    validation:
+      row_count: 3
+      schema_valid: true
+      data_quality: "high"
+```
+
+**Key Advantages:**
+- 🎯 **Semantic Understanding**: Tests understand intent, not just text
+- 🔄 **Self-Healing**: Adapts to minor output changes
+- 📊 **Rich Validation**: Goes beyond text matching to validate data structure
+- 🚀 **Performance Aware**: Monitors execution characteristics
+- 🔍 **Context Aware**: Understands the environment and tool being tested
+
+Start testing your terminal applications intelligently with Gadugi's revolutionary TUI testing capabilities!
+
 ## 📚 API Documentation
 
 ### Core Classes

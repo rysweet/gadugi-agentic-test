@@ -30,6 +30,7 @@ export enum Priority {
 export enum TestInterface {
   CLI = 'CLI',
   GUI = 'GUI',
+  TUI = 'TUI',
   MIXED = 'MIXED',
   API = 'API'
 }

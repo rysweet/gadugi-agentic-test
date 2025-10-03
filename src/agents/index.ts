@@ -15,6 +15,7 @@ export interface IAgent {
 export enum AgentType {
   UI = 'ui',
   CLI = 'cli',
+  TUI = 'tui',
   API = 'api',
   WEBSOCKET = 'websocket',
   GITHUB = 'github',
@@ -27,6 +28,16 @@ export { ElectronUIAgent, createElectronUIAgent } from './ElectronUIAgent';
 export type { ElectronUIAgentConfig, WebSocketEvent, PerformanceSample } from './ElectronUIAgent';
 export { CLIAgent, createCLIAgent } from './CLIAgent';
 export type { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData } from './CLIAgent';
+export { TUIAgent, createTUIAgent } from './TUIAgent';
+export type {
+  TUIAgentConfig,
+  TerminalSession,
+  TerminalOutput,
+  ColorInfo,
+  PerformanceMetrics as TUIPerformanceMetrics,
+  InputSimulation,
+  MenuNavigation
+} from './TUIAgent';
 export { IssueReporter, createIssueReporter, defaultIssueReporterConfig } from './IssueReporter';
 export type { 
   IssueReporterConfig, 

@@ -5,6 +5,9 @@
 // Core test models
 export * from './TestModels';
 
+// TUI testing models
+export * from './TUIModels';
+
 // Application state models
 export * from './AppState';
 

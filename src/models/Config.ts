@@ -232,28 +232,31 @@ export interface CleanupConfig {
 export interface TestConfig {
   /** Test execution settings */
   execution: ExecutionConfig;
-  
+
   /** CLI testing configuration */
   cli: CLIConfig;
-  
+
   /** UI testing configuration */
   ui: UIConfig;
-  
+
+  /** TUI testing configuration */
+  tui: import('./TUIModels').TUIConfig;
+
   /** GitHub integration settings */
   github?: GitHubConfig;
-  
+
   /** Priority-based execution settings */
   priority: PriorityConfig;
-  
+
   /** Logging configuration */
   logging: LoggingConfig;
-  
+
   /** Reporting configuration */
   reporting: ReportingConfig;
-  
+
   /** Notification settings */
   notifications: NotificationConfig;
-  
+
   /** Custom plugin configurations */
   plugins: Record<string, any>;
 }
