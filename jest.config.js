@@ -16,6 +16,9 @@ module.exports = {
       }
     }]
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(pixelmatch|jimp)/)'
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

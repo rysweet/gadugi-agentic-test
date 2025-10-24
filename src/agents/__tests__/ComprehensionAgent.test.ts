@@ -227,7 +227,7 @@ Usage: atg build --tenant-id <id>
 
       const scenarios = await agent.generateTestScenarios(featureSpec);
 
-      expect(scenarios).toHaveLength(4); // 1 success + 2 failures + 1 edge case
+      expect(scenarios).toHaveLength(5); // 1 success + 2 failures + 2 edge cases (LLM generates both edge cases from spec)
       
       // Check success scenario
       const successScenario = scenarios.find(s => s.name.includes('Success'));
