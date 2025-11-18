@@ -8,9 +8,9 @@
 
 ## Overview
 
-Gadugi Agentic Test is a revolutionary testing framework that employs autonomous AI agents to intelligently test Electron applications and complex software systems. Unlike traditional testing tools, Gadugi agents understand application behavior, adapt to changes, and collaborate to provide comprehensive coverage without brittle test scripts.
+Gadugi Agentic Test is a testing framework that employs autonomous AI agents to intelligently test Electron applications, web apps, command lines, and text ui applications "outside-in" - ie like a user would. Unlike traditional testing tools, Gadugi agents understand application behavior, adapt to changes, and collaborate to provide comprehensive coverage without brittle test scripts.
 
-The framework combines the power of **multi-agent orchestration**, **intelligent UI understanding**, and **adaptive test generation** to create a truly autonomous testing experience.
+The framework combines the power of **multi-agent orchestration**, **intelligent UI understanding**, and **adaptive test generation** to create an autonomous testing experience.
 
 ## ✨ Key Features
 
