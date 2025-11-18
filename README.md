@@ -1,7 +1,5 @@
 # Gadugi Agentic Test Framework
 
-[![Build Status](https://github.com/Azure/azure-tenant-grapher/actions/workflows/ci.yml/badge.svg)](https://github.com/Azure/azure-tenant-grapher/actions)
-[![npm version](https://badge.fury.io/js/%40azure-tenant-grapher%2Fagentic-testing.svg)](https://www.npmjs.com/package/@azure-tenant-grapher/agentic-testing)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Gadugi** (ᎦᏚᎩ) - Cherokee word meaning "cooperative spirit" - perfectly embodies this framework where intelligent agents work together to test complex applications.
