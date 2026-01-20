@@ -1,0 +1,82 @@
+name: "Amplihack Guide Agent Interactive Test"
+description: "Test guide agent v3.0.0 interactive tutorial features in amplihack CLI"
+version: "1.0.0"
+
+config:
+  timeout: 240000  # 4 minutes for full interaction
+  retries: 1
+  parallel: false
+
+agents:
+  - name: "amplihack-cli"
+    type: "system"
+    config:
+      shell: "bash"
+      cwd: "/home/azureuser/src/amplihack/worktrees/feat-issue-1986-guide-tutorial"
+      timeout: 240000
+      capture_output: true
+
+steps:
+  - name: "Test 1: Invoke guide agent with workflow question"
+    agent: "amplihack-cli"
+    action: "execute_command"
+    params:
+      command: "uvx --from git+https://github.com/rysweet/amplihack@feat/issue-1986-guide-tutorial amplihack claude -- -p \"Task(subagent_type='guide', prompt='I am new to amplihack. Teach me about workflows.')\" 2>&1 | head -200"
+    expect:
+      stdout_contains:
+        - "Workflow"
+        - "Q&A"
+        - "DEFAULT"
+    timeout: 180000
+
+  - name: "Test 2: Check for interactive features in guide file"
+    agent: "amplihack-cli"
+    action: "execute_command"
+    params:
+      command: "grep -c '\\[WAIT\\]' .claude/agents/amplihack/core/guide.md"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "41"  # Should have 41 WAIT states
+    timeout: 5000
+
+  - name: "Test 3: Verify real production examples"
+    agent: "amplihack-cli"
+    action: "execute_command"
+    params:
+      command: "grep 'quality-audit\\|issue #2003\\|ddd:prime' .claude/agents/amplihack/core/guide.md | wc -l"
+    expect:
+      exit_code: 0
+    timeout: 5000
+
+  - name: "Test 4: Verify Anthropic + gh pages links"
+    agent: "amplihack-cli"
+    action: "execute_command"
+    params:
+      command: "grep -c 'docs.anthropic.com\\|rysweet.github.io' .claude/agents/amplihack/core/guide.md"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "12"  # Should have ~12 doc links
+    timeout: 5000
+
+  - name: "Test 5: Run interactive test script"
+    agent: "amplihack-cli"
+    action: "execute_command"
+    params:
+      command: "./.claude/tests/test_guide_interactive.sh"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "ALL TESTS PASSED"
+    timeout: 10000
+
+metadata:
+  tags:
+    - "guide-agent"
+    - "interactive"
+    - "tutorial"
+    - "amplihack"
+  priority: "critical"
+  author: "claude-sonnet"
+  created: "2026-01-20"
