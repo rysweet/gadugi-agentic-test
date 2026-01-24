@@ -109,20 +109,20 @@ export class FileUtils {
           dirPath
         );
       }
-    } catch (error) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
         try {
           await fs.mkdir(dirPath, { recursive: true });
-        } catch (mkdirError) {
+        } catch (mkdirError: unknown) {
           throw new FileOperationError(
-            `Failed to create directory: ${mkdirError.message}`,
+            `Failed to create directory: ${mkdirError instanceof Error ? mkdirError.message : String(mkdirError)}`,
             'ensureDirectory',
             dirPath
           );
         }
       } else if (!(error instanceof FileOperationError)) {
         throw new FileOperationError(
-          `Failed to check directory: ${error.message}`,
+          `Failed to check directory: ${error instanceof Error ? error.message : String(error)}`,
           'ensureDirectory',
           dirPath
         );
@@ -139,9 +139,9 @@ export class FileUtils {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       return JSON.parse(content) as T;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to read JSON file: ${error.message}`,
+        `Failed to read JSON file: ${error instanceof Error ? error.message : String(error)}`,
         'readJsonFile',
         filePath
       );
@@ -156,9 +156,9 @@ export class FileUtils {
       await this.ensureDirectory(path.dirname(filePath));
       const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
       await fs.writeFile(filePath, content, 'utf-8');
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to write JSON file: ${error.message}`,
+        `Failed to write JSON file: ${error instanceof Error ? error.message : String(error)}`,
         'writeJsonFile',
         filePath
       );
@@ -172,9 +172,9 @@ export class FileUtils {
     try {
       await this.ensureDirectory(path.dirname(filePath));
       await fs.appendFile(filePath, content);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to append to file: ${error.message}`,
+        `Failed to append to file: ${error instanceof Error ? error.message : String(error)}`,
         'appendToFile',
         filePath
       );
@@ -202,10 +202,10 @@ export class FileUtils {
         }
         await fs.copyFile(source, destination);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (!(error instanceof FileOperationError)) {
         throw new FileOperationError(
-          `Failed to copy: ${error.message}`,
+          `Failed to copy: ${error instanceof Error ? error.message : String(error)}`,
           'copy',
           source
         );
@@ -246,9 +246,9 @@ export class FileUtils {
     try {
       await this.ensureDirectory(path.dirname(destination));
       await fs.rename(source, destination);
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to move: ${error.message}`,
+        `Failed to move: ${error instanceof Error ? error.message : String(error)}`,
         'move',
         source
       );
@@ -271,10 +271,10 @@ export class FileUtils {
       } else {
         await fs.unlink(filePath);
       }
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
+    } catch (error: unknown) {
+      if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) {
         throw new FileOperationError(
-          `Failed to delete: ${error.message}`,
+          `Failed to delete: ${error instanceof Error ? error.message : String(error)}`,
           'delete',
           filePath
         );
@@ -313,9 +313,9 @@ export class FileUtils {
         isDirectory: stats.isDirectory(),
         permissions: stats.mode.toString(8).slice(-3)
       };
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to get metadata: ${error.message}`,
+        `Failed to get metadata: ${error instanceof Error ? error.message : String(error)}`,
         'getMetadata',
         filePath
       );
@@ -329,9 +329,9 @@ export class FileUtils {
     try {
       const buffer = await fs.readFile(filePath);
       return crypto.createHash(algorithm).update(buffer).digest('hex');
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to calculate hash: ${error.message}`,
+        `Failed to calculate hash: ${error instanceof Error ? error.message : String(error)}`,
         'calculateHash',
         filePath
       );
@@ -361,9 +361,9 @@ export class FileUtils {
       
       // Remove duplicates
       return [...new Set(results)];
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to find files: ${error.message}`,
+        `Failed to find files: ${error instanceof Error ? error.message : String(error)}`,
         'findFiles'
       );
     }
@@ -436,10 +436,10 @@ export class FileUtils {
               result.deletedFiles.push(filePath);
             }
           }
-        } catch (error) {
+        } catch (error: unknown) {
           result.errors.push({
             path: filePath,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
           });
         }
       }
@@ -449,9 +449,9 @@ export class FileUtils {
         await this.removeEmptyDirectories(directory);
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Cleanup failed: ${error.message}`,
+        `Cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
         'cleanup',
         directory
       );
@@ -479,9 +479,9 @@ export class FileUtils {
       await this.copy(source, backupPath);
       return backupPath;
 
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Backup failed: ${error.message}`,
+        `Backup failed: ${error instanceof Error ? error.message : String(error)}`,
         'backup',
         source
       );
@@ -545,10 +545,10 @@ export class FileUtils {
             await this.copy(sourcePath, destPath);
             result.copied.push(relativePath);
           }
-        } catch (error) {
+        } catch (error: unknown) {
           result.errors.push({
             path: relativePath,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
           });
         }
       }
@@ -563,18 +563,18 @@ export class FileUtils {
             const extraPath = path.join(destination, extraFile);
             await this.delete(extraPath, true);
             result.deleted.push(extraFile);
-          } catch (error) {
+          } catch (error: unknown) {
             result.errors.push({
               path: extraFile,
-              error: error.message
+              error: error instanceof Error ? error.message : String(error)
             });
           }
         }
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Sync failed: ${error.message}`,
+        `Sync failed: ${error instanceof Error ? error.message : String(error)}`,
         'sync',
         source
       );
@@ -602,9 +602,9 @@ export class FileUtils {
           // Skip files that can't be accessed
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to get directory size: ${error.message}`,
+        `Failed to get directory size: ${error instanceof Error ? error.message : String(error)}`,
         'getDirectorySize',
         directory
       );
@@ -626,9 +626,9 @@ export class FileUtils {
     try {
       await fs.writeFile(tempPath, '');
       return tempPath;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to create temp file: ${error.message}`,
+        `Failed to create temp file: ${error instanceof Error ? error.message : String(error)}`,
         'createTempFile',
         tempPath
       );
@@ -648,9 +648,9 @@ export class FileUtils {
     try {
       await this.ensureDirectory(tempPath);
       return tempPath;
-    } catch (error) {
+    } catch (error: unknown) {
       throw new FileOperationError(
-        `Failed to create temp directory: ${error.message}`,
+        `Failed to create temp directory: ${error instanceof Error ? error.message : String(error)}`,
         'createTempDirectory',
         tempPath
       );

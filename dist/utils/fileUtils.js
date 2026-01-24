@@ -46,16 +46,16 @@ class FileUtils {
             }
         }
         catch (error) {
-            if (error.code === 'ENOENT') {
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
                 try {
                     await promises_1.default.mkdir(dirPath, { recursive: true });
                 }
                 catch (mkdirError) {
-                    throw new FileOperationError(`Failed to create directory: ${mkdirError.message}`, 'ensureDirectory', dirPath);
+                    throw new FileOperationError(`Failed to create directory: ${mkdirError instanceof Error ? mkdirError.message : String(mkdirError)}`, 'ensureDirectory', dirPath);
                 }
             }
             else if (!(error instanceof FileOperationError)) {
-                throw new FileOperationError(`Failed to check directory: ${error.message}`, 'ensureDirectory', dirPath);
+                throw new FileOperationError(`Failed to check directory: ${error instanceof Error ? error.message : String(error)}`, 'ensureDirectory', dirPath);
             }
             else {
                 throw error;
@@ -71,7 +71,7 @@ class FileUtils {
             return JSON.parse(content);
         }
         catch (error) {
-            throw new FileOperationError(`Failed to read JSON file: ${error.message}`, 'readJsonFile', filePath);
+            throw new FileOperationError(`Failed to read JSON file: ${error instanceof Error ? error.message : String(error)}`, 'readJsonFile', filePath);
         }
     }
     /**
@@ -84,7 +84,7 @@ class FileUtils {
             await promises_1.default.writeFile(filePath, content, 'utf-8');
         }
         catch (error) {
-            throw new FileOperationError(`Failed to write JSON file: ${error.message}`, 'writeJsonFile', filePath);
+            throw new FileOperationError(`Failed to write JSON file: ${error instanceof Error ? error.message : String(error)}`, 'writeJsonFile', filePath);
         }
     }
     /**
@@ -96,7 +96,7 @@ class FileUtils {
             await promises_1.default.appendFile(filePath, content);
         }
         catch (error) {
-            throw new FileOperationError(`Failed to append to file: ${error.message}`, 'appendToFile', filePath);
+            throw new FileOperationError(`Failed to append to file: ${error instanceof Error ? error.message : String(error)}`, 'appendToFile', filePath);
         }
     }
     /**
@@ -118,7 +118,7 @@ class FileUtils {
         }
         catch (error) {
             if (!(error instanceof FileOperationError)) {
-                throw new FileOperationError(`Failed to copy: ${error.message}`, 'copy', source);
+                throw new FileOperationError(`Failed to copy: ${error instanceof Error ? error.message : String(error)}`, 'copy', source);
             }
             throw error;
         }
@@ -153,7 +153,7 @@ class FileUtils {
             await promises_1.default.rename(source, destination);
         }
         catch (error) {
-            throw new FileOperationError(`Failed to move: ${error.message}`, 'move', source);
+            throw new FileOperationError(`Failed to move: ${error instanceof Error ? error.message : String(error)}`, 'move', source);
         }
     }
     /**
@@ -175,8 +175,8 @@ class FileUtils {
             }
         }
         catch (error) {
-            if (error.code !== 'ENOENT') {
-                throw new FileOperationError(`Failed to delete: ${error.message}`, 'delete', filePath);
+            if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) {
+                throw new FileOperationError(`Failed to delete: ${error instanceof Error ? error.message : String(error)}`, 'delete', filePath);
             }
         }
     }
@@ -212,7 +212,7 @@ class FileUtils {
             };
         }
         catch (error) {
-            throw new FileOperationError(`Failed to get metadata: ${error.message}`, 'getMetadata', filePath);
+            throw new FileOperationError(`Failed to get metadata: ${error instanceof Error ? error.message : String(error)}`, 'getMetadata', filePath);
         }
     }
     /**
@@ -224,7 +224,7 @@ class FileUtils {
             return crypto_1.default.createHash(algorithm).update(buffer).digest('hex');
         }
         catch (error) {
-            throw new FileOperationError(`Failed to calculate hash: ${error.message}`, 'calculateHash', filePath);
+            throw new FileOperationError(`Failed to calculate hash: ${error instanceof Error ? error.message : String(error)}`, 'calculateHash', filePath);
         }
     }
     /**
@@ -246,7 +246,7 @@ class FileUtils {
             return [...new Set(results)];
         }
         catch (error) {
-            throw new FileOperationError(`Failed to find files: ${error.message}`, 'findFiles');
+            throw new FileOperationError(`Failed to find files: ${error instanceof Error ? error.message : String(error)}`, 'findFiles');
         }
     }
     /**
@@ -306,7 +306,7 @@ class FileUtils {
                 catch (error) {
                     result.errors.push({
                         path: filePath,
-                        error: error.message
+                        error: error instanceof Error ? error.message : String(error)
                     });
                 }
             }
@@ -316,7 +316,7 @@ class FileUtils {
             }
         }
         catch (error) {
-            throw new FileOperationError(`Cleanup failed: ${error.message}`, 'cleanup', directory);
+            throw new FileOperationError(`Cleanup failed: ${error instanceof Error ? error.message : String(error)}`, 'cleanup', directory);
         }
         return result;
     }
@@ -337,7 +337,7 @@ class FileUtils {
             return backupPath;
         }
         catch (error) {
-            throw new FileOperationError(`Backup failed: ${error.message}`, 'backup', source);
+            throw new FileOperationError(`Backup failed: ${error instanceof Error ? error.message : String(error)}`, 'backup', source);
         }
     }
     /**
@@ -390,7 +390,7 @@ class FileUtils {
                 catch (error) {
                     result.errors.push({
                         path: relativePath,
-                        error: error.message
+                        error: error instanceof Error ? error.message : String(error)
                     });
                 }
             }
@@ -407,14 +407,14 @@ class FileUtils {
                     catch (error) {
                         result.errors.push({
                             path: extraFile,
-                            error: error.message
+                            error: error instanceof Error ? error.message : String(error)
                         });
                     }
                 }
             }
         }
         catch (error) {
-            throw new FileOperationError(`Sync failed: ${error.message}`, 'sync', source);
+            throw new FileOperationError(`Sync failed: ${error instanceof Error ? error.message : String(error)}`, 'sync', source);
         }
         return result;
     }
@@ -438,7 +438,7 @@ class FileUtils {
             }
         }
         catch (error) {
-            throw new FileOperationError(`Failed to get directory size: ${error.message}`, 'getDirectorySize', directory);
+            throw new FileOperationError(`Failed to get directory size: ${error instanceof Error ? error.message : String(error)}`, 'getDirectorySize', directory);
         }
         return totalSize;
     }
@@ -456,7 +456,7 @@ class FileUtils {
             return tempPath;
         }
         catch (error) {
-            throw new FileOperationError(`Failed to create temp file: ${error.message}`, 'createTempFile', tempPath);
+            throw new FileOperationError(`Failed to create temp file: ${error instanceof Error ? error.message : String(error)}`, 'createTempFile', tempPath);
         }
     }
     /**
@@ -473,7 +473,7 @@ class FileUtils {
             return tempPath;
         }
         catch (error) {
-            throw new FileOperationError(`Failed to create temp directory: ${error.message}`, 'createTempDirectory', tempPath);
+            throw new FileOperationError(`Failed to create temp directory: ${error instanceof Error ? error.message : String(error)}`, 'createTempDirectory', tempPath);
         }
     }
     /**

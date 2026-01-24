@@ -108,6 +108,10 @@ export declare class TestOrchestrator extends EventEmitter {
      */
     private reportFailures;
     /**
+     * Calculate session status based on results
+     */
+    private calculateSessionStatus;
+    /**
      * Calculate session metrics
      */
     private calculateSessionMetrics;

@@ -92,6 +92,34 @@ const DEFAULT_CONFIG: TestConfig = {
     screenshotDir: './screenshots',
     recordVideo: false
   },
+  tui: {
+    terminal: 'xterm',
+    defaultDimensions: {
+      width: 80,
+      height: 24
+    },
+    encoding: 'utf8',
+    defaultTimeout: 30000,
+    pollingInterval: 100,
+    captureScreenshots: true,
+    recordSessions: false,
+    colorMode: '24bit',
+    interpretAnsi: true,
+    shell: '/bin/bash',
+    shellArgs: [],
+    environment: {},
+    workingDirectory: process.cwd(),
+    accessibility: {
+      highContrast: false,
+      largeText: false,
+      screenReader: false
+    },
+    performance: {
+      refreshRate: 60,
+      maxBufferSize: 1024 * 1024,
+      hardwareAcceleration: false
+    }
+  },
   priority: {
     enabled: true,
     executionOrder: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
@@ -214,11 +242,11 @@ export class ConfigManager {
       // Notify watchers
       this.notifyWatchers();
 
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof ConfigError) {
         throw error;
       }
-      throw new ConfigError(`Failed to load config from ${filePath}: ${error.message}`, filePath);
+      throw new ConfigError(`Failed to load config from ${filePath}: ${error instanceof Error ? error.message : String(error)}`, filePath);
     }
   }
 
@@ -362,8 +390,8 @@ export class ConfigManager {
         // This should be done during runtime validation
       }
 
-    } catch (error) {
-      errors.push(`Configuration validation error: ${error.message}`);
+    } catch (error: unknown) {
+      errors.push(`Configuration validation error: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return {
@@ -382,24 +410,55 @@ export class ConfigManager {
     switch (environment) {
       case 'development':
         return this.mergeConfigs(baseConfig, {
-          logging: { level: 'debug' as const },
-          ui: { headless: false },
-          execution: { continueOnFailure: true }
+          logging: { 
+            ...baseConfig.logging,
+            level: 'debug' as const 
+          },
+          ui: { 
+            ...baseConfig.ui,
+            headless: false 
+          },
+          execution: { 
+            ...baseConfig.execution,
+            continueOnFailure: true 
+          }
         });
 
       case 'testing':
         return this.mergeConfigs(baseConfig, {
-          logging: { level: 'info' as const },
-          ui: { headless: true },
-          execution: { continueOnFailure: false, maxRetries: 0 }
+          logging: { 
+            ...baseConfig.logging,
+            level: 'info' as const 
+          },
+          ui: { 
+            ...baseConfig.ui,
+            headless: true 
+          },
+          execution: { 
+            ...baseConfig.execution,
+            continueOnFailure: false, 
+            maxRetries: 0 
+          }
         });
 
       case 'production':
         return this.mergeConfigs(baseConfig, {
-          logging: { level: 'warn' as const },
-          ui: { headless: true },
-          execution: { continueOnFailure: false },
-          notifications: { enabled: true }
+          logging: { 
+            ...baseConfig.logging,
+            level: 'warn' as const 
+          },
+          ui: { 
+            ...baseConfig.ui,
+            headless: true 
+          },
+          execution: { 
+            ...baseConfig.execution,
+            continueOnFailure: false 
+          },
+          notifications: { 
+            ...baseConfig.notifications,
+            enabled: true 
+          }
         });
 
       default:
@@ -512,7 +571,7 @@ export class ConfigManager {
     this.watchers.forEach(callback => {
       try {
         callback(this.getConfig());
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error in configuration watcher:', error);
       }
     });
@@ -579,7 +638,8 @@ export function updateConfig(updates: Partial<TestConfig>): void {
  * Load configuration from a YAML file
  */
 export async function loadConfigFromYaml(filePath: string): Promise<TestConfig> {
-  return globalConfigManager.loadFromFile(filePath);
+  await globalConfigManager.loadFromFile(filePath);
+  return globalConfigManager.getConfig();
 }
 
 /**

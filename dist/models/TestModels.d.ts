@@ -263,6 +263,25 @@ export interface TestSession {
     };
     /** Configuration used */
     config?: any;
+    /** Number of scenarios executed */
+    scenariosExecuted?: number;
+    /** Number of issues created from failures */
+    issuesCreated?: number;
+    /** Failed test results */
+    failures?: TestResult[];
+    /** Performance metrics */
+    metrics?: {
+        /** Total execution duration in milliseconds */
+        totalDuration: number;
+        /** Average duration per test in milliseconds */
+        averageDuration: number;
+        /** Minimum test duration in milliseconds */
+        minDuration: number;
+        /** Maximum test duration in milliseconds */
+        maxDuration: number;
+        /** Test throughput (tests per second) */
+        throughput: number;
+    };
 }
 export interface TestSuite {
     /** Suite name */

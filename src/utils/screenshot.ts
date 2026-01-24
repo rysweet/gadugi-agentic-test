@@ -7,8 +7,8 @@ import { Page, Browser, BrowserContext, Locator } from 'playwright';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import * as Jimp from 'jimp';
-import * as pixelmatch from 'pixelmatch';
+import { Jimp, loadFont, intToRGBA, rgbaToInt } from 'jimp';
+import pixelmatchDefault from 'pixelmatch';
 
 /**
  * Screenshot options interface
@@ -351,8 +351,8 @@ export class ScreenshotManager {
         Jimp.read(actualImage)
       ]);
 
-      const baselineSize = { width: baseline.getWidth(), height: baseline.getHeight() };
-      const actualSize = { width: actual.getWidth(), height: actual.getHeight() };
+      const baselineSize = { width: baseline.width, height: baseline.height };
+      const actualSize = { width: actual.width, height: actual.height };
 
       // Handle different image sizes by resizing to match
       let resized = false;
@@ -360,13 +360,13 @@ export class ScreenshotManager {
         const maxWidth = Math.max(baselineSize.width, actualSize.width);
         const maxHeight = Math.max(baselineSize.height, actualSize.height);
         
-        baseline.resize(maxWidth, maxHeight);
-        actual.resize(maxWidth, maxHeight);
+        baseline.resize({ w: maxWidth, h: maxHeight });
+        actual.resize({ w: maxWidth, h: maxHeight });
         resized = true;
       }
 
-      const width = baseline.getWidth();
-      const height = baseline.getHeight();
+      const width = baseline.width;
+      const height = baseline.height;
       const pixelCount = width * height;
 
       // Convert images to RGBA buffers for pixelmatch
@@ -379,13 +379,13 @@ export class ScreenshotManager {
         threshold: algorithm === 'perceptual' ? 0.2 : 0.1,
         includeAA,
         alpha: colorOptions.alpha || 1.0,
-        aaColor: [255, 255, 0], // Yellow for antialiasing differences
-        diffColor: colorOptions.changedColor || [255, 0, 255], // Magenta for differences
-        diffColorAlt: colorOptions.addedColor || [0, 255, 0] // Green for additions
+        aaColor: [255, 255, 0] as [number, number, number], // Yellow for antialiasing differences
+        diffColor: (colorOptions.changedColor || [255, 0, 255]) as [number, number, number], // Magenta for differences
+        diffColorAlt: (colorOptions.addedColor || [0, 255, 0]) as [number, number, number] // Green for additions
       };
 
       // Perform pixel comparison
-      const differentPixels = pixelmatch(
+      const differentPixels = pixelmatchDefault(
         baselineBuffer,
         actualBuffer,
         diffBuffer,
@@ -478,24 +478,24 @@ export class ScreenshotManager {
         Jimp.read(actualImage)
       ]);
 
-      const baselineWidth = baseline.getWidth();
-      const baselineHeight = baseline.getHeight();
-      const actualWidth = actual.getWidth();
-      const actualHeight = actual.getHeight();
+      const baselineWidth = baseline.width;
+      const baselineHeight = baseline.height;
+      const actualWidth = actual.width;
+      const actualHeight = actual.height;
 
       // Handle different sizes by resizing to the larger dimensions
       const targetWidth = Math.max(baselineWidth, actualWidth);
       const targetHeight = Math.max(baselineHeight, actualHeight);
 
       if (baselineWidth !== targetWidth || baselineHeight !== targetHeight) {
-        baseline.resize(targetWidth, targetHeight);
+        baseline.resize({ w: targetWidth, h: targetHeight });
       }
       if (actualWidth !== targetWidth || actualHeight !== targetHeight) {
-        actual.resize(targetWidth, targetHeight);
+        actual.resize({ w: targetWidth, h: targetHeight });
       }
 
       // Create diff image based on algorithm
-      let diffImage: Jimp;
+      let diffImage: Awaited<ReturnType<typeof Jimp.read>>;
 
       if (algorithm === 'structural') {
         diffImage = await this.createStructuralDiff(baseline, actual, colorOptions);
@@ -508,18 +508,19 @@ export class ScreenshotManager {
       // Create side-by-side comparison if requested
       if (showSideBySide) {
         const sideBySideWidth = targetWidth * 3; // baseline + actual + diff
-        const sideBySideImage = new Jimp(sideBySideWidth, targetHeight, '#FFFFFF');
+        const sideBySideImage = new Jimp({ width: sideBySideWidth, height: targetHeight, color: 0xFFFFFFFF });
         
         // Composite images side by side
         sideBySideImage.composite(baseline, 0, 0);
         sideBySideImage.composite(actual, targetWidth, 0);
         sideBySideImage.composite(diffImage, targetWidth * 2, 0);
         
-        // Add labels
-        const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
-        sideBySideImage.print(font, 10, 10, 'Baseline');
-        sideBySideImage.print(font, targetWidth + 10, 10, 'Actual');
-        sideBySideImage.print(font, targetWidth * 2 + 10, 10, 'Diff');
+        // Add labels - Use font file path instead of constant
+        const fontPath = path.join(__dirname, '../../node_modules/@jimp/plugin-print/fonts/open-sans/open-sans-16-black/open-sans-16-black.fnt');
+        const font = await loadFont(fontPath);
+        sideBySideImage.print({ font, x: 10, y: 10, text: 'Baseline' });
+        sideBySideImage.print({ font, x: targetWidth + 10, y: 10, text: 'Actual' });
+        sideBySideImage.print({ font, x: targetWidth * 2 + 10, y: 10, text: 'Diff' });
         
         diffImage = sideBySideImage;
       }
@@ -528,7 +529,7 @@ export class ScreenshotManager {
       await this.ensureDirectoryExists(path.dirname(outputPath));
 
       // Save the diff image
-      await diffImage.writeAsync(outputPath);
+      await diffImage.write(outputPath as `${string}.${string}`);
       
       return outputPath;
 
@@ -541,13 +542,13 @@ export class ScreenshotManager {
    * Create pixel-by-pixel difference image
    */
   private async createPixelDiff(
-    baseline: Jimp,
-    actual: Jimp,
+    baseline: Awaited<ReturnType<typeof Jimp.read>>,
+    actual: Awaited<ReturnType<typeof Jimp.read>>,
     colorOptions: DiffColorOptions,
     includeAA: boolean
-  ): Promise<Jimp> {
-    const width = baseline.getWidth();
-    const height = baseline.getHeight();
+  ): Promise<Awaited<ReturnType<typeof Jimp.read>>> {
+    const width = baseline.width;
+    const height = baseline.height;
     
     const {
       removedColor = [255, 0, 0], // Red for removed
@@ -562,7 +563,7 @@ export class ScreenshotManager {
     const diffBuffer = new Uint8ClampedArray(width * height * 4);
 
     // Use pixelmatch for accurate pixel comparison
-    const differentPixels = pixelmatch(
+    const differentPixels = pixelmatchDefault(
       baselineBuffer,
       actualBuffer,
       diffBuffer,
@@ -578,7 +579,7 @@ export class ScreenshotManager {
     );
 
     // Create enhanced diff image with custom color coding
-    const diffImage = new Jimp(width, height);
+    const diffImage = new Jimp({ width, height });
     
     for (let i = 0; i < width * height; i++) {
       const pixelIndex = i * 4;
@@ -625,7 +626,7 @@ export class ScreenshotManager {
 
       const x = i % width;
       const y = Math.floor(i / width);
-      const color = Jimp.rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+      const color = rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
       diffImage.setPixelColor(color, x, y);
     }
 
@@ -636,13 +637,13 @@ export class ScreenshotManager {
    * Create perceptual difference image (focuses on human-visible differences)
    */
   private async createPerceptualDiff(
-    baseline: Jimp,
-    actual: Jimp,
+    baseline: Awaited<ReturnType<typeof Jimp.read>>,
+    actual: Awaited<ReturnType<typeof Jimp.read>>,
     colorOptions: DiffColorOptions
-  ): Promise<Jimp> {
-    const width = baseline.getWidth();
-    const height = baseline.getHeight();
-    const diffImage = new Jimp(width, height);
+  ): Promise<Awaited<ReturnType<typeof Jimp.read>>> {
+    const width = baseline.width;
+    const height = baseline.height;
+    const diffImage = new Jimp({ width, height });
 
     const {
       removedColor = [255, 0, 0],
@@ -654,8 +655,8 @@ export class ScreenshotManager {
     // Perceptual comparison using luminance
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        const baselineColor = Jimp.intToRGBA(baseline.getPixelColor(x, y));
-        const actualColor = Jimp.intToRGBA(actual.getPixelColor(x, y));
+        const baselineColor = intToRGBA(baseline.getPixelColor(x, y));
+        const actualColor = intToRGBA(actual.getPixelColor(x, y));
 
         // Calculate perceptual luminance
         const baselineLum = 0.299 * baselineColor.r + 0.587 * baselineColor.g + 0.114 * baselineColor.b;
@@ -685,7 +686,7 @@ export class ScreenshotManager {
           finalColor = [actualColor.r, actualColor.g, actualColor.b, 128];
         }
 
-        const color = Jimp.rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+        const color = rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
         diffImage.setPixelColor(color, x, y);
       }
     }
@@ -697,12 +698,12 @@ export class ScreenshotManager {
    * Create structural difference image (focuses on edges and shapes)
    */
   private async createStructuralDiff(
-    baseline: Jimp,
-    actual: Jimp,
+    baseline: Awaited<ReturnType<typeof Jimp.read>>,
+    actual: Awaited<ReturnType<typeof Jimp.read>>,
     colorOptions: DiffColorOptions
-  ): Promise<Jimp> {
-    const width = baseline.getWidth();
-    const height = baseline.getHeight();
+  ): Promise<Awaited<ReturnType<typeof Jimp.read>>> {
+    const width = baseline.width;
+    const height = baseline.height;
     
     const {
       removedColor = [255, 0, 0],
@@ -715,15 +716,15 @@ export class ScreenshotManager {
     const baselineEdges = this.detectEdges(baseline);
     const actualEdges = this.detectEdges(actual);
     
-    const diffImage = new Jimp(width, height);
+    const diffImage = new Jimp({ width, height });
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const baselineEdge = baselineEdges.getPixelColor(x, y);
         const actualEdge = actualEdges.getPixelColor(x, y);
         
-        const baselineGray = Jimp.intToRGBA(baselineEdge);
-        const actualGray = Jimp.intToRGBA(actualEdge);
+        const baselineGray = intToRGBA(baselineEdge);
+        const actualGray = intToRGBA(actualEdge);
         
         const edgeDiff = Math.abs(baselineGray.r - actualGray.r);
         
@@ -737,11 +738,11 @@ export class ScreenshotManager {
           }
         } else {
           // Get original pixel for no-difference areas
-          const originalColor = Jimp.intToRGBA(actual.getPixelColor(x, y));
+          const originalColor = intToRGBA(actual.getPixelColor(x, y));
           finalColor = [originalColor.r, originalColor.g, originalColor.b, 128];
         }
 
-        const color = Jimp.rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+        const color = rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
         diffImage.setPixelColor(color, x, y);
       }
     }
@@ -752,10 +753,10 @@ export class ScreenshotManager {
   /**
    * Simple edge detection using Sobel filter
    */
-  private detectEdges(image: Jimp): Jimp {
-    const width = image.getWidth();
-    const height = image.getHeight();
-    const edges = image.clone().greyscale();
+  private detectEdges(image: Awaited<ReturnType<typeof Jimp.read>>): Awaited<ReturnType<typeof Jimp.read>> {
+    const width = image.width;
+    const height = image.height;
+    const edges = image.clone().greyscale() as Awaited<ReturnType<typeof Jimp.read>>;
 
     const sobelX = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
     const sobelY = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
@@ -766,7 +767,7 @@ export class ScreenshotManager {
 
         for (let ky = -1; ky <= 1; ky++) {
           for (let kx = -1; kx <= 1; kx++) {
-            const pixel = Jimp.intToRGBA(image.getPixelColor(x + kx, y + ky));
+            const pixel = intToRGBA(image.getPixelColor(x + kx, y + ky));
             const gray = pixel.r; // Already greyscale
             
             gx += gray * sobelX[ky + 1][kx + 1];
@@ -777,7 +778,7 @@ export class ScreenshotManager {
         const magnitude = Math.sqrt(gx * gx + gy * gy);
         const clampedMagnitude = Math.min(255, magnitude);
         
-        const color = Jimp.rgbaToInt(clampedMagnitude, clampedMagnitude, clampedMagnitude, 255);
+        const color = rgbaToInt(clampedMagnitude, clampedMagnitude, clampedMagnitude, 255);
         edges.setPixelColor(color, x, y);
       }
     }

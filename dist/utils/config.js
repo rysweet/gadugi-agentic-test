@@ -115,6 +115,34 @@ const DEFAULT_CONFIG = {
         screenshotDir: './screenshots',
         recordVideo: false
     },
+    tui: {
+        terminal: 'xterm',
+        defaultDimensions: {
+            width: 80,
+            height: 24
+        },
+        encoding: 'utf8',
+        defaultTimeout: 30000,
+        pollingInterval: 100,
+        captureScreenshots: true,
+        recordSessions: false,
+        colorMode: '24bit',
+        interpretAnsi: true,
+        shell: '/bin/bash',
+        shellArgs: [],
+        environment: {},
+        workingDirectory: process.cwd(),
+        accessibility: {
+            highContrast: false,
+            largeText: false,
+            screenReader: false
+        },
+        performance: {
+            refreshRate: 60,
+            maxBufferSize: 1024 * 1024,
+            hardwareAcceleration: false
+        }
+    },
     priority: {
         enabled: true,
         executionOrder: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
@@ -232,7 +260,7 @@ class ConfigManager {
             if (error instanceof ConfigError) {
                 throw error;
             }
-            throw new ConfigError(`Failed to load config from ${filePath}: ${error.message}`, filePath);
+            throw new ConfigError(`Failed to load config from ${filePath}: ${error instanceof Error ? error.message : String(error)}`, filePath);
         }
     }
     /**
@@ -358,7 +386,7 @@ class ConfigManager {
             }
         }
         catch (error) {
-            errors.push(`Configuration validation error: ${error.message}`);
+            errors.push(`Configuration validation error: ${error instanceof Error ? error.message : String(error)}`);
         }
         return {
             valid: errors.length === 0,
@@ -374,22 +402,53 @@ class ConfigManager {
         switch (environment) {
             case 'development':
                 return this.mergeConfigs(baseConfig, {
-                    logging: { level: 'debug' },
-                    ui: { headless: false },
-                    execution: { continueOnFailure: true }
+                    logging: {
+                        ...baseConfig.logging,
+                        level: 'debug'
+                    },
+                    ui: {
+                        ...baseConfig.ui,
+                        headless: false
+                    },
+                    execution: {
+                        ...baseConfig.execution,
+                        continueOnFailure: true
+                    }
                 });
             case 'testing':
                 return this.mergeConfigs(baseConfig, {
-                    logging: { level: 'info' },
-                    ui: { headless: true },
-                    execution: { continueOnFailure: false, maxRetries: 0 }
+                    logging: {
+                        ...baseConfig.logging,
+                        level: 'info'
+                    },
+                    ui: {
+                        ...baseConfig.ui,
+                        headless: true
+                    },
+                    execution: {
+                        ...baseConfig.execution,
+                        continueOnFailure: false,
+                        maxRetries: 0
+                    }
                 });
             case 'production':
                 return this.mergeConfigs(baseConfig, {
-                    logging: { level: 'warn' },
-                    ui: { headless: true },
-                    execution: { continueOnFailure: false },
-                    notifications: { enabled: true }
+                    logging: {
+                        ...baseConfig.logging,
+                        level: 'warn'
+                    },
+                    ui: {
+                        ...baseConfig.ui,
+                        headless: true
+                    },
+                    execution: {
+                        ...baseConfig.execution,
+                        continueOnFailure: false
+                    },
+                    notifications: {
+                        ...baseConfig.notifications,
+                        enabled: true
+                    }
                 });
             default:
                 return baseConfig;
@@ -552,7 +611,8 @@ function updateConfig(updates) {
  * Load configuration from a YAML file
  */
 async function loadConfigFromYaml(filePath) {
-    return exports.globalConfigManager.loadFromFile(filePath);
+    await exports.globalConfigManager.loadFromFile(filePath);
+    return exports.globalConfigManager.getConfig();
 }
 /**
  * Alias for loadConfigFromYaml
