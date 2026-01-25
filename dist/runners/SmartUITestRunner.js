@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+#!/usr/bin/env node
 "use strict";
 /**
  * Smart UI Testing Runner

@@ -495,7 +495,7 @@ export class ScreenshotManager {
       }
 
       // Create diff image based on algorithm
-      let diffImage: Awaited<ReturnType<typeof Jimp.read>>;
+      let diffImage: any;
 
       if (algorithm === 'structural') {
         diffImage = await this.createStructuralDiff(baseline, actual, colorOptions);
@@ -630,7 +630,7 @@ export class ScreenshotManager {
       diffImage.setPixelColor(color, x, y);
     }
 
-    return diffImage;
+    return diffImage as any;
   }
 
   /**
@@ -691,7 +691,7 @@ export class ScreenshotManager {
       }
     }
 
-    return diffImage;
+    return diffImage as any;
   }
 
   /**
@@ -747,7 +747,7 @@ export class ScreenshotManager {
       }
     }
 
-    return diffImage;
+    return diffImage as any;
   }
 
   /**

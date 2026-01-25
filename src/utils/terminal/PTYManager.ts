@@ -112,7 +112,7 @@ export class PTYManager extends EventEmitter {
         }
 
         // Platform-specific options
-        const options: pty.IOptions = {
+        const options: pty.IPtyForkOptions = {
           cwd: this.config.cwd,
           env: this.config.env,
           cols: this.config.cols,
@@ -135,7 +135,7 @@ export class PTYManager extends EventEmitter {
           this.emit('data', data);
         });
 
-        this.pty.onExit((event: { exitCode: number; signal?: string }) => {
+        this.pty.onExit((event: { exitCode: number; signal?: number }) => {
           this.isActive = false;
           this.emit('exit', event.exitCode, event.signal);
         });

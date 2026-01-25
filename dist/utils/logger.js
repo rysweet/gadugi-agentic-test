@@ -286,18 +286,12 @@ class TestLogger {
             }
             this.logger.transports.forEach((transport) => {
                 if ('close' in transport && typeof transport.close === 'function') {
-                    transport.close(() => {
-                        pendingTransports--;
-                        if (pendingTransports === 0) {
-                            resolve();
-                        }
-                    });
+                    // Winston v3 close() is synchronous (no callback)
+                    transport.close();
                 }
-                else {
-                    pendingTransports--;
-                    if (pendingTransports === 0) {
-                        resolve();
-                    }
+                pendingTransports--;
+                if (pendingTransports === 0) {
+                    resolve();
                 }
             });
         });
