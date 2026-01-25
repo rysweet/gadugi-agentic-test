@@ -36,6 +36,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScreenshotManager = void 0;
 exports.createScreenshotManager = createScreenshotManager;
@@ -44,8 +47,8 @@ exports.captureElementScreenshot = captureElementScreenshot;
 const fs = __importStar(require("fs/promises"));
 const path = __importStar(require("path"));
 const crypto = __importStar(require("crypto"));
-const Jimp = __importStar(require("jimp"));
-const pixelmatch = __importStar(require("pixelmatch"));
+const jimp_1 = require("jimp");
+const pixelmatch_1 = __importDefault(require("pixelmatch"));
 /**
  * Default screenshot options
  */
@@ -192,22 +195,22 @@ class ScreenshotManager {
         try {
             // Load both images using Jimp
             const [baseline, actual] = await Promise.all([
-                Jimp.read(baselineImage),
-                Jimp.read(actualImage)
+                jimp_1.Jimp.read(baselineImage),
+                jimp_1.Jimp.read(actualImage)
             ]);
-            const baselineSize = { width: baseline.getWidth(), height: baseline.getHeight() };
-            const actualSize = { width: actual.getWidth(), height: actual.getHeight() };
+            const baselineSize = { width: baseline.width, height: baseline.height };
+            const actualSize = { width: actual.width, height: actual.height };
             // Handle different image sizes by resizing to match
             let resized = false;
             if (baselineSize.width !== actualSize.width || baselineSize.height !== actualSize.height) {
                 const maxWidth = Math.max(baselineSize.width, actualSize.width);
                 const maxHeight = Math.max(baselineSize.height, actualSize.height);
-                baseline.resize(maxWidth, maxHeight);
-                actual.resize(maxWidth, maxHeight);
+                baseline.resize({ w: maxWidth, h: maxHeight });
+                actual.resize({ w: maxWidth, h: maxHeight });
                 resized = true;
             }
-            const width = baseline.getWidth();
-            const height = baseline.getHeight();
+            const width = baseline.width;
+            const height = baseline.height;
             const pixelCount = width * height;
             // Convert images to RGBA buffers for pixelmatch
             const baselineBuffer = new Uint8ClampedArray(baseline.bitmap.data);
@@ -219,11 +222,11 @@ class ScreenshotManager {
                 includeAA,
                 alpha: colorOptions.alpha || 1.0,
                 aaColor: [255, 255, 0], // Yellow for antialiasing differences
-                diffColor: colorOptions.changedColor || [255, 0, 255], // Magenta for differences
-                diffColorAlt: colorOptions.addedColor || [0, 255, 0] // Green for additions
+                diffColor: (colorOptions.changedColor || [255, 0, 255]), // Magenta for differences
+                diffColorAlt: (colorOptions.addedColor || [0, 255, 0]) // Green for additions
             };
             // Perform pixel comparison
-            const differentPixels = pixelmatch(baselineBuffer, actualBuffer, diffBuffer, width, height, pixelmatchOptions);
+            const differentPixels = (0, pixelmatch_1.default)(baselineBuffer, actualBuffer, diffBuffer, width, height, pixelmatchOptions);
             const differencePercentage = (differentPixels / pixelCount) * 100;
             const similarityPercentage = 100 - differencePercentage;
             const matches = differencePercentage <= (threshold * 100);
@@ -274,21 +277,21 @@ class ScreenshotManager {
         try {
             // Load both images
             const [baseline, actual] = await Promise.all([
-                Jimp.read(baselineImage),
-                Jimp.read(actualImage)
+                jimp_1.Jimp.read(baselineImage),
+                jimp_1.Jimp.read(actualImage)
             ]);
-            const baselineWidth = baseline.getWidth();
-            const baselineHeight = baseline.getHeight();
-            const actualWidth = actual.getWidth();
-            const actualHeight = actual.getHeight();
+            const baselineWidth = baseline.width;
+            const baselineHeight = baseline.height;
+            const actualWidth = actual.width;
+            const actualHeight = actual.height;
             // Handle different sizes by resizing to the larger dimensions
             const targetWidth = Math.max(baselineWidth, actualWidth);
             const targetHeight = Math.max(baselineHeight, actualHeight);
             if (baselineWidth !== targetWidth || baselineHeight !== targetHeight) {
-                baseline.resize(targetWidth, targetHeight);
+                baseline.resize({ w: targetWidth, h: targetHeight });
             }
             if (actualWidth !== targetWidth || actualHeight !== targetHeight) {
-                actual.resize(targetWidth, targetHeight);
+                actual.resize({ w: targetWidth, h: targetHeight });
             }
             // Create diff image based on algorithm
             let diffImage;
@@ -304,22 +307,23 @@ class ScreenshotManager {
             // Create side-by-side comparison if requested
             if (showSideBySide) {
                 const sideBySideWidth = targetWidth * 3; // baseline + actual + diff
-                const sideBySideImage = new Jimp(sideBySideWidth, targetHeight, '#FFFFFF');
+                const sideBySideImage = new jimp_1.Jimp({ width: sideBySideWidth, height: targetHeight, color: 0xFFFFFFFF });
                 // Composite images side by side
                 sideBySideImage.composite(baseline, 0, 0);
                 sideBySideImage.composite(actual, targetWidth, 0);
                 sideBySideImage.composite(diffImage, targetWidth * 2, 0);
-                // Add labels
-                const font = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
-                sideBySideImage.print(font, 10, 10, 'Baseline');
-                sideBySideImage.print(font, targetWidth + 10, 10, 'Actual');
-                sideBySideImage.print(font, targetWidth * 2 + 10, 10, 'Diff');
+                // Add labels - Use font file path instead of constant
+                const fontPath = path.join(__dirname, '../../node_modules/@jimp/plugin-print/fonts/open-sans/open-sans-16-black/open-sans-16-black.fnt');
+                const font = await (0, jimp_1.loadFont)(fontPath);
+                sideBySideImage.print({ font, x: 10, y: 10, text: 'Baseline' });
+                sideBySideImage.print({ font, x: targetWidth + 10, y: 10, text: 'Actual' });
+                sideBySideImage.print({ font, x: targetWidth * 2 + 10, y: 10, text: 'Diff' });
                 diffImage = sideBySideImage;
             }
             // Ensure output directory exists
             await this.ensureDirectoryExists(path.dirname(outputPath));
             // Save the diff image
-            await diffImage.writeAsync(outputPath);
+            await diffImage.write(outputPath);
             return outputPath;
         }
         catch (error) {
@@ -330,8 +334,8 @@ class ScreenshotManager {
      * Create pixel-by-pixel difference image
      */
     async createPixelDiff(baseline, actual, colorOptions, includeAA) {
-        const width = baseline.getWidth();
-        const height = baseline.getHeight();
+        const width = baseline.width;
+        const height = baseline.height;
         const { removedColor = [255, 0, 0], // Red for removed
         addedColor = [0, 255, 0], // Green for added
         changedColor = [255, 255, 0], // Yellow for changed
@@ -341,7 +345,7 @@ class ScreenshotManager {
         const actualBuffer = new Uint8ClampedArray(actual.bitmap.data);
         const diffBuffer = new Uint8ClampedArray(width * height * 4);
         // Use pixelmatch for accurate pixel comparison
-        const differentPixels = pixelmatch(baselineBuffer, actualBuffer, diffBuffer, width, height, {
+        const differentPixels = (0, pixelmatch_1.default)(baselineBuffer, actualBuffer, diffBuffer, width, height, {
             threshold: 0.1,
             includeAA,
             alpha: 1.0,
@@ -349,7 +353,7 @@ class ScreenshotManager {
             diffColorAlt: addedColor
         });
         // Create enhanced diff image with custom color coding
-        const diffImage = new Jimp(width, height);
+        const diffImage = new jimp_1.Jimp({ width, height });
         for (let i = 0; i < width * height; i++) {
             const pixelIndex = i * 4;
             const baselinePixel = [
@@ -394,7 +398,7 @@ class ScreenshotManager {
             }
             const x = i % width;
             const y = Math.floor(i / width);
-            const color = Jimp.rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+            const color = (0, jimp_1.rgbaToInt)(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
             diffImage.setPixelColor(color, x, y);
         }
         return diffImage;
@@ -403,15 +407,15 @@ class ScreenshotManager {
      * Create perceptual difference image (focuses on human-visible differences)
      */
     async createPerceptualDiff(baseline, actual, colorOptions) {
-        const width = baseline.getWidth();
-        const height = baseline.getHeight();
-        const diffImage = new Jimp(width, height);
+        const width = baseline.width;
+        const height = baseline.height;
+        const diffImage = new jimp_1.Jimp({ width, height });
         const { removedColor = [255, 0, 0], addedColor = [0, 255, 0], changedColor = [255, 255, 0], alpha = 255 } = colorOptions;
         // Perceptual comparison using luminance
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                const baselineColor = Jimp.intToRGBA(baseline.getPixelColor(x, y));
-                const actualColor = Jimp.intToRGBA(actual.getPixelColor(x, y));
+                const baselineColor = (0, jimp_1.intToRGBA)(baseline.getPixelColor(x, y));
+                const actualColor = (0, jimp_1.intToRGBA)(actual.getPixelColor(x, y));
                 // Calculate perceptual luminance
                 const baselineLum = 0.299 * baselineColor.r + 0.587 * baselineColor.g + 0.114 * baselineColor.b;
                 const actualLum = 0.299 * actualColor.r + 0.587 * actualColor.g + 0.114 * actualColor.b;
@@ -436,7 +440,7 @@ class ScreenshotManager {
                     // No significant perceptual difference
                     finalColor = [actualColor.r, actualColor.g, actualColor.b, 128];
                 }
-                const color = Jimp.rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+                const color = (0, jimp_1.rgbaToInt)(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
                 diffImage.setPixelColor(color, x, y);
             }
         }
@@ -446,19 +450,19 @@ class ScreenshotManager {
      * Create structural difference image (focuses on edges and shapes)
      */
     async createStructuralDiff(baseline, actual, colorOptions) {
-        const width = baseline.getWidth();
-        const height = baseline.getHeight();
+        const width = baseline.width;
+        const height = baseline.height;
         const { removedColor = [255, 0, 0], addedColor = [0, 255, 0], changedColor = [255, 255, 0], alpha = 255 } = colorOptions;
         // Apply edge detection (simple Sobel filter)
         const baselineEdges = this.detectEdges(baseline);
         const actualEdges = this.detectEdges(actual);
-        const diffImage = new Jimp(width, height);
+        const diffImage = new jimp_1.Jimp({ width, height });
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 const baselineEdge = baselineEdges.getPixelColor(x, y);
                 const actualEdge = actualEdges.getPixelColor(x, y);
-                const baselineGray = Jimp.intToRGBA(baselineEdge);
-                const actualGray = Jimp.intToRGBA(actualEdge);
+                const baselineGray = (0, jimp_1.intToRGBA)(baselineEdge);
+                const actualGray = (0, jimp_1.intToRGBA)(actualEdge);
                 const edgeDiff = Math.abs(baselineGray.r - actualGray.r);
                 let finalColor;
                 if (edgeDiff > 50) {
@@ -471,10 +475,10 @@ class ScreenshotManager {
                 }
                 else {
                     // Get original pixel for no-difference areas
-                    const originalColor = Jimp.intToRGBA(actual.getPixelColor(x, y));
+                    const originalColor = (0, jimp_1.intToRGBA)(actual.getPixelColor(x, y));
                     finalColor = [originalColor.r, originalColor.g, originalColor.b, 128];
                 }
-                const color = Jimp.rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
+                const color = (0, jimp_1.rgbaToInt)(finalColor[0], finalColor[1], finalColor[2], finalColor[3]);
                 diffImage.setPixelColor(color, x, y);
             }
         }
@@ -484,8 +488,8 @@ class ScreenshotManager {
      * Simple edge detection using Sobel filter
      */
     detectEdges(image) {
-        const width = image.getWidth();
-        const height = image.getHeight();
+        const width = image.width;
+        const height = image.height;
         const edges = image.clone().greyscale();
         const sobelX = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
         const sobelY = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
@@ -494,7 +498,7 @@ class ScreenshotManager {
                 let gx = 0, gy = 0;
                 for (let ky = -1; ky <= 1; ky++) {
                     for (let kx = -1; kx <= 1; kx++) {
-                        const pixel = Jimp.intToRGBA(image.getPixelColor(x + kx, y + ky));
+                        const pixel = (0, jimp_1.intToRGBA)(image.getPixelColor(x + kx, y + ky));
                         const gray = pixel.r; // Already greyscale
                         gx += gray * sobelX[ky + 1][kx + 1];
                         gy += gray * sobelY[ky + 1][kx + 1];
@@ -502,7 +506,7 @@ class ScreenshotManager {
                 }
                 const magnitude = Math.sqrt(gx * gx + gy * gy);
                 const clampedMagnitude = Math.min(255, magnitude);
-                const color = Jimp.rgbaToInt(clampedMagnitude, clampedMagnitude, clampedMagnitude, 255);
+                const color = (0, jimp_1.rgbaToInt)(clampedMagnitude, clampedMagnitude, clampedMagnitude, 255);
                 edges.setPixelColor(color, x, y);
             }
         }

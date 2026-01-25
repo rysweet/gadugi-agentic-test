@@ -138,11 +138,11 @@ export class YamlParser {
       } else {
         return [this.validateAndConvertScenario(substitutedContent, filePath)];
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
         throw error;
       }
-      throw new YamlParseError(`Failed to load YAML file: ${error.message}`, filePath);
+      throw new YamlParseError(`Failed to load YAML file: ${error instanceof Error ? error.message : String(error)}`, filePath);
     }
   }
 
@@ -158,11 +158,11 @@ export class YamlParser {
 
       const substituted = this.substituteVariables(parsed, variables);
       return this.validateAndConvertScenario(substituted, 'inline');
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
         throw error;
       }
-      throw new YamlParseError(`Failed to parse YAML: ${error.message}`);
+      throw new YamlParseError(`Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -426,8 +426,8 @@ export class YamlParser {
       }
 
       return { valid: errors.length === 0, errors };
-    } catch (error) {
-      errors.push(`Failed to parse YAML: ${error.message}`);
+    } catch (error: unknown) {
+      errors.push(`Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`);
       return { valid: false, errors };
     }
   }

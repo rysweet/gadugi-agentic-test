@@ -93,6 +93,13 @@ exports.TEST_SUITES = {
  * Default configuration factory
  */
 function createDefaultConfig() {
+    // Filter out undefined values from process.env to match Record<string, string> type
+    const envVars = Object.entries(process.env).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
     const defaultConfig = {
         execution: {
             maxParallel: 3,
@@ -124,7 +131,7 @@ function createDefaultConfig() {
             defaultTimeout: 30000,
             environment: {
                 NODE_ENV: 'test',
-                ...process.env
+                ...envVars
             },
             captureOutput: true,
             shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
@@ -143,6 +150,34 @@ function createDefaultConfig() {
             screenshotDir: './outputs/screenshots',
             recordVideo: false,
             slowMo: 100
+        },
+        tui: {
+            terminal: 'xterm',
+            defaultDimensions: {
+                width: 80,
+                height: 24
+            },
+            encoding: 'utf8',
+            defaultTimeout: 30000,
+            pollingInterval: 100,
+            captureScreenshots: true,
+            recordSessions: false,
+            colorMode: '24bit',
+            interpretAnsi: true,
+            shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+            shellArgs: [],
+            environment: envVars,
+            workingDirectory: process.cwd(),
+            accessibility: {
+                highContrast: false,
+                largeText: false,
+                screenReader: false
+            },
+            performance: {
+                refreshRate: 60,
+                maxBufferSize: 1024 * 1024, // 1MB
+                hardwareAcceleration: false
+            }
         },
         github: {
             token: process.env.GITHUB_TOKEN || '',
@@ -421,11 +456,8 @@ async function saveResults(session, outputPath) {
         sessionId: session.id,
         startTime: session.startTime.toISOString(),
         endTime: session.endTime?.toISOString() || null,
-        metrics: session.metrics,
-        scenariosExecuted: session.scenariosExecuted,
-        issuesCreated: session.issuesCreated,
-        results: session.results,
-        failures: session.failures
+        summary: session.summary,
+        results: session.results
     };
     await fs.writeFile(outputPath, JSON.stringify(resultsData, null, 2));
     logger_1.logger.info(`Results saved to: ${outputPath}`);
@@ -438,22 +470,18 @@ function displayResults(session) {
     console.log('TEST SESSION RESULTS');
     console.log('='.repeat(60));
     console.log(`Session ID: ${session.id}`);
-    console.log(`Duration: ${((session.metrics.duration || 0) / 1000).toFixed(2)} seconds`);
-    console.log(`Total Tests: ${session.metrics.totalScenarios || 0}`);
-    console.log(`Passed: ${session.metrics.passed || 0}`);
-    console.log(`Failed: ${session.metrics.failed || 0}`);
-    console.log(`Skipped: ${session.metrics.skipped || 0}`);
-    const total = session.metrics.totalScenarios || 0;
-    const passed = session.metrics.passed || 0;
-    const passRate = total > 0 ? (passed / total) * 100 : 0;
+    const duration = session.endTime && session.startTime
+        ? (session.endTime.getTime() - session.startTime.getTime()) / 1000
+        : 0;
+    console.log(`Duration: ${duration.toFixed(2)} seconds`);
+    console.log(`Total Tests: ${session.summary.total}`);
+    console.log(`Passed: ${session.summary.passed}`);
+    console.log(`Failed: ${session.summary.failed}`);
+    console.log(`Skipped: ${session.summary.skipped}`);
+    const passRate = session.summary.total > 0
+        ? (session.summary.passed / session.summary.total) * 100
+        : 0;
     console.log(`Pass Rate: ${passRate.toFixed(1)}%`);
-    console.log(`Issues Created: ${session.issuesCreated.length}`);
-    if (session.issuesCreated.length > 0) {
-        console.log('\nCreated Issues:');
-        for (const issueNum of session.issuesCreated) {
-            console.log(`  - #${issueNum}`);
-        }
-    }
 }
 /**
  * Perform dry run - discover and display scenarios without execution
@@ -491,7 +519,7 @@ function setupGracefulShutdown(orchestrator) {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     // Handle unhandled rejections
     process.on('unhandledRejection', (reason, promise) => {
-        logger_1.logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+        logger_1.logger.error('Unhandled Rejection:', { reason, promise });
         process.exit(1);
     });
     process.on('uncaughtException', (error) => {
@@ -508,7 +536,7 @@ async function main() {
         // Parse command line arguments
         const args = parseArguments();
         // Setup logging
-        (0, logger_1.setupLogger)(args.logLevel.toLowerCase());
+        (0, logger_1.setupLogger)({ level: args.logLevel.toLowerCase() });
         logger_1.logger.info('Starting Agentic Testing System');
         logger_1.logger.info(`Configuration: ${args.config}`);
         logger_1.logger.info(`Test suite: ${args.suite}`);
@@ -538,7 +566,7 @@ async function main() {
             await saveResults(session, args.output);
         }
         // Return exit code based on failures
-        return (session.metrics.failed || 0) > 0 ? 1 : 0;
+        return session.summary.failed > 0 ? 1 : 0;
     }
     catch (error) {
         logger_1.logger.error('Testing system failed:', error);
@@ -576,7 +604,7 @@ async function runTests(options = {}) {
         ...options
     };
     // Setup logging
-    (0, logger_1.setupLogger)('info');
+    (0, logger_1.setupLogger)({ level: logger_1.LogLevel.INFO });
     // Load configuration
     const baseConfig = opts.configPath
         ? await loadConfiguration(opts.configPath, { noIssues: false })
@@ -598,16 +626,13 @@ async function runTests(options = {}) {
             id: (0, uuid_1.v4)(),
             startTime: new Date(),
             endTime: new Date(),
-            scenariosExecuted: [],
+            status: TestModels_1.TestStatus.PASSED,
             results: [],
-            failures: [],
-            issuesCreated: [],
-            metrics: {
-                totalScenarios: scenarios.length,
+            summary: {
+                total: scenarios.length,
                 passed: 0,
                 failed: 0,
-                skipped: 0,
-                duration: 0
+                skipped: 0
             }
         };
     }
