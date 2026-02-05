@@ -61,8 +61,8 @@ function logInfo(message: string): void {
 }
 
 program
-  .name('agentic-test')
-  .description('TypeScript Agentic Testing System for Electron applications')
+  .name('gadugi-test')
+  .description('Intelligent multi-agent testing framework for Electron, CLI, and web applications')
   .version('1.0.0');
 
 program
@@ -709,28 +709,28 @@ program
       program.help({ error: false });
     } else {
       console.log();
-      console.log(chalk.bold('Agentic Testing System - Examples:'));
+      console.log(chalk.bold('Gadugi Agentic Test - Examples:'));
       console.log();
       console.log(chalk.gray('# Run all scenarios'));
-      console.log('agentic-test run');
+      console.log('gadugi-test run');
       console.log();
       console.log(chalk.gray('# Run specific scenario'));
-      console.log('agentic-test run --scenario my-test');
+      console.log('gadugi-test run --scenario my-test');
       console.log();
       console.log(chalk.gray('# Run with custom configuration'));
-      console.log('agentic-test run --config my-config.yaml');
+      console.log('gadugi-test run --config my-config.yaml');
       console.log();
       console.log(chalk.gray('# Watch for file changes'));
-      console.log('agentic-test watch --directory ./my-scenarios');
+      console.log('gadugi-test watch --directory ./my-scenarios');
       console.log();
       console.log(chalk.gray('# Initialize new project'));
-      console.log('agentic-test init --template electron --directory my-project');
+      console.log('gadugi-test init --template electron --directory my-project');
       console.log();
       console.log(chalk.gray('# Validate scenarios'));
-      console.log('agentic-test validate --strict');
+      console.log('gadugi-test validate --strict');
       console.log();
       console.log(chalk.gray('# List scenarios with filtering'));
-      console.log('agentic-test list --filter integration');
+      console.log('gadugi-test list --filter integration');
       console.log();
     }
   });
@@ -741,7 +741,7 @@ program
   .action((cmd) => {
     logError(`Unknown command: ${cmd}`);
     console.log();
-    console.log('Run', chalk.cyan('agentic-test help'), 'for usage information.');
+    console.log('Run', chalk.cyan('gadugi-test help'), 'for usage information.');
     process.exit(1);
   });
 

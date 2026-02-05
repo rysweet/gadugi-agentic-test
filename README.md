@@ -42,9 +42,12 @@ The framework combines the power of **multi-agent orchestration**, **intelligent
 
 ### Prerequisites
 - Node.js 18+ 
-- Python 3.11+ (for orchestration)
 - Playwright browsers
 - Git CLI (for issue reporting)
+- **Build tools for native modules** (node-pty requires compilation):
+  - **Linux/WSL**: `sudo apt-get install build-essential python3`
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+  - **Windows**: Visual Studio Build Tools with "Desktop development with C++"
 
 ### From GitHub (Current)
 ```bash
