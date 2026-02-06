@@ -3,7 +3,8 @@
  * Coordinates all testing agents and manages test execution flow
  */
 import { EventEmitter } from 'events';
-import { TestScenario, TestResult, TestSession, TestFailure } from '../models/TestModels';
+import { TestResult, TestSession, TestFailure } from '../models/TestModels';
+import { TestScenario } from '../scenarios';
 import { TestConfig } from '../models/Config';
 /**
  * Test suite configuration

@@ -49,7 +49,7 @@ const CLIAgent_1 = require("../agents/CLIAgent");
 const IssueReporter_1 = require("../agents/IssueReporter");
 const PriorityAgent_1 = require("../agents/PriorityAgent");
 const logger_1 = require("../utils/logger");
-const yamlParser_1 = require("../utils/yamlParser");
+const scenarios_1 = require("../scenarios");
 /**
  * Main test orchestrator class
  */
@@ -178,10 +178,9 @@ class TestOrchestrator extends events_1.EventEmitter {
             // Load specific files
             for (const file of scenarioFiles) {
                 try {
-                    const content = await fs.readFile(file, 'utf-8');
-                    const fileScenarios = await (0, yamlParser_1.parseYamlScenarios)(content);
-                    scenarios.push(...fileScenarios);
-                    logger_1.logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
+                    const scenario = await scenarios_1.ScenarioLoader.loadFromFile(file);
+                    scenarios.push(scenario);
+                    logger_1.logger.debug(`Loaded 1 scenario from ${file}`);
                 }
                 catch (error) {
                     logger_1.logger.error(`Failed to load scenarios from ${file}:`, error);
@@ -196,7 +195,7 @@ class TestOrchestrator extends events_1.EventEmitter {
                 for (const file of yamlFiles) {
                     const filePath = path.join(scenarioDir, file);
                     const content = await fs.readFile(filePath, 'utf-8');
-                    const fileScenarios = await (0, yamlParser_1.parseYamlScenarios)(content);
+                    const fileScenarios = await parseYamlScenarios(content);
                     scenarios.push(...fileScenarios);
                     logger_1.logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
                 }
