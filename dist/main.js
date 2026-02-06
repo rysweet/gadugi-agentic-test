@@ -40,7 +40,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTestOrchestrator = exports.TestOrchestrator = exports.TEST_SUITES = void 0;
+exports.createTestOrchestrator = exports.TestScenario = exports.TestOrchestrator = exports.TEST_SUITES = void 0;
 exports.createDefaultConfig = createDefaultConfig;
 exports.parseArguments = parseArguments;
 exports.loadConfiguration = loadConfiguration;
@@ -63,6 +63,7 @@ const orchestrator_1 = require("./orchestrator");
 Object.defineProperty(exports, "TestOrchestrator", { enumerable: true, get: function () { return orchestrator_1.TestOrchestrator; } });
 Object.defineProperty(exports, "createTestOrchestrator", { enumerable: true, get: function () { return orchestrator_1.createTestOrchestrator; } });
 const TestModels_1 = require("./models/TestModels");
+Object.defineProperty(exports, "TestScenario", { enumerable: true, get: function () { return TestModels_1.TestScenario; } });
 const logger_1 = require("./utils/logger");
 const config_1 = require("./utils/config");
 const yamlParser_1 = require("./utils/yamlParser");

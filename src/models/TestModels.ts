@@ -38,7 +38,8 @@ export enum TestInterface {
 /**
  * Individual test step within a scenario
  */
-export interface TestStep {
+/** Internal orchestrator step format - use scenarios/OrchestratorStep for public API */
+export interface OrchestratorStep {
   /** Action to perform (e.g., 'click', 'type', 'wait', 'execute') */
   action: string;
   /** Target element or command to interact with */
@@ -74,7 +75,8 @@ export interface VerificationStep {
 /**
  * Complete test scenario definition
  */
-export interface TestScenario {
+/** Internal orchestrator scenario format - use scenarios/OrchestratorScenario for public API */
+export interface OrchestratorScenario {
   /** Unique identifier for the scenario */
   id: string;
   /** Human-readable name */
@@ -88,7 +90,7 @@ export interface TestScenario {
   /** Prerequisites or setup requirements */
   prerequisites: string[];
   /** Test execution steps */
-  steps: TestStep[];
+  steps: OrchestratorStep[];
   /** Verification steps to validate results */
   verifications: VerificationStep[];
   /** Expected final outcome */
@@ -102,7 +104,7 @@ export interface TestScenario {
   /** Environment variables or configuration needed */
   environment?: Record<string, string>;
   /** Cleanup steps to run after test completion */
-  cleanup?: TestStep[];
+  cleanup?: OrchestratorStep[];
 }
 
 /**
@@ -304,7 +306,7 @@ export interface TestSuite {
   /** Suite description */
   description?: string;
   /** Test scenarios in this suite */
-  scenarios: TestScenario[];
+  scenarios: OrchestratorScenario[];
 }
 
 export enum AssertionType {
