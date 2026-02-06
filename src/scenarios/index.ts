@@ -12,14 +12,18 @@ export class ScenarioLoader {
     const content = await fs.readFile(filePath, 'utf-8');
     const raw = yaml.load(content) as any;
 
-    // Handle both formats:
-    // Format 1: Top-level name, steps, assertions (new format)
+    // Handle three formats:
+    // Format 1: Top-level name, steps, assertions (canonical format)
     // Format 2: Top-level application, scenarios array (legacy format)
-    if (raw.scenarios && Array.isArray(raw.scenarios)) {
-      // Legacy format with application/scenarios - convert to new format
+    // Format 3: scenario: { name, steps, ... } (wrapped format)
+    if (raw.scenario && typeof raw.scenario === 'object') {
+      // Wrapped format - unwrap and validate
+      return this.validateScenario(raw.scenario);
+    } else if (raw.scenarios && Array.isArray(raw.scenarios)) {
+      // Legacy format with application/scenarios - convert
       return this.convertLegacyFormat(raw);
     } else {
-      // New format - validate directly
+      // Canonical format - validate directly
       return this.validateScenario(raw);
     }
   }

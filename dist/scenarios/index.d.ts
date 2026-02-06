@@ -4,6 +4,7 @@
 export declare class ScenarioLoader {
     static loadFromFile(filePath: string): Promise<TestScenario>;
     static loadFromDirectory(dirPath: string): Promise<TestScenario[]>;
+    private static convertLegacyFormat;
     private static validateScenario;
 }
 export interface TestScenario {
