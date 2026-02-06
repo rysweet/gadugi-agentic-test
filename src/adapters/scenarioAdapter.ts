@@ -10,31 +10,39 @@ import { v4 as uuidv4 } from 'uuid';
  * Convert simple scenario format (from YAML) to complex format (for TestOrchestrator)
  */
 export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario {
-  // Handle missing or empty steps array
+  // Handle missing or empty arrays with defensive checks
   const steps = simple.steps && Array.isArray(simple.steps) && simple.steps.length > 0
     ? simple.steps.map(adaptStepToOrchestrator)
     : [];
 
+  const verifications = simple.assertions && Array.isArray(simple.assertions)
+    ? simple.assertions.map(a => ({
+        name: a.name,
+        type: a.type,
+        params: a.params,
+        expected: undefined
+      })) as any
+    : [];
+
+  const cleanup = simple.cleanup && Array.isArray(simple.cleanup)
+    ? simple.cleanup.map(adaptStepToOrchestrator)
+    : undefined;
+
   return {
     id: uuidv4(),
-    name: simple.name,
-    description: simple.description || `Test scenario: ${simple.name}`,
+    name: simple.name || 'Unnamed scenario',
+    description: simple.description || `Test scenario: ${simple.name || 'unnamed'}`,
     priority: mapPriority(simple.metadata?.priority),
     interface: mapInterface(simple.metadata?.tags || []),
     prerequisites: simple.environment?.requires || [],
     steps,
-    verifications: simple.assertions.map(a => ({
-      name: a.name,
-      type: a.type,
-      params: a.params,
-      expected: undefined
-    })) as any, // Type conversion to VerificationStep[]
+    verifications,
     expectedOutcome: 'Test passes all assertions',
     estimatedDuration: simple.config?.timeout ? simple.config.timeout / 1000 : 60,
     tags: simple.metadata?.tags || [],
     enabled: true,
     environment: undefined,
-    cleanup: simple.cleanup ? simple.cleanup.map(adaptStepToOrchestrator) : undefined
+    cleanup
   };
 }
 
