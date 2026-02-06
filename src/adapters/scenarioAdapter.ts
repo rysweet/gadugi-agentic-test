@@ -1,8 +1,8 @@
 /**
- * Adapter to convert between scenarios/OrchestratorScenario and models/OrchestratorScenario formats
+ * Adapter to convert between scenarios/TestScenario and models/OrchestratorScenario formats
  */
 
-import { TestScenario as SimpleScenario } from '../scenarios';
+import { TestScenario as SimpleScenario, TestStep as SimpleStep } from '../scenarios';
 import { OrchestratorScenario as ComplexScenario, OrchestratorStep, Priority, TestInterface } from '../models/TestModels';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,7 +17,7 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     priority: mapPriority(simple.metadata?.priority),
     interface: mapInterface(simple.metadata?.tags || []),
     prerequisites: simple.environment?.requires || [],
-    steps: simple.steps as any as OrchestratorStep[], // Type conversion from scenarios format
+    steps: simple.steps.map(adaptStepToOrchestrator),
     verifications: simple.assertions.map(a => ({
       name: a.name,
       type: a.type,
@@ -29,7 +29,42 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     tags: simple.metadata?.tags || [],
     enabled: true,
     environment: undefined,
-    cleanup: simple.cleanup as any as OrchestratorStep[] | undefined
+    cleanup: simple.cleanup ? simple.cleanup.map(adaptStepToOrchestrator) : undefined
+  };
+}
+
+/**
+ * Convert scenarios/TestStep to models/OrchestratorStep
+ */
+function adaptStepToOrchestrator(simpleStep: SimpleStep): OrchestratorStep {
+  const params = simpleStep.params || {};
+
+  // Build target string based on params
+  let target = '';
+  let value = '';
+
+  if (params.command) {
+    // For spawn/spawn_tui actions: combine command and args into target (space-separated)
+    if (params.args && Array.isArray(params.args)) {
+      target = `${params.command} ${params.args.join(' ')}`;
+    } else {
+      target = params.command;
+    }
+  } else if (params.text !== undefined) {
+    // For input/validate actions: text becomes value
+    value = params.text;
+    target = 'current_session'; // Default session ID
+  } else {
+    // Fallback: use first param value as target
+    const firstValue = Object.values(params)[0];
+    target = String(firstValue || '');
+  }
+
+  return {
+    action: simpleStep.action,
+    target,
+    value,
+    timeout: simpleStep.timeout
   };
 }
 

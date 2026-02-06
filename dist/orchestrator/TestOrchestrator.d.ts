@@ -36,6 +36,7 @@ export declare class TestOrchestrator extends EventEmitter {
     private failures;
     private cliAgent;
     private uiAgent;
+    private tuiAgent;
     private issueReporter;
     private priorityAgent;
     private maxParallel;
@@ -67,6 +68,10 @@ export declare class TestOrchestrator extends EventEmitter {
      * Execute CLI test scenarios in parallel
      */
     private executeCLIScenarios;
+    /**
+     * Execute TUI test scenarios in parallel
+     */
+    private executeTUIScenarios;
     /**
      * Execute UI test scenarios
      */

@@ -46,6 +46,7 @@ const uuid_1 = require("uuid");
 const TestModels_1 = require("../models/TestModels");
 const ElectronUIAgent_1 = require("../agents/ElectronUIAgent");
 const CLIAgent_1 = require("../agents/CLIAgent");
+const TUIAgent_1 = require("../agents/TUIAgent");
 const IssueReporter_1 = require("../agents/IssueReporter");
 const PriorityAgent_1 = require("../agents/PriorityAgent");
 const logger_1 = require("../utils/logger");
@@ -64,6 +65,7 @@ class TestOrchestrator extends events_1.EventEmitter {
         this.config = config;
         // Initialize agents with proper type handling
         this.cliAgent = new CLIAgent_1.CLIAgent(config.cli);
+        this.tuiAgent = new TUIAgent_1.TUIAgent(config.tui || {});
         // IssueReporter expects IssueReporterConfig which extends GitHubConfig
         // Provide default values if github config is missing
         this.issueReporter = new IssueReporter_1.IssueReporter(config.github || {
@@ -108,8 +110,9 @@ class TestOrchestrator extends events_1.EventEmitter {
      */
     async run(suite = 'smoke', scenarioFiles) {
         logger_1.logger.info(`Starting test session with suite: ${suite}`);
-        // Initialize CLI agent before use
+        // Initialize agents before use
         await this.cliAgent.initialize();
+        await this.tuiAgent.initialize();
         // Create session - match TestSession interface from TestModels
         this.session = {
             id: (0, uuid_1.v4)(),
@@ -272,10 +275,10 @@ class TestOrchestrator extends events_1.EventEmitter {
             logger_1.logger.info(`Executing ${cliScenarios.length} CLI scenarios`);
             await this.executeCLIScenarios(cliScenarios);
         }
-        // Execute TUI scenarios (treat as CLI since TUI is terminal-based)
+        // Execute TUI scenarios with TUIAgent
         if (tuiScenarios.length > 0) {
             logger_1.logger.info(`Executing ${tuiScenarios.length} TUI scenarios`);
-            await this.executeCLIScenarios(tuiScenarios); // TUI uses CLIAgent for terminal interaction
+            await this.executeTUIScenarios(tuiScenarios);
         }
         // Execute UI scenarios
         if (uiScenarios.length > 0) {
@@ -294,6 +297,15 @@ class TestOrchestrator extends events_1.EventEmitter {
     async executeCLIScenarios(scenarios) {
         const results = await this.executeParallel(scenarios, async (scenario) => {
             return await this.executeSingleScenario(scenario, this.cliAgent);
+        });
+        this.processResults(scenarios, results);
+    }
+    /**
+     * Execute TUI test scenarios in parallel
+     */
+    async executeTUIScenarios(scenarios) {
+        const results = await this.executeParallel(scenarios, async (scenario) => {
+            return await this.executeSingleScenario(scenario, this.tuiAgent);
         });
         this.processResults(scenarios, results);
     }
