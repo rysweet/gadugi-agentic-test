@@ -90,8 +90,8 @@ function logInfo(message) {
     console.log(chalk_1.default.blue('ℹ'), message);
 }
 program
-    .name('agentic-test')
-    .description('TypeScript Agentic Testing System for Electron applications')
+    .name('gadugi-test')
+    .description('Intelligent multi-agent testing framework for Electron, CLI, and web applications')
     .version('1.0.0');
 program
     .command('run')
@@ -120,12 +120,12 @@ program
         else {
             // Try loading default config files
             const defaultConfigs = [
-                'agentic-test.config.yaml',
-                'agentic-test.config.yml',
-                'agentic-test.config.json',
-                '.agentic-testrc.yaml',
-                '.agentic-testrc.yml',
-                '.agentic-testrc.json'
+                'gadugi-test.config.yaml',
+                'gadugi-test.config.yml',
+                'gadugi-test.config.json',
+                '.gadugi-testrc.yaml',
+                '.gadugi-testrc.yml',
+                '.gadugi-testrc.json'
             ];
             for (const configFile of defaultConfigs) {
                 try {
@@ -549,7 +549,7 @@ program
 program
     .command('init')
     .description('Initialize a new testing project with templates and configuration')
-    .option('-d, --directory <path>', 'Target directory', './agentic-testing')
+    .option('-d, --directory <path>', 'Target directory', './gadugi-testing')
     .option('--force', 'Overwrite existing files')
     .option('--template <type>', 'Project template (basic, advanced, electron)', 'basic')
     .action(async (options) => {
@@ -585,9 +585,9 @@ program
         }
         // Create configuration file
         const configTemplate = getConfigTemplate(options.template);
-        const configPath = path.join(options.directory, 'agentic-test.config.yaml');
+        const configPath = path.join(options.directory, 'gadugi-test.config.yaml');
         await fs.writeFile(configPath, configTemplate, 'utf-8');
-        logSuccess('Created configuration file: agentic-test.config.yaml');
+        logSuccess('Created configuration file: gadugi-test.config.yaml');
         // Create .env template
         const envTemplate = getEnvTemplate();
         const envPath = path.join(options.directory, '.env.example');
@@ -623,7 +623,7 @@ program
         console.log(chalk_1.default.gray('2.'), 'cp .env.example .env');
         console.log(chalk_1.default.gray('3.'), 'npm install');
         console.log(chalk_1.default.gray('4.'), 'Edit scenarios in the scenarios/ directory');
-        console.log(chalk_1.default.gray('5.'), 'Run tests with: agentic-test run');
+        console.log(chalk_1.default.gray('5.'), 'Run tests with: gadugi-test run');
         console.log();
     }
     catch (error) {
@@ -680,28 +680,28 @@ program
     }
     else {
         console.log();
-        console.log(chalk_1.default.bold('Agentic Testing System - Examples:'));
+        console.log(chalk_1.default.bold('Gadugi Agentic Test - Examples:'));
         console.log();
         console.log(chalk_1.default.gray('# Run all scenarios'));
-        console.log('agentic-test run');
+        console.log('gadugi-test run');
         console.log();
         console.log(chalk_1.default.gray('# Run specific scenario'));
-        console.log('agentic-test run --scenario my-test');
+        console.log('gadugi-test run --scenario my-test');
         console.log();
         console.log(chalk_1.default.gray('# Run with custom configuration'));
-        console.log('agentic-test run --config my-config.yaml');
+        console.log('gadugi-test run --config my-config.yaml');
         console.log();
         console.log(chalk_1.default.gray('# Watch for file changes'));
-        console.log('agentic-test watch --directory ./my-scenarios');
+        console.log('gadugi-test watch --directory ./my-scenarios');
         console.log();
         console.log(chalk_1.default.gray('# Initialize new project'));
-        console.log('agentic-test init --template electron --directory my-project');
+        console.log('gadugi-test init --template electron --directory my-project');
         console.log();
         console.log(chalk_1.default.gray('# Validate scenarios'));
-        console.log('agentic-test validate --strict');
+        console.log('gadugi-test validate --strict');
         console.log();
         console.log(chalk_1.default.gray('# List scenarios with filtering'));
-        console.log('agentic-test list --filter integration');
+        console.log('gadugi-test list --filter integration');
         console.log();
     }
 });
@@ -711,7 +711,7 @@ program
     .action((cmd) => {
     logError(`Unknown command: ${cmd}`);
     console.log();
-    console.log('Run', chalk_1.default.cyan('agentic-test help'), 'for usage information.');
+    console.log('Run', chalk_1.default.cyan('gadugi-test help'), 'for usage information.');
     process.exit(1);
 });
 // Template generation functions
@@ -897,15 +897,15 @@ function getPackageJsonTemplate(projectName) {
         version: '1.0.0',
         description: 'Agentic testing project',
         scripts: {
-            test: 'agentic-test run',
-            'test:watch': 'agentic-test watch',
-            'test:validate': 'agentic-test validate',
-            'test:list': 'agentic-test list',
+            test: 'gadugi-test run',
+            'test:watch': 'gadugi-test watch',
+            'test:validate': 'gadugi-test validate',
+            'test:list': 'gadugi-test list',
             lint: 'echo "Add your linting command here"',
             start: 'echo "Add your start command here"'
         },
         dependencies: {
-            '@azure-tenant-grapher/agentic-testing': '^1.0.0'
+            '@gadugi/agentic-test': '^1.0.0'
         },
         devDependencies: {},
         keywords: ['testing', 'agentic', 'automation'],
@@ -941,7 +941,7 @@ npm install
 
 2. Edit the \`.env\` file with your configuration values.
 
-3. Modify \`agentic-test.config.yaml\` as needed for your project.
+3. Modify \`gadugi-test.config.yaml\` as needed for your project.
 
 ### Running Tests
 
@@ -950,7 +950,7 @@ npm install
 npm test
 
 # Run specific scenario
-agentic-test run --scenario example-basic
+gadugi-test run --scenario example-basic
 
 # Run in watch mode
 npm run test:watch
@@ -1009,8 +1009,8 @@ enabled: true
 ## Troubleshooting
 
 - Check the \`reports/\` directory for detailed test results
-- Enable debug logging: \`agentic-test run --debug\`
-- Validate scenario syntax: \`agentic-test validate --strict\`
+- Enable debug logging: \`gadugi-test run --debug\`
+- Validate scenario syntax: \`gadugi-test validate --strict\`
 
 For more information, see the [Agentic Testing System documentation](https://github.com/Azure/azure-tenant-grapher).
 `;
