@@ -146,36 +146,51 @@ program
           return;
         }
         
-        // Simple execution simulation since the orchestrator API is complex
-        const executionBar = createProgressBar(scenarios.length, 'Executing scenarios');
-        executionBar.start(scenarios.length, 0);
-        
-        let passedCount = 0;
-        let failedCount = 0;
-        
-        // Process each scenario
-        for (let i = 0; i < scenarios.length; i++) {
-          const scenario = scenarios[i];
-          try {
-            // Simulate scenario execution
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // For demonstration, randomly pass/fail scenarios
-            if (Math.random() > 0.2) { // 80% pass rate
-              passedCount++;
-            } else {
-              failedCount++;
-              logWarning(`Scenario failed: ${scenario.name}`);
-            }
-          } catch (error) {
-            failedCount++;
-            logError(`Scenario error: ${scenario.name} - ${error}`);
+        // Import orchestrator and config defaults
+        const { TestOrchestrator } = await import('./orchestrator');
+        const { TestStatus } = await import('./models/TestModels');
+
+        // Create minimal test config with all required fields
+        const testConfig = config || {
+          execution: {
+            maxParallel: 1,
+            maxRetries: 0,
+            continueOnFailure: true,
+            timeout: parseInt(options.timeout),
+            cleanupOnFailure: false,
+            collectMetrics: false
+          },
+          cli: {},
+          ui: { browser: 'chromium' },
+          tui: {},
+          priority: {
+            enabled: false,
+            defaultPriority: 'medium'
+          },
+          logging: {
+            level: 'info',
+            file: undefined
+          },
+          reporting: {
+            format: 'console',
+            outputDir: './test-results'
           }
-          
-          executionBar.update(i + 1);
-        }
-        
-        executionBar.stop();
+        };
+
+        const orchestrator = new TestOrchestrator(testConfig as any);
+
+        // Convert scenario names to file paths for orchestrator.run()
+        const scenarioFiles = scenarios.map((s: any) =>
+          path.join(options.directory, `${s.name.toLowerCase().replace(/\s+/g, '-')}.yaml`)
+        );
+
+        // Run tests through orchestrator
+        logInfo('Executing test scenarios...');
+        const session = await orchestrator.run('test-suite', scenarioFiles);
+
+        // Extract results from session
+        const passedCount = session.summary.passed;
+        const failedCount = session.summary.failed;
         
         // Report results with colors
         console.log('\n' + chalk.bold('Test Execution Results:'));
