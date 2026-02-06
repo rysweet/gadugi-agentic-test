@@ -6,7 +6,7 @@
 import { Page, ElectronApplication, _electron } from 'playwright';
 import * as path from 'path';
 import { promises as fs } from 'fs';
-import { TestResult, TestStatus, TestStep } from '../models/TestModels';
+import { TestResult, TestStatus, OrchestratorStep } from '../models/TestModels';
 
 // Test results interface
 interface TestResults {

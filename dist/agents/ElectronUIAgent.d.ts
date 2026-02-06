@@ -8,7 +8,7 @@
 import { Locator } from 'playwright';
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { TestStep, StepResult } from '../models/TestModels';
+import { OrchestratorStep, StepResult } from '../models/TestModels';
 import { AppState } from '../models/AppState';
 import { ScreenshotMetadata } from '../utils/screenshot';
 /**
@@ -148,7 +148,7 @@ export declare class ElectronUIAgent extends EventEmitter implements IAgent {
     /**
      * Execute a single test step
      */
-    executeStep(step: TestStep, stepIndex: number): Promise<StepResult>;
+    executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult>;
     /**
      * Capture the current application state
      */

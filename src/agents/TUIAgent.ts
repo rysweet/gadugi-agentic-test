@@ -17,7 +17,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { IAgent, AgentType } from './index';
 import {
-  TestStep,
+  OrchestratorStep,
   TestStatus,
   StepResult,
   CommandResult
@@ -698,7 +698,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test step
    */
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     this.logger.stepExecution(stepIndex, step.action, step.target);
 
@@ -1210,7 +1210,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
   // Step action handlers
 
-  private async handleSpawnAction(step: TestStep): Promise<string> {
+  private async handleSpawnAction(step: OrchestratorStep): Promise<string> {
     const parts = step.target.split(' ');
     const command = parts[0];
     const args = parts.slice(1);
@@ -1218,7 +1218,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
     return this.spawnTUI(command, args);
   }
 
-  private async handleInputAction(step: TestStep): Promise<void> {
+  private async handleInputAction(step: OrchestratorStep): Promise<void> {
     const sessionId = step.target;
     const input = step.value || '';
 
@@ -1234,21 +1234,21 @@ export class TUIAgent extends EventEmitter implements IAgent {
     await this.sendInput(sessionId, inputSim);
   }
 
-  private async handleMenuNavigationAction(step: TestStep): Promise<MenuNavigation> {
+  private async handleMenuNavigationAction(step: OrchestratorStep): Promise<MenuNavigation> {
     const sessionId = step.target;
     const path = step.value ? step.value.split(',').map((s: string) => s.trim()) : [];
 
     return this.navigateMenu(sessionId, path);
   }
 
-  private async handleOutputValidationAction(step: TestStep): Promise<boolean> {
+  private async handleOutputValidationAction(step: OrchestratorStep): Promise<boolean> {
     const sessionId = step.target;
     const expected = step.expected || step.value;
 
     return this.validateOutput(sessionId, expected);
   }
 
-  private async handleColorValidationAction(step: TestStep): Promise<boolean> {
+  private async handleColorValidationAction(step: OrchestratorStep): Promise<boolean> {
     const sessionId = step.target;
     let expectedColors: ColorInfo[];
 
@@ -1261,12 +1261,12 @@ export class TUIAgent extends EventEmitter implements IAgent {
     return this.validateFormatting(sessionId, expectedColors);
   }
 
-  private handleCaptureOutputAction(step: TestStep): TerminalOutput | null {
+  private handleCaptureOutputAction(step: OrchestratorStep): TerminalOutput | null {
     const sessionId = step.target;
     return this.captureOutput(sessionId);
   }
 
-  private async handleWaitForOutputAction(step: TestStep): Promise<void> {
+  private async handleWaitForOutputAction(step: OrchestratorStep): Promise<void> {
     const sessionId = step.target;
     const pattern = step.value || '';
     const timeout = step.timeout || this.config.defaultTimeout;
@@ -1274,7 +1274,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
     await this.waitForOutputPattern(sessionId, pattern, timeout);
   }
 
-  private async handleResizeTerminalAction(step: TestStep): Promise<void> {
+  private async handleResizeTerminalAction(step: OrchestratorStep): Promise<void> {
     const sessionId = step.target;
     const [cols, rows] = (step.value || '80,24').split(',').map(Number);
 
@@ -1286,7 +1286,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  private async handleKillSessionAction(step: TestStep): Promise<void> {
+  private async handleKillSessionAction(step: OrchestratorStep): Promise<void> {
     const sessionId = step.target;
     await this.killSession(sessionId);
   }

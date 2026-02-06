@@ -3,8 +3,7 @@
  * Coordinates all testing agents and manages test execution flow
  */
 import { EventEmitter } from 'events';
-import { TestResult, TestSession, TestFailure } from '../models/TestModels';
-import { TestScenario } from '../scenarios';
+import { OrchestratorScenario, TestResult, TestSession, TestFailure } from '../models/TestModels';
 import { TestConfig } from '../models/Config';
 /**
  * Test suite configuration
@@ -21,8 +20,8 @@ export interface TestSuite {
 export interface OrchestratorEvents {
     'session:start': (session: TestSession) => void;
     'session:end': (session: TestSession) => void;
-    'scenario:start': (scenario: TestScenario) => void;
-    'scenario:end': (scenario: TestScenario, result: TestResult) => void;
+    'scenario:start': (scenario: OrchestratorScenario) => void;
+    'scenario:end': (scenario: OrchestratorScenario, result: TestResult) => void;
     'phase:start': (phase: string) => void;
     'phase:end': (phase: string) => void;
     'error': (error: Error) => void;

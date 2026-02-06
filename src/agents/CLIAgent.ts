@@ -12,7 +12,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { IAgent, AgentType } from './index';
 import { 
-  TestStep, 
+  OrchestratorStep, 
   TestStatus, 
   StepResult, 
   CommandResult 
@@ -321,7 +321,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test step
    */
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     this.logger.stepExecution(stepIndex, step.action, step.target);
     
@@ -728,7 +728,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  private async handleExecuteAction(step: TestStep): Promise<CommandResult> {
+  private async handleExecuteAction(step: OrchestratorStep): Promise<CommandResult> {
     const parts = step.target.split(' ');
     const command = parts[0];
     const args = parts.slice(1);
@@ -753,7 +753,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
     return this.executeCommand(command, args, options);
   }
 
-  private async handleExecuteWithInputAction(step: TestStep): Promise<CommandResult> {
+  private async handleExecuteWithInputAction(step: OrchestratorStep): Promise<CommandResult> {
     const parts = step.target.split(' ');
     const command = parts[0];
     const args = parts.slice(1);

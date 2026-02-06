@@ -8,7 +8,7 @@
  */
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { TestStep, StepResult, TestScenario } from '../models/TestModels';
+import { OrchestratorStep, StepResult, OrchestratorScenario } from '../models/TestModels';
 import { LogLevel } from '../utils/logger';
 /**
  * WebSocket connection states
@@ -174,7 +174,7 @@ export declare class WebSocketAgent extends EventEmitter implements IAgent {
     /**
      * Execute a test scenario
      */
-    execute(scenario: TestScenario): Promise<any>;
+    execute(scenario: OrchestratorScenario): Promise<any>;
     /**
      * Connect to WebSocket server
      */
@@ -194,7 +194,7 @@ export declare class WebSocketAgent extends EventEmitter implements IAgent {
     /**
      * Execute a test step
      */
-    executeStep(step: TestStep, stepIndex: number): Promise<StepResult>;
+    executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult>;
     /**
      * Get connection state
      */

@@ -11,10 +11,10 @@ import { io, Socket } from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
 import { 
-  TestStep, 
+  OrchestratorStep, 
   TestStatus, 
   StepResult, 
-  TestScenario 
+  OrchestratorScenario 
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
 
@@ -274,7 +274,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test scenario
    */
-  async execute(scenario: TestScenario): Promise<any> {
+  async execute(scenario: OrchestratorScenario): Promise<any> {
     if (!this.isInitialized) {
       throw new Error('Agent not initialized. Call initialize() first.');
     }
@@ -530,7 +530,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test step
    */
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     this.logger.stepExecution(stepIndex, step.action, step.target);
     
@@ -861,7 +861,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
     }
   }
 
-  private async handleSendMessage(step: TestStep): Promise<WebSocketMessage> {
+  private async handleSendMessage(step: OrchestratorStep): Promise<WebSocketMessage> {
     const event = step.target;
     let data: any;
     let ack = false;
@@ -879,7 +879,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
     return this.sendMessage(event, data, ack);
   }
 
-  private async handleWaitForMessage(step: TestStep): Promise<WebSocketMessage> {
+  private async handleWaitForMessage(step: OrchestratorStep): Promise<WebSocketMessage> {
     const event = step.target;
     const timeout = step.timeout || 10000;
     
@@ -903,7 +903,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
     return this.waitForMessage(event, timeout, filter);
   }
 
-  private async validateMessage(step: TestStep): Promise<boolean> {
+  private async validateMessage(step: OrchestratorStep): Promise<boolean> {
     const latestMessage = this.getLatestMessage();
     if (!latestMessage) {
       throw new Error('No message available for validation');

@@ -15,5 +15,5 @@ export type {
   TestSession,
   TestResult,
   TestFailure,
-  TestScenario 
+  OrchestratorScenario 
 } from '../models/TestModels';

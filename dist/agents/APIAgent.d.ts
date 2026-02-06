@@ -8,7 +8,7 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { TestStep, StepResult, TestScenario } from '../models/TestModels';
+import { OrchestratorStep, StepResult, OrchestratorScenario } from '../models/TestModels';
 import { LogLevel } from '../utils/logger';
 /**
  * HTTP methods supported by the API agent
@@ -177,7 +177,7 @@ export declare class APIAgent extends EventEmitter implements IAgent {
     /**
      * Execute a test scenario
      */
-    execute(scenario: TestScenario): Promise<any>;
+    execute(scenario: OrchestratorScenario): Promise<any>;
     /**
      * Make an HTTP request with full configuration
      */
@@ -185,7 +185,7 @@ export declare class APIAgent extends EventEmitter implements IAgent {
     /**
      * Execute a test step
      */
-    executeStep(step: TestStep, stepIndex: number): Promise<StepResult>;
+    executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult>;
     /**
      * Set authentication configuration
      */

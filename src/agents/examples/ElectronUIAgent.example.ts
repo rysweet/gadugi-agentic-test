@@ -6,7 +6,7 @@
  */
 
 import { ElectronUIAgent } from '../ElectronUIAgent';
-import { TestScenario, TestStep, Priority, TestInterface } from '../../models/TestModels';
+import { OrchestratorScenario, OrchestratorStep, Priority, TestInterface } from '../../models/TestModels';
 import { LogLevel } from '../../utils/logger';
 
 /**
@@ -88,7 +88,7 @@ async function fullScenarioTest(): Promise<void> {
   });
 
   // Define a complete test scenario
-  const scenario: TestScenario = {
+  const scenario: OrchestratorScenario = {
     id: 'spa-build-workflow',
     name: 'SPA Build Workflow Test',
     description: 'Complete workflow test for your application SPA',
@@ -353,7 +353,7 @@ async function customStepExecutionTest(): Promise<void> {
     await agent.initialize();
     
     // Execute custom steps
-    const steps: TestStep[] = [
+    const steps: OrchestratorStep[] = [
       { action: 'launch_electron', target: '', description: 'Launch app' },
       { action: 'wait', value: '2000', target: '', description: 'Wait 2 seconds' },
       { action: 'click_tab', target: 'Config', description: 'Go to config tab' },

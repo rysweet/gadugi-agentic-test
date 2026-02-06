@@ -245,7 +245,7 @@ class YamlParser {
         return { ...content, variables: { ...content.variables, ...variables } };
     }
     /**
-     * Validate and convert raw scenario to TestScenario
+     * Validate and convert raw scenario to OrchestratorScenario
      */
     validateAndConvertScenario(raw, context) {
         const errors = [];
@@ -402,7 +402,7 @@ class YamlParser {
         return variables;
     }
     /**
-     * Convert TestScenario back to YAML string
+     * Convert OrchestratorScenario back to YAML string
      */
     scenarioToYaml(scenario) {
         const yamlObject = {

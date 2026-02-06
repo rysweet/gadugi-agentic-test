@@ -5,7 +5,7 @@
  * test scenarios using large language models (OpenAI GPT or Azure OpenAI).
  */
 import { IAgent } from './index';
-import { TestScenario } from '../models/TestModels';
+import { OrchestratorScenario } from '../models/TestModels';
 /**
  * LLM provider types
  */
@@ -191,7 +191,7 @@ export declare class ComprehensionAgent implements IAgent {
      * @param featureSpec - Feature specification
      * @returns List of test scenarios
      */
-    generateTestScenarios(featureSpec: FeatureSpec): Promise<TestScenario[]>;
+    generateTestScenarios(featureSpec: FeatureSpec): Promise<OrchestratorScenario[]>;
     /**
      * Generate a success path test scenario
      * @param spec - Feature specification
@@ -274,7 +274,7 @@ export declare class ComprehensionAgent implements IAgent {
      * Process all discovered features and generate comprehensive test scenarios
      * @returns Comprehensive list of test scenarios
      */
-    processDiscoveredFeatures(): Promise<TestScenario[]>;
+    processDiscoveredFeatures(): Promise<OrchestratorScenario[]>;
 }
 /**
  * Create a ComprehensionAgent instance with default configuration

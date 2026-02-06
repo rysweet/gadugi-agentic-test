@@ -21,7 +21,7 @@ import * as fs from 'fs/promises';
 import { io, Socket } from 'socket.io-client';
 import { IAgent, AgentType } from './index';
 import { 
-  TestStep, 
+  OrchestratorStep, 
   TestStatus, 
   StepResult
 } from '../models/TestModels';
@@ -559,7 +559,7 @@ export class ElectronUIAgent extends EventEmitter implements IAgent {
   /**
    * Execute a single test step
    */
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     this.logger.stepExecution(stepIndex, step.action, step.target);
     

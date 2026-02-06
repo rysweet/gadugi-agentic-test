@@ -6,7 +6,7 @@
  */
 export { SmartUITestRunner, createSmartUITestRunner, runSmartUITests } from './SmartUITestRunner';
 export { ComprehensiveUITestRunner, createComprehensiveUITestRunner, runComprehensiveUITests } from './ComprehensiveUITestRunner';
-export type { TestResult, TestStatus, TestStep } from '../models/TestModels';
+export type { TestResult, TestStatus, OrchestratorStep } from '../models/TestModels';
 /**
  * Available test runners
  */

@@ -7,7 +7,7 @@
  */
 import { TestOrchestrator, createTestOrchestrator } from './orchestrator';
 import { TestConfig } from './models/Config';
-import { TestSession, TestResult, TestScenario } from './models/TestModels';
+import { TestSession, TestResult, OrchestratorScenario } from './models/TestModels';
 /**
  * Command line arguments interface
  */
@@ -52,11 +52,11 @@ export declare function loadConfiguration(configPath: string, cliArgs: CliArgume
 /**
  * Discover and load test scenarios
  */
-export declare function loadTestScenarios(scenarioFiles?: string[]): Promise<TestScenario[]>;
+export declare function loadTestScenarios(scenarioFiles?: string[]): Promise<OrchestratorScenario[]>;
 /**
  * Filter scenarios based on test suite configuration
  */
-export declare function filterScenariosForSuite(scenarios: TestScenario[], suite: string): TestScenario[];
+export declare function filterScenariosForSuite(scenarios: OrchestratorScenario[], suite: string): OrchestratorScenario[];
 /**
  * Save test results to output file
  */
@@ -68,7 +68,7 @@ export declare function displayResults(session: TestSession): void;
 /**
  * Perform dry run - discover and display scenarios without execution
  */
-export declare function performDryRun(scenarios: TestScenario[], suite: string): Promise<void>;
+export declare function performDryRun(scenarios: OrchestratorScenario[], suite: string): Promise<void>;
 /**
  * Setup graceful shutdown handlers
  */
@@ -99,5 +99,5 @@ export declare function runTests(options?: ProgrammaticTestOptions): Promise<Tes
 /**
  * Export all public interfaces and functions
  */
-export { TestOrchestrator, TestConfig, TestSession, TestResult, TestScenario, createTestOrchestrator };
+export { TestOrchestrator, TestConfig, TestSession, TestResult, OrchestratorScenario, createTestOrchestrator };
 //# sourceMappingURL=main.d.ts.map

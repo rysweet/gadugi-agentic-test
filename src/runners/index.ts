@@ -20,7 +20,7 @@ export {
 } from './ComprehensiveUITestRunner';
 
 // Re-export common types for convenience
-export type { TestResult, TestStatus, TestStep } from '../models/TestModels';
+export type { TestResult, TestStatus, OrchestratorStep } from '../models/TestModels';
 
 /**
  * Available test runners

@@ -50,6 +50,7 @@ const IssueReporter_1 = require("../agents/IssueReporter");
 const PriorityAgent_1 = require("../agents/PriorityAgent");
 const logger_1 = require("../utils/logger");
 const scenarios_1 = require("../scenarios");
+const scenarioAdapter_1 = require("../adapters/scenarioAdapter");
 /**
  * Main test orchestrator class
  */
@@ -107,6 +108,8 @@ class TestOrchestrator extends events_1.EventEmitter {
      */
     async run(suite = 'smoke', scenarioFiles) {
         logger_1.logger.info(`Starting test session with suite: ${suite}`);
+        // Initialize CLI agent before use
+        await this.cliAgent.initialize();
         // Create session - match TestSession interface from TestModels
         this.session = {
             id: (0, uuid_1.v4)(),
@@ -178,8 +181,9 @@ class TestOrchestrator extends events_1.EventEmitter {
             // Load specific files
             for (const file of scenarioFiles) {
                 try {
-                    const scenario = await scenarios_1.ScenarioLoader.loadFromFile(file);
-                    scenarios.push(scenario);
+                    const simpleScenario = await scenarios_1.ScenarioLoader.loadFromFile(file);
+                    const complexScenario = (0, scenarioAdapter_1.adaptScenarioToComplex)(simpleScenario);
+                    scenarios.push(complexScenario);
                     logger_1.logger.debug(`Loaded 1 scenario from ${file}`);
                 }
                 catch (error) {
@@ -194,10 +198,10 @@ class TestOrchestrator extends events_1.EventEmitter {
                 const yamlFiles = files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'));
                 for (const file of yamlFiles) {
                     const filePath = path.join(scenarioDir, file);
-                    const content = await fs.readFile(filePath, 'utf-8');
-                    const fileScenarios = await parseYamlScenarios(content);
-                    scenarios.push(...fileScenarios);
-                    logger_1.logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
+                    const simpleScenario = await scenarios_1.ScenarioLoader.loadFromFile(filePath);
+                    const complexScenario = (0, scenarioAdapter_1.adaptScenarioToComplex)(simpleScenario);
+                    scenarios.push(complexScenario);
+                    logger_1.logger.debug(`Loaded 1 scenario from ${file}`);
                 }
             }
             catch (error) {
@@ -261,11 +265,17 @@ class TestOrchestrator extends events_1.EventEmitter {
         // Group scenarios by interface type
         const cliScenarios = scenarios.filter(s => s.interface === TestModels_1.TestInterface.CLI);
         const uiScenarios = scenarios.filter(s => s.interface === TestModels_1.TestInterface.GUI);
+        const tuiScenarios = scenarios.filter(s => s.interface === TestModels_1.TestInterface.TUI);
         const mixedScenarios = scenarios.filter(s => s.interface === TestModels_1.TestInterface.MIXED);
         // Execute CLI scenarios
         if (cliScenarios.length > 0) {
             logger_1.logger.info(`Executing ${cliScenarios.length} CLI scenarios`);
             await this.executeCLIScenarios(cliScenarios);
+        }
+        // Execute TUI scenarios (treat as CLI since TUI is terminal-based)
+        if (tuiScenarios.length > 0) {
+            logger_1.logger.info(`Executing ${tuiScenarios.length} TUI scenarios`);
+            await this.executeCLIScenarios(tuiScenarios); // TUI uses CLIAgent for terminal interaction
         }
         // Execute UI scenarios
         if (uiScenarios.length > 0) {

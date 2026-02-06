@@ -6,7 +6,7 @@
 import * as yaml from 'js-yaml';
 import fs from 'fs/promises';
 import path from 'path';
-import { TestScenario, TestStep, VerificationStep, Priority, TestInterface } from '../models/TestModels';
+import { OrchestratorScenario, OrchestratorStep, VerificationStep, Priority, TestInterface } from '../models/TestModels';
 
 /**
  * YAML parsing error class
@@ -111,7 +111,7 @@ export class YamlParser {
   /**
    * Load and parse a YAML file containing test scenarios
    */
-  async loadScenarios(filePath: string, variables: VariableContext = this.createDefaultVariableContext()): Promise<TestScenario[]> {
+  async loadScenarios(filePath: string, variables: VariableContext = this.createDefaultVariableContext()): Promise<OrchestratorScenario[]> {
     try {
       const absolutePath = path.resolve(this.config.baseDir, filePath);
       const content = await fs.readFile(absolutePath, 'utf-8');
@@ -149,7 +149,7 @@ export class YamlParser {
   /**
    * Load a single scenario from YAML string
    */
-  parseScenario(yamlContent: string, variables: VariableContext = this.createDefaultVariableContext()): TestScenario {
+  parseScenario(yamlContent: string, variables: VariableContext = this.createDefaultVariableContext()): OrchestratorScenario {
     try {
       const parsed = yaml.load(yamlContent) as RawScenario;
       if (!parsed) {
@@ -288,9 +288,9 @@ export class YamlParser {
   }
 
   /**
-   * Validate and convert raw scenario to TestScenario
+   * Validate and convert raw scenario to OrchestratorScenario
    */
-  private validateAndConvertScenario(raw: RawScenario, context: string): TestScenario {
+  private validateAndConvertScenario(raw: RawScenario, context: string): OrchestratorScenario {
     const errors: string[] = [];
 
     // Required fields
@@ -357,7 +357,7 @@ export class YamlParser {
   /**
    * Validate test steps
    */
-  private validateSteps(rawSteps: any[]): TestStep[] {
+  private validateSteps(rawSteps: any[]): OrchestratorStep[] {
     return rawSteps.map((step, index) => {
       if (typeof step !== 'object' || !step.action || !step.target) {
         throw new ValidationError(`Invalid step at index ${index}: action and target are required`);
@@ -462,9 +462,9 @@ export class YamlParser {
   }
 
   /**
-   * Convert TestScenario back to YAML string
+   * Convert OrchestratorScenario back to YAML string
    */
-  scenarioToYaml(scenario: TestScenario): string {
+  scenarioToYaml(scenario: OrchestratorScenario): string {
     const yamlObject = {
       id: scenario.id,
       name: scenario.name,
@@ -508,7 +508,7 @@ export function createYamlParser(config?: Partial<YamlParserConfig>): YamlParser
 /**
  * Convenience function to load scenarios from a file
  */
-export async function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<TestScenario[]> {
+export async function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<OrchestratorScenario[]> {
   const parser = createYamlParser();
   return parser.loadScenarios(filePath, variables);
 }
@@ -516,7 +516,7 @@ export async function loadScenariosFromFile(filePath: string, variables?: Variab
 /**
  * Convenience function to parse a scenario from YAML string
  */
-export function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): TestScenario {
+export function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): OrchestratorScenario {
   const parser = createYamlParser();
   return parser.parseScenario(yamlContent, variables);
 }

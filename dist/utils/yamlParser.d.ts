@@ -2,7 +2,7 @@
  * YAML parsing utilities for test scenarios
  * Handles loading, parsing, validation, and variable substitution
  */
-import { TestScenario } from '../models/TestModels';
+import { OrchestratorScenario } from '../models/TestModels';
 /**
  * YAML parsing error class
  */
@@ -55,11 +55,11 @@ export declare class YamlParser {
     /**
      * Load and parse a YAML file containing test scenarios
      */
-    loadScenarios(filePath: string, variables?: VariableContext): Promise<TestScenario[]>;
+    loadScenarios(filePath: string, variables?: VariableContext): Promise<OrchestratorScenario[]>;
     /**
      * Load a single scenario from YAML string
      */
-    parseScenario(yamlContent: string, variables?: VariableContext): TestScenario;
+    parseScenario(yamlContent: string, variables?: VariableContext): OrchestratorScenario;
     /**
      * Process include directives in YAML content
      */
@@ -77,7 +77,7 @@ export declare class YamlParser {
      */
     private mergeVariables;
     /**
-     * Validate and convert raw scenario to TestScenario
+     * Validate and convert raw scenario to OrchestratorScenario
      */
     private validateAndConvertScenario;
     /**
@@ -112,9 +112,9 @@ export declare class YamlParser {
      */
     extractVariables(content: any): Record<string, any>;
     /**
-     * Convert TestScenario back to YAML string
+     * Convert OrchestratorScenario back to YAML string
      */
-    scenarioToYaml(scenario: TestScenario): string;
+    scenarioToYaml(scenario: OrchestratorScenario): string;
 }
 /**
  * Create a YAML parser instance
@@ -123,11 +123,11 @@ export declare function createYamlParser(config?: Partial<YamlParserConfig>): Ya
 /**
  * Convenience function to load scenarios from a file
  */
-export declare function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<TestScenario[]>;
+export declare function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<OrchestratorScenario[]>;
 /**
  * Convenience function to parse a scenario from YAML string
  */
-export declare function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): TestScenario;
+export declare function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): OrchestratorScenario;
 /**
  * Alias for loadScenariosFromFile for backward compatibility
  */

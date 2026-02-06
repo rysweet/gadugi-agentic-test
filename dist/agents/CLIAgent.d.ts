@@ -8,7 +8,7 @@
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { TestStep, StepResult, CommandResult } from '../models/TestModels';
+import { OrchestratorStep, StepResult, CommandResult } from '../models/TestModels';
 import { LogLevel } from '../utils/logger';
 /**
  * Configuration options for the CLIAgent
@@ -124,7 +124,7 @@ export declare class CLIAgent extends EventEmitter implements IAgent {
     /**
      * Execute a test step
      */
-    executeStep(step: TestStep, stepIndex: number): Promise<StepResult>;
+    executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult>;
     /**
      * Validate command output against expected result
      */

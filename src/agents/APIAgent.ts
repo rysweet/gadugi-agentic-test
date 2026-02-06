@@ -10,10 +10,10 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } f
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
 import { 
-  TestStep, 
+  OrchestratorStep, 
   TestStatus, 
   StepResult, 
-  TestScenario 
+  OrchestratorScenario 
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
 
@@ -282,7 +282,7 @@ export class APIAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test scenario
    */
-  async execute(scenario: TestScenario): Promise<any> {
+  async execute(scenario: OrchestratorScenario): Promise<any> {
     if (!this.isInitialized) {
       throw new Error('Agent not initialized. Call initialize() first.');
     }
@@ -463,7 +463,7 @@ export class APIAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test step
    */
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     this.logger.stepExecution(stepIndex, step.action, step.target);
     
@@ -688,56 +688,56 @@ export class APIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  private async handleGetRequest(step: TestStep): Promise<APIResponse> {
+  private async handleGetRequest(step: OrchestratorStep): Promise<APIResponse> {
     const headers = this.parseHeaders(step.value);
     return this.makeRequest('GET', step.target, undefined, headers, {
       timeout: step.timeout
     });
   }
 
-  private async handlePostRequest(step: TestStep): Promise<APIResponse> {
+  private async handlePostRequest(step: OrchestratorStep): Promise<APIResponse> {
     const { data, headers } = this.parseRequestData(step.value);
     return this.makeRequest('POST', step.target, data, headers, {
       timeout: step.timeout
     });
   }
 
-  private async handlePutRequest(step: TestStep): Promise<APIResponse> {
+  private async handlePutRequest(step: OrchestratorStep): Promise<APIResponse> {
     const { data, headers } = this.parseRequestData(step.value);
     return this.makeRequest('PUT', step.target, data, headers, {
       timeout: step.timeout
     });
   }
 
-  private async handleDeleteRequest(step: TestStep): Promise<APIResponse> {
+  private async handleDeleteRequest(step: OrchestratorStep): Promise<APIResponse> {
     const headers = this.parseHeaders(step.value);
     return this.makeRequest('DELETE', step.target, undefined, headers, {
       timeout: step.timeout
     });
   }
 
-  private async handlePatchRequest(step: TestStep): Promise<APIResponse> {
+  private async handlePatchRequest(step: OrchestratorStep): Promise<APIResponse> {
     const { data, headers } = this.parseRequestData(step.value);
     return this.makeRequest('PATCH', step.target, data, headers, {
       timeout: step.timeout
     });
   }
 
-  private async handleHeadRequest(step: TestStep): Promise<APIResponse> {
+  private async handleHeadRequest(step: OrchestratorStep): Promise<APIResponse> {
     const headers = this.parseHeaders(step.value);
     return this.makeRequest('HEAD', step.target, undefined, headers, {
       timeout: step.timeout
     });
   }
 
-  private async handleOptionsRequest(step: TestStep): Promise<APIResponse> {
+  private async handleOptionsRequest(step: OrchestratorStep): Promise<APIResponse> {
     const headers = this.parseHeaders(step.value);
     return this.makeRequest('OPTIONS', step.target, undefined, headers, {
       timeout: step.timeout
     });
   }
 
-  private async validateResponse(step: TestStep): Promise<boolean> {
+  private async validateResponse(step: OrchestratorStep): Promise<boolean> {
     const latestResponse = this.getLatestResponse();
     if (!latestResponse) {
       throw new Error('No response available for validation');

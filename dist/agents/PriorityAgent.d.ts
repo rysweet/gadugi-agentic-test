@@ -7,7 +7,7 @@
  */
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { TestFailure, TestResult, Priority, TestScenario } from '../models/TestModels';
+import { TestFailure, TestResult, Priority, OrchestratorScenario } from '../models/TestModels';
 import { LogLevel } from '../utils/logger';
 /**
  * Priority scoring factors
@@ -67,7 +67,7 @@ export interface AnalysisContext {
     /** Historical test results */
     history: TestResult[];
     /** Test scenario information */
-    scenarios: Map<string, TestScenario>;
+    scenarios: Map<string, OrchestratorScenario>;
     /** Previous priority assignments */
     previousPriorities: Map<string, PriorityAssignment>;
     /** System metadata */
@@ -183,7 +183,7 @@ export declare class PriorityAgent extends EventEmitter implements IAgent {
     /**
      * Execute priority analysis on a scenario (implements IAgent interface)
      */
-    execute(scenario: TestScenario): Promise<PriorityAssignment | null>;
+    execute(scenario: OrchestratorScenario): Promise<PriorityAssignment | null>;
     /**
      * Analyze and assign priority to a test failure
      */

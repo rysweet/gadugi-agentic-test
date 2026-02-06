@@ -13,7 +13,7 @@
 import { ChildProcess, SpawnOptions } from 'child_process';
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { TestStep, StepResult } from '../models/TestModels';
+import { OrchestratorStep, StepResult } from '../models/TestModels';
 import { LogLevel } from '../utils/logger';
 /**
  * TUI Agent configuration options
@@ -248,7 +248,7 @@ export declare class TUIAgent extends EventEmitter implements IAgent {
     /**
      * Execute a test step
      */
-    executeStep(step: TestStep, stepIndex: number): Promise<StepResult>;
+    executeStep(step: OrchestratorStep, stepIndex: number): Promise<StepResult>;
     private setupSessionHandlers;
     private validateWorkingDirectory;
     private setupPlatformConfig;

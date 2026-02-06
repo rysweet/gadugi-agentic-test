@@ -8,7 +8,8 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  TestStep,
+  OrchestratorScenario,
+  OrchestratorStep,
   TestResult,
   TestStatus,
   TestSession,
@@ -32,6 +33,7 @@ import { IssueReporter } from '../agents/IssueReporter';
 import { PriorityAgent } from '../agents/PriorityAgent';
 import { logger } from '../utils/logger';
 import { ScenarioLoader } from '../scenarios';
+import { adaptScenarioToComplex } from '../adapters/scenarioAdapter';
 
 /**
  * Test suite configuration
@@ -49,8 +51,8 @@ export interface TestSuite {
 export interface OrchestratorEvents {
   'session:start': (session: TestSession) => void;
   'session:end': (session: TestSession) => void;
-  'scenario:start': (scenario: TestScenario) => void;
-  'scenario:end': (scenario: TestScenario, result: TestResult) => void;
+  'scenario:start': (scenario: OrchestratorScenario) => void;
+  'scenario:end': (scenario: OrchestratorScenario, result: TestResult) => void;
   'phase:start': (phase: string) => void;
   'phase:end': (phase: string) => void;
   'error': (error: Error) => void;
@@ -134,7 +136,10 @@ export class TestOrchestrator extends EventEmitter {
    */
   async run(suite: string = 'smoke', scenarioFiles?: string[]): Promise<TestSession> {
     logger.info(`Starting test session with suite: ${suite}`);
-    
+
+    // Initialize CLI agent before use
+    await this.cliAgent.initialize();
+
     // Create session - match TestSession interface from TestModels
     this.session = {
       id: uuidv4(),
@@ -207,8 +212,8 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Load test scenarios from files
    */
-  private async loadScenarios(scenarioFiles?: string[]): Promise<TestScenario[]> {
-    const scenarios: TestScenario[] = [];
+  private async loadScenarios(scenarioFiles?: string[]): Promise<OrchestratorScenario[]> {
+    const scenarios: OrchestratorScenario[] = [];
     
     // Default scenario directory
     const scenarioDir = path.join(process.cwd(), 'scenarios');
@@ -217,8 +222,9 @@ export class TestOrchestrator extends EventEmitter {
       // Load specific files
       for (const file of scenarioFiles) {
         try {
-          const scenario = await ScenarioLoader.loadFromFile(file);
-          scenarios.push(scenario);
+          const simpleScenario = await ScenarioLoader.loadFromFile(file);
+          const complexScenario = adaptScenarioToComplex(simpleScenario);
+          scenarios.push(complexScenario);
           logger.debug(`Loaded 1 scenario from ${file}`);
         } catch (error) {
           logger.error(`Failed to load scenarios from ${file}:`, error);
@@ -232,10 +238,10 @@ export class TestOrchestrator extends EventEmitter {
         
         for (const file of yamlFiles) {
           const filePath = path.join(scenarioDir, file);
-          const content = await fs.readFile(filePath, 'utf-8');
-          const fileScenarios = await parseYamlScenarios(content);
-          scenarios.push(...fileScenarios);
-          logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
+          const simpleScenario = await ScenarioLoader.loadFromFile(filePath);
+          const complexScenario = adaptScenarioToComplex(simpleScenario);
+          scenarios.push(complexScenario);
+          logger.debug(`Loaded 1 scenario from ${file}`);
         }
       } catch (error) {
         logger.error('Failed to load scenarios from directory:', error);
@@ -249,7 +255,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Filter scenarios based on test suite configuration
    */
-  private filterScenariosForSuite(scenarios: TestScenario[], suite: string): TestScenario[] {
+  private filterScenariosForSuite(scenarios: OrchestratorScenario[], suite: string): OrchestratorScenario[] {
     // Default test suites - removed reference to config.execution?.suites
     const suiteConfig: Record<string, string[]> = {
       smoke: ['smoke:', 'critical:', 'auth:'],
@@ -263,7 +269,7 @@ export class TestOrchestrator extends EventEmitter {
       return scenarios;
     }
     
-    const filtered: TestScenario[] = [];
+    const filtered: OrchestratorScenario[] = [];
     
     for (const scenario of scenarios) {
       for (const pattern of patterns) {
@@ -300,24 +306,31 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Execute test scenarios with parallel execution support
    */
-  private async executeScenarios(scenarios: TestScenario[]): Promise<void> {
+  private async executeScenarios(scenarios: OrchestratorScenario[]): Promise<void> {
     // Group scenarios by interface type
     const cliScenarios = scenarios.filter(s => s.interface === TestInterface.CLI);
     const uiScenarios = scenarios.filter(s => s.interface === TestInterface.GUI);
+    const tuiScenarios = scenarios.filter(s => s.interface === TestInterface.TUI);
     const mixedScenarios = scenarios.filter(s => s.interface === TestInterface.MIXED);
-    
+
     // Execute CLI scenarios
     if (cliScenarios.length > 0) {
       logger.info(`Executing ${cliScenarios.length} CLI scenarios`);
       await this.executeCLIScenarios(cliScenarios);
     }
-    
+
+    // Execute TUI scenarios (treat as CLI since TUI is terminal-based)
+    if (tuiScenarios.length > 0) {
+      logger.info(`Executing ${tuiScenarios.length} TUI scenarios`);
+      await this.executeCLIScenarios(tuiScenarios); // TUI uses CLIAgent for terminal interaction
+    }
+
     // Execute UI scenarios
     if (uiScenarios.length > 0) {
       logger.info(`Executing ${uiScenarios.length} UI scenarios`);
       await this.executeUIScenarios(uiScenarios);
     }
-    
+
     // Execute mixed scenarios
     if (mixedScenarios.length > 0) {
       logger.info(`Executing ${mixedScenarios.length} mixed scenarios`);
@@ -328,7 +341,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Execute CLI test scenarios in parallel
    */
-  private async executeCLIScenarios(scenarios: TestScenario[]): Promise<void> {
+  private async executeCLIScenarios(scenarios: OrchestratorScenario[]): Promise<void> {
     const results = await this.executeParallel(scenarios, async (scenario) => {
       return await this.executeSingleScenario(scenario, this.cliAgent);
     });
@@ -339,7 +352,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Execute UI test scenarios
    */
-  private async executeUIScenarios(scenarios: TestScenario[]): Promise<void> {
+  private async executeUIScenarios(scenarios: OrchestratorScenario[]): Promise<void> {
     if (!this.uiAgent) {
       logger.warn('UI agent not available');
       for (const scenario of scenarios) {
@@ -375,7 +388,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Execute mixed interface scenarios
    */
-  private async executeMixedScenarios(scenarios: TestScenario[]): Promise<void> {
+  private async executeMixedScenarios(scenarios: OrchestratorScenario[]): Promise<void> {
     for (const scenario of scenarios) {
       if (this.abortController.signal.aborted) {
         logger.info('Execution aborted');
@@ -429,7 +442,7 @@ export class TestOrchestrator extends EventEmitter {
    * Execute a single test scenario
    */
   private async executeSingleScenario(
-    scenario: TestScenario,
+    scenario: OrchestratorScenario,
     agent: CLIAgent | ElectronUIAgent
   ): Promise<TestResult> {
     logger.info(`Executing scenario: ${scenario.id} - ${scenario.name}`);
@@ -490,7 +503,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Select appropriate agent for scenario
    */
-  private selectAgentForScenario(scenario: TestScenario): CLIAgent | ElectronUIAgent {
+  private selectAgentForScenario(scenario: OrchestratorScenario): CLIAgent | ElectronUIAgent {
     // Count step types
     const cliSteps = scenario.steps.filter(s => 
       s.action === 'execute' || s.action === 'runCommand'
@@ -508,7 +521,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Process execution results
    */
-  private processResults(scenarios: TestScenario[], results: (TestResult | Error)[]): void {
+  private processResults(scenarios: OrchestratorScenario[], results: (TestResult | Error)[]): void {
     for (let i = 0; i < scenarios.length; i++) {
       const result = results[i];
       
@@ -553,7 +566,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Record a scenario failure
    */
-  private recordFailure(scenario: TestScenario, errorMsg: string): void {
+  private recordFailure(scenario: OrchestratorScenario, errorMsg: string): void {
     const failure: TestFailure = {
       scenarioId: scenario.id,
       timestamp: new Date(),
