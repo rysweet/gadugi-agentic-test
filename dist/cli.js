@@ -200,11 +200,10 @@ program
                 }
             };
             const orchestrator = new TestOrchestrator(testConfig);
-            // Convert scenario names to file paths for orchestrator.run()
-            const scenarioFiles = scenarios.map((s) => path.join(options.directory, `${s.name.toLowerCase().replace(/\s+/g, '-')}.yaml`));
-            // Run tests through orchestrator
+            // Pass scenarios directly to orchestrator instead of reconstructing filenames
+            // The orchestrator will use the already-loaded scenarios
             logInfo('Executing test scenarios...');
-            const session = await orchestrator.run('test-suite', scenarioFiles);
+            const session = await orchestrator.runWithScenarios('test-suite', scenarios);
             // Extract results from session
             const passedCount = session.summary.passed;
             const failedCount = session.summary.failed;

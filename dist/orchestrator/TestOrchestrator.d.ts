@@ -4,6 +4,7 @@
  */
 import { EventEmitter } from 'events';
 import { OrchestratorScenario, TestResult, TestSession, TestFailure } from '../models/TestModels';
+import { TestScenario } from '../scenarios';
 import { TestConfig } from '../models/Config';
 /**
  * Test suite configuration
@@ -48,6 +49,10 @@ export declare class TestOrchestrator extends EventEmitter {
      * Setup internal event handlers
      */
     private setupEventHandlers;
+    /**
+     * Run a complete testing session with pre-loaded scenarios
+     */
+    runWithScenarios(suite: string, loadedScenarios: TestScenario[]): Promise<TestSession>;
     /**
      * Run a complete testing session
      */

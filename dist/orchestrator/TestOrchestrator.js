@@ -106,6 +106,89 @@ class TestOrchestrator extends events_1.EventEmitter {
         });
     }
     /**
+     * Run a complete testing session with pre-loaded scenarios
+     */
+    async runWithScenarios(suite, loadedScenarios) {
+        logger_1.logger.info(`Starting test session with suite: ${suite}`);
+        // Initialize agents before use
+        await this.cliAgent.initialize();
+        await this.tuiAgent.initialize();
+        // Create session
+        this.session = {
+            id: (0, uuid_1.v4)(),
+            startTime: new Date(),
+            endTime: undefined,
+            status: TestModels_1.TestStatus.RUNNING,
+            results: [],
+            summary: {
+                total: 0,
+                passed: 0,
+                failed: 0,
+                skipped: 0
+            },
+            config: this.config
+        };
+        this.emit('session:start', this.session);
+        try {
+            // Use pre-loaded scenarios instead of loading from files
+            logger_1.logger.info(`Phase 1: Using ${loadedScenarios.length} pre-loaded scenarios`);
+            // Convert scenarios to orchestrator format
+            const { adaptScenarioToComplex } = await Promise.resolve().then(() => __importStar(require('../adapters/scenarioAdapter')));
+            const orchestratorScenarios = loadedScenarios.map(adaptScenarioToComplex);
+            // Filter and execute
+            const filteredScenarios = this.filterScenariosForSuite(orchestratorScenarios, suite);
+            logger_1.logger.info(`Selected ${filteredScenarios.length} scenarios for suite '${suite}'`);
+            this.emit('phase:start', 'execution');
+            logger_1.logger.info('Phase 2: Executing test scenarios');
+            await this.executeScenarios(filteredScenarios);
+            this.emit('phase:end', 'execution');
+            // Phase 3-4: Analysis and reporting
+            this.emit('phase:start', 'analysis');
+            logger_1.logger.info('Phase 3: Analyzing results and prioritizing failures');
+            if (this.failures.length > 0) {
+                logger_1.logger.info(`Analyzing ${this.failures.length} failures`);
+                await this.priorityAgent.analyzePriority(this.failures);
+                const summary = this.priorityAgent.generateReport();
+                logger_1.logger.info(`Priority summary:`, { ...summary, average: summary.averageImpactScore.toFixed(2) });
+            }
+            else {
+                logger_1.logger.info('No failures to analyze');
+            }
+            this.emit('phase:end', 'analysis');
+            this.emit('phase:start', 'reporting');
+            logger_1.logger.info('Phase 4: Reporting failures to GitHub');
+            if (this.config.github?.createIssuesOnFailure && this.failures.length > 0) {
+                await this.issueReporter.reportFailures(this.failures, this.results);
+            }
+            else {
+                logger_1.logger.info('Issue creation disabled');
+            }
+            this.emit('phase:end', 'reporting');
+            // Finalize session
+            this.session.endTime = new Date();
+            this.session.status = this.failures.length === 0 ? TestModels_1.TestStatus.PASSED : TestModels_1.TestStatus.FAILED;
+            this.session.results = this.results;
+            this.session.summary = {
+                total: this.results.length,
+                passed: this.results.filter(r => r.status === TestModels_1.TestStatus.PASSED).length,
+                failed: this.results.filter(r => r.status === TestModels_1.TestStatus.FAILED).length,
+                skipped: this.results.filter(r => r.status === TestModels_1.TestStatus.SKIPPED).length
+            };
+            await this.saveSessionResults(this.session);
+            this.emit('session:end', this.session);
+        }
+        catch (error) {
+            logger_1.logger.error('Test session failed:', error);
+            if (this.session) {
+                this.session.status = TestModels_1.TestStatus.FAILED;
+                this.session.endTime = new Date();
+            }
+            throw error;
+        }
+        logger_1.logger.info(`Test session completed: ${this.session?.id}`);
+        return this.session;
+    }
+    /**
      * Run a complete testing session
      */
     async run(suite = 'smoke', scenarioFiles) {
