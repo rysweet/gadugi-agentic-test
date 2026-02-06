@@ -8,7 +8,6 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  TestScenario,
   TestStep,
   TestResult,
   TestStatus,
@@ -18,6 +17,7 @@ import {
   TestError,
   Priority
 } from '../models/TestModels';
+import { TestScenario } from '../scenarios';
 import {
   TestConfig,
   ExecutionConfig,
@@ -31,7 +31,7 @@ import { CLIAgent } from '../agents/CLIAgent';
 import { IssueReporter } from '../agents/IssueReporter';
 import { PriorityAgent } from '../agents/PriorityAgent';
 import { logger } from '../utils/logger';
-import { parseYamlScenarios } from '../utils/yamlParser';
+import { ScenarioLoader } from '../scenarios';
 
 /**
  * Test suite configuration
@@ -217,10 +217,9 @@ export class TestOrchestrator extends EventEmitter {
       // Load specific files
       for (const file of scenarioFiles) {
         try {
-          const content = await fs.readFile(file, 'utf-8');
-          const fileScenarios = await parseYamlScenarios(content);
-          scenarios.push(...fileScenarios);
-          logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
+          const scenario = await ScenarioLoader.loadFromFile(file);
+          scenarios.push(scenario);
+          logger.debug(`Loaded 1 scenario from ${file}`);
         } catch (error) {
           logger.error(`Failed to load scenarios from ${file}:`, error);
         }
