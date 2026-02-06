@@ -10,6 +10,11 @@ import { v4 as uuidv4 } from 'uuid';
  * Convert simple scenario format (from YAML) to complex format (for TestOrchestrator)
  */
 export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario {
+  // Handle missing or empty steps array
+  const steps = simple.steps && Array.isArray(simple.steps) && simple.steps.length > 0
+    ? simple.steps.map(adaptStepToOrchestrator)
+    : [];
+
   return {
     id: uuidv4(),
     name: simple.name,
@@ -17,7 +22,7 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     priority: mapPriority(simple.metadata?.priority),
     interface: mapInterface(simple.metadata?.tags || []),
     prerequisites: simple.environment?.requires || [],
-    steps: simple.steps.map(adaptStepToOrchestrator),
+    steps,
     verifications: simple.assertions.map(a => ({
       name: a.name,
       type: a.type,
