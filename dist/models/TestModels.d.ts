@@ -307,4 +307,8 @@ export interface TestAssertion {
     expected?: any;
     operator?: 'equals' | 'contains' | 'exists' | 'gt' | 'lt' | 'gte' | 'lte';
 }
+/** @deprecated Use OrchestratorStep - kept for backward compatibility with existing code */
+export type TestStep = OrchestratorStep;
+/** @deprecated Use OrchestratorScenario - kept for backward compatibility with existing code */
+export type TestScenario = OrchestratorScenario;
 //# sourceMappingURL=TestModels.d.ts.map
