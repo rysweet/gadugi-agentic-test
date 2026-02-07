@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc --skipLibCheck --noEmitOnError false && npm run postbuild",
-    "postbuild": "(echo '#!/usr/bin/env node' && cat dist/runners/SmartUITestRunner.js) > temp_smart.js && mv temp_smart.js dist/runners/SmartUITestRunner.js && chmod +x dist/cli.js dist/runners/SmartUITestRunner.js",
+    "postbuild": "chmod +x dist/cli.js dist/runners/SmartUITestRunner.js 2>/dev/null || true",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
@@ -37,10 +37,6 @@
   ],
   "dependencies": {
     "@octokit/rest": "^20.0.2",
-    "@types/chokidar": "^1.7.5",
-    "@types/glob": "^8.1.0",
-    "@types/pidusage": "^2.0.5",
-    "@types/pixelmatch": "^5.2.6",
     "axios": "^1.6.0",
     "chalk": "^5.6.0",
     "chokidar": "^4.0.3",
@@ -62,11 +58,15 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/chokidar": "^1.7.5",
     "@types/cli-progress": "^3.11.6",
     "@types/fs-extra": "^11.0.4",
+    "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.8",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.10.0",
+    "@types/pidusage": "^2.0.5",
+    "@types/pixelmatch": "^5.2.6",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
