@@ -236,7 +236,11 @@ class TUIAgent extends events_1.EventEmitter {
         const startTime = Date.now();
         const spawnOptions = {
             cwd: this.config.workingDirectory,
-            env: { ...this.config.environment, ...options.env },
+            env: {
+                ...process.env, // Inherit parent PATH and other environment
+                ...this.config.environment, // Override with TUI-specific vars
+                ...options.env // Override with call-specific vars
+            },
             stdio: ['pipe', 'pipe', 'pipe'],
             shell: false,
             ...options

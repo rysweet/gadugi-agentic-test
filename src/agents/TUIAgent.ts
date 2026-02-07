@@ -388,7 +388,11 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
     const spawnOptions: SpawnOptions = {
       cwd: this.config.workingDirectory,
-      env: { ...this.config.environment, ...options.env },
+      env: {
+        ...process.env,  // Inherit parent PATH and other environment
+        ...this.config.environment,  // Override with TUI-specific vars
+        ...options.env  // Override with call-specific vars
+      },
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: false,
       ...options
