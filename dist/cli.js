@@ -177,27 +177,103 @@ program
             const testConfig = config || {
                 execution: {
                     maxParallel: 1,
-                    maxRetries: 0,
+                    defaultTimeout: parseInt(options.timeout),
                     continueOnFailure: true,
-                    timeout: parseInt(options.timeout),
-                    cleanupOnFailure: false,
-                    collectMetrics: false
+                    maxRetries: 0,
+                    retryDelay: 1000,
+                    randomizeOrder: false,
+                    resourceLimits: {
+                        maxMemory: 1024 * 1024 * 1024, // 1GB
+                        maxCpuUsage: 80,
+                        maxDiskUsage: 1024 * 1024 * 1024 * 10, // 10GB
+                        maxExecutionTime: parseInt(options.timeout),
+                        maxOpenFiles: 1000
+                    },
+                    cleanup: {
+                        cleanupAfterEach: false,
+                        cleanupAfterAll: false,
+                        cleanupDirectories: [],
+                        cleanupFiles: [],
+                        terminateProcesses: [],
+                        stopServices: [],
+                        customCleanupScripts: []
+                    }
                 },
-                cli: {},
-                ui: { browser: 'chromium' },
-                tui: {},
+                cli: {
+                    executablePath: 'node',
+                    workingDirectory: process.cwd(),
+                    defaultTimeout: parseInt(options.timeout),
+                    environment: {},
+                    captureOutput: true,
+                    maxRetries: 0,
+                    retryDelay: 1000
+                },
+                ui: {
+                    browser: 'chromium',
+                    headless: false,
+                    viewport: { width: 1280, height: 720 },
+                    baseUrl: 'http://localhost:3000',
+                    defaultTimeout: parseInt(options.timeout),
+                    screenshotDir: './screenshots',
+                    recordVideo: false
+                },
+                tui: {
+                    terminal: 'xterm',
+                    defaultDimensions: { width: 80, height: 24 },
+                    encoding: 'utf8',
+                    defaultTimeout: parseInt(options.timeout),
+                    pollingInterval: 100,
+                    captureScreenshots: false,
+                    recordSessions: false,
+                    colorMode: '24bit',
+                    interpretAnsi: true,
+                    shell: process.env.SHELL || '/bin/bash',
+                    shellArgs: [],
+                    environment: {},
+                    workingDirectory: process.cwd(),
+                    accessibility: {
+                        highContrast: false,
+                        screenReader: false,
+                        largeText: false
+                    },
+                    performance: {
+                        refreshRate: 60,
+                        maxBufferSize: 100000,
+                        hardwareAcceleration: false
+                    }
+                },
                 priority: {
                     enabled: false,
-                    defaultPriority: 'medium'
+                    executionOrder: ['critical', 'high', 'medium', 'low'],
+                    failFastOnCritical: false,
+                    maxParallelByPriority: {},
+                    timeoutMultipliers: {},
+                    retryCountsByPriority: {}
                 },
                 logging: {
                     level: 'info',
-                    file: undefined
+                    console: true,
+                    format: 'text',
+                    includeTimestamp: true,
+                    maxFileSize: 10 * 1024 * 1024,
+                    maxFiles: 5,
+                    compress: false
                 },
                 reporting: {
-                    format: 'console',
-                    outputDir: './test-results'
-                }
+                    outputDir: './test-results',
+                    formats: ['json'],
+                    includeScreenshots: true,
+                    includeLogs: true,
+                    customTemplates: {},
+                    generationTimeout: 30000
+                },
+                notifications: {
+                    enabled: false,
+                    channels: [],
+                    triggers: [],
+                    templates: {}
+                },
+                plugins: {}
             };
             const orchestrator = new TestOrchestrator(testConfig);
             // Pass scenarios directly to orchestrator instead of reconstructing filenames

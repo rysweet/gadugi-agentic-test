@@ -84,10 +84,10 @@ export class TestOrchestrator extends EventEmitter {
   constructor(config: TestConfig) {
     super();
     this.config = config;
-    
+
     // Initialize agents with proper type handling
     this.cliAgent = new CLIAgent(config.cli);
-    this.tuiAgent = new TUIAgent(config.tui as any || {});
+    this.tuiAgent = new TUIAgent(this.adaptTUIConfig(config.tui));
 
     // IssueReporter expects IssueReporterConfig which extends GitHubConfig
     // Provide default values if github config is missing
@@ -103,16 +103,16 @@ export class TestOrchestrator extends EventEmitter {
       createPullRequestsForFixes: false,
       autoAssignUsers: []
     });
-    
+
     // PriorityAgent expects PriorityAgentConfig which has different properties than PriorityConfig
-    // Use type assertion to handle this architectural mismatch
-    this.priorityAgent = new PriorityAgent(config.priority as any || {});
-    
+    // Convert PriorityConfig to PriorityAgentConfig
+    this.priorityAgent = new PriorityAgent(this.adaptPriorityConfig(config.priority));
+
     // Initialize UI agent if configured
     // UIConfig doesn't have executablePath, but ElectronUIAgentConfig does
-    // Use type assertion since this is an architectural mismatch
+    // Convert UIConfig to ElectronUIAgentConfig if possible
     if (config.ui && config.ui.browser) {
-      this.uiAgent = new ElectronUIAgent(config.ui as any);
+      this.uiAgent = new ElectronUIAgent(this.adaptUIConfig(config.ui));
     }
     
     // Execution settings
@@ -135,17 +135,10 @@ export class TestOrchestrator extends EventEmitter {
   }
 
   /**
-   * Run a complete testing session with pre-loaded scenarios
+   * Create a new test session
    */
-  async runWithScenarios(suite: string, loadedScenarios: TestScenario[]): Promise<TestSession> {
-    logger.info(`Starting test session with suite: ${suite}`);
-
-    // Initialize agents before use
-    await this.cliAgent.initialize();
-    await this.tuiAgent.initialize();
-
-    // Create session
-    this.session = {
+  private createSession(): TestSession {
+    const session: TestSession = {
       id: uuidv4(),
       startTime: new Date(),
       endTime: undefined,
@@ -159,7 +152,21 @@ export class TestOrchestrator extends EventEmitter {
       },
       config: this.config
     };
+    return session;
+  }
 
+  /**
+   * Run a complete testing session with pre-loaded scenarios
+   */
+  async runWithScenarios(suite: string, loadedScenarios: TestScenario[]): Promise<TestSession> {
+    logger.info(`Starting test session with suite: ${suite}`);
+
+    // Initialize agents before use
+    await this.cliAgent.initialize();
+    await this.tuiAgent.initialize();
+
+    // Create session using shared method
+    this.session = this.createSession();
     this.emit('session:start', this.session);
 
     try {
@@ -199,32 +206,22 @@ export class TestOrchestrator extends EventEmitter {
       }
       this.emit('phase:end', 'reporting');
 
-      // Finalize session
-      this.session.endTime = new Date();
-      this.session.status = this.failures.length === 0 ? TestStatus.PASSED : TestStatus.FAILED;
-      this.session.results = this.results;
-      this.session.summary = {
-        total: this.results.length,
-        passed: this.results.filter(r => r.status === TestStatus.PASSED).length,
-        failed: this.results.filter(r => r.status === TestStatus.FAILED).length,
-        skipped: this.results.filter(r => r.status === TestStatus.SKIPPED).length
-      };
-
-      // Save session results to file
-      const outputDir = path.join(process.cwd(), 'outputs', 'sessions');
-      await fs.mkdir(outputDir, { recursive: true });
-      const sessionFile = path.join(outputDir, `session_${this.session.id}_${new Date().toISOString().replace(/:/g, '-')}.json`);
-      await fs.writeFile(sessionFile, JSON.stringify(this.session, null, 2));
-      logger.info(`Session results saved to ${sessionFile}`);
-      this.emit('session:end', this.session);
-
     } catch (error) {
       logger.error('Test session failed:', error);
-      if (this.session) {
-        this.session.status = TestStatus.FAILED;
-        this.session.endTime = new Date();
-      }
+      this.emit('error', error as Error);
       throw error;
+    } finally {
+      // Finalize session
+      if (this.session) {
+        this.session.endTime = new Date();
+        this.session.status = this.calculateSessionStatus();
+        this.calculateSessionMetrics();
+
+        // Save session results
+        await this.saveSessionResults();
+
+        this.emit('session:end', this.session);
+      }
     }
 
     logger.info(`Test session completed: ${this.session?.id}`);
@@ -241,22 +238,8 @@ export class TestOrchestrator extends EventEmitter {
     await this.cliAgent.initialize();
     await this.tuiAgent.initialize();
 
-    // Create session - match TestSession interface from TestModels
-    this.session = {
-      id: uuidv4(),
-      startTime: new Date(),
-      endTime: undefined, // Use undefined instead of null
-      status: TestStatus.RUNNING,
-      results: [],
-      summary: {
-        total: 0,
-        passed: 0,
-        failed: 0,
-        skipped: 0
-      },
-      config: this.config
-    };
-    
+    // Create session using shared method
+    this.session = this.createSession();
     this.emit('session:start', this.session);
     
     try {
@@ -826,6 +809,62 @@ export class TestOrchestrator extends EventEmitter {
    */
   getFailures(): TestFailure[] {
     return this.failures;
+  }
+
+  /**
+   * Adapt TUIConfig to TUIAgentConfig
+   */
+  private adaptTUIConfig(config: import('../models/TUIModels').TUIConfig): import('../agents/TUIAgent').TUIAgentConfig {
+    return {
+      terminalType: config.terminal || 'xterm',
+      terminalSize: {
+        cols: config.defaultDimensions?.width || 80,
+        rows: config.defaultDimensions?.height || 24
+      },
+      defaultTimeout: config.defaultTimeout || 30000,
+      inputTiming: {
+        keystrokeDelay: 10,
+        responseDelay: 100,
+        stabilizationTimeout: 1000
+      },
+      outputCapture: {
+        preserveColors: true,
+        bufferSize: 10000,
+        captureTiming: true
+      }
+    };
+  }
+
+  /**
+   * Adapt PriorityConfig to PriorityAgentConfig
+   */
+  private adaptPriorityConfig(config: PriorityConfig): import('../agents/PriorityAgent').PriorityAgentConfig {
+    return {
+      historyRetentionDays: 30,
+      flakyThreshold: 0.3,
+      patternSensitivity: 0.7,
+      minSamplesForTrends: 5
+    };
+  }
+
+  /**
+   * Adapt UIConfig to ElectronUIAgentConfig
+   */
+  private adaptUIConfig(config: UIConfig): import('../agents/ElectronUIAgent').ElectronUIAgentConfig {
+    return {
+      executablePath: process.env.ELECTRON_APP_PATH || 'electron',
+      launchTimeout: config.defaultTimeout || 30000,
+      defaultTimeout: config.defaultTimeout || 30000,
+      headless: config.headless || false,
+      recordVideo: config.recordVideo || false,
+      videoDir: config.videoDir,
+      slowMo: config.slowMo,
+      screenshotConfig: {
+        mode: 'on',
+        directory: config.screenshotDir || './screenshots',
+        fullPage: true
+      }
+    };
   }
 }
 

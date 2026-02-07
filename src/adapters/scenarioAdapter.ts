@@ -17,11 +17,12 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
 
   const verifications = simple.assertions && Array.isArray(simple.assertions)
     ? simple.assertions.map(a => ({
-        name: a.name,
         type: a.type,
-        params: a.params,
-        expected: undefined
-      })) as any
+        target: a.params?.target || 'default',
+        expected: String(a.params?.expected || ''),
+        operator: 'equals' as const,
+        description: a.name
+      }))
     : [];
 
   const cleanup = simple.cleanup && Array.isArray(simple.cleanup)

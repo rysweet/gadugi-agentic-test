@@ -50,6 +50,10 @@ export declare class TestOrchestrator extends EventEmitter {
      */
     private setupEventHandlers;
     /**
+     * Create a new test session
+     */
+    private createSession;
+    /**
      * Run a complete testing session with pre-loaded scenarios
      */
     runWithScenarios(suite: string, loadedScenarios: TestScenario[]): Promise<TestSession>;
@@ -145,6 +149,18 @@ export declare class TestOrchestrator extends EventEmitter {
      * Get test failures
      */
     getFailures(): TestFailure[];
+    /**
+     * Adapt TUIConfig to TUIAgentConfig
+     */
+    private adaptTUIConfig;
+    /**
+     * Adapt PriorityConfig to PriorityAgentConfig
+     */
+    private adaptPriorityConfig;
+    /**
+     * Adapt UIConfig to ElectronUIAgentConfig
+     */
+    private adaptUIConfig;
 }
 /**
  * Create a test orchestrator instance

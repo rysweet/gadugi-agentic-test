@@ -279,7 +279,10 @@ class SystemAgent extends events_1.EventEmitter {
     async getCPUMetrics() {
         try {
             const currentLoad = await si.currentLoad();
-            const cpuTemperature = await si.cpuTemperature().catch(() => ({ main: undefined }));
+            const cpuTemperature = await si.cpuTemperature().catch((err) => {
+                this.logger.warn('CPU temperature not available', { error: err });
+                return { main: undefined };
+            });
             return {
                 usage: currentLoad.currentLoad,
                 loadAverage: os.loadavg(),
@@ -331,7 +334,10 @@ class SystemAgent extends events_1.EventEmitter {
         try {
             const [fsSize, diskIO] = await Promise.all([
                 si.fsSize(),
-                si.disksIO().catch(() => undefined)
+                si.disksIO().catch((err) => {
+                    this.logger.warn('Disk I/O metrics not available', { error: err });
+                    return undefined;
+                })
             ]);
             const usage = fsSize.map(fs => ({
                 filesystem: fs.fs,
@@ -361,7 +367,10 @@ class SystemAgent extends events_1.EventEmitter {
         try {
             const [networkStats, networkConnections] = await Promise.all([
                 si.networkStats(),
-                si.networkConnections().catch(() => [])
+                si.networkConnections().catch((err) => {
+                    this.logger.warn('Network connections not available', { error: err });
+                    return [];
+                })
             ]);
             const interfaces = networkStats.map(stat => ({
                 name: stat.iface,
@@ -390,7 +399,10 @@ class SystemAgent extends events_1.EventEmitter {
             const processInfos = [];
             for (const proc of processes.list) {
                 try {
-                    const stats = await (0, pidusage_1.default)(proc.pid).catch(() => null);
+                    const stats = await (0, pidusage_1.default)(proc.pid).catch((err) => {
+                        this.logger.debug(`Failed to get pidusage stats for PID ${proc.pid}`, { error: err });
+                        return null;
+                    });
                     processInfos.push({
                         pid: proc.pid,
                         name: proc.name,
@@ -410,6 +422,7 @@ class SystemAgent extends events_1.EventEmitter {
                 }
                 catch (procError) {
                     // Skip processes we can't access
+                    this.logger.debug(`Cannot access process ${proc.pid}`, { error: procError });
                     continue;
                 }
             }
@@ -475,6 +488,7 @@ class SystemAgent extends events_1.EventEmitter {
                 }
                 catch (statsError) {
                     // Add container without stats
+                    this.logger.debug(`Failed to get stats for container ${id.substring(0, 12)}`, { error: statsError });
                     containers.push({
                         id: id.substring(0, 12),
                         name,
@@ -508,6 +522,7 @@ class SystemAgent extends events_1.EventEmitter {
             return { rx: inputBytes, tx: outputBytes };
         }
         catch (error) {
+            this.logger.warn('Failed to parse Docker network I/O', { error, raw: ioString });
             return { rx: 0, tx: 0 };
         }
     }
@@ -525,6 +540,7 @@ class SystemAgent extends events_1.EventEmitter {
             return { read: inputBytes, write: outputBytes };
         }
         catch (error) {
+            this.logger.warn('Failed to parse Docker block I/O', { error, raw: ioString });
             return { read: 0, write: 0 };
         }
     }
@@ -574,8 +590,9 @@ class SystemAgent extends events_1.EventEmitter {
             try {
                 const absolutePath = path.resolve(watchPath);
                 // Check if path exists
-                await fs.access(absolutePath).catch(() => {
+                await fs.access(absolutePath).catch((err) => {
                     // Create directory if it doesn't exist
+                    this.logger.debug(`Path ${absolutePath} does not exist, creating it`, { error: err });
                     return fs.mkdir(absolutePath, { recursive: true });
                 });
                 // Set up watcher
