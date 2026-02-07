@@ -41,16 +41,55 @@ The framework combines the power of **multi-agent orchestration**, **intelligent
 ## 🚀 Installation
 
 ### Prerequisites
-- Node.js 18+ 
-- Python 3.11+ (for orchestration)
-- Playwright browsers
-- Git CLI (for issue reporting)
 
-### From GitHub (Current)
+**Runtime Requirements:**
+- Node.js 18+ 
+- Playwright browsers (`npx playwright install`)
+- Git CLI (for issue reporting)
+- OpenAI API key (for AI-powered features)
+
+**Build Requirements (for native modules):**
+
+This package uses `node-pty` for terminal emulation, which requires native compilation:
+
+**macOS:**
+```bash
+xcode-select --install  # Command Line Tools
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install -y build-essential python3
+```
+
+**RHEL/Fedora:**
+```bash
+sudo dnf install -y gcc-c++ make python3
+```
+
+**Windows:**
+```powershell
+# Option 1: Install Visual Studio Build Tools
+npm install -g windows-build-tools
+
+# Option 2: Use Visual Studio Installer
+# Select "Desktop development with C++" workload
+```
+
+### From NPM (Recommended)
+```bash
+# Install globally for CLI access
+npm install -g @gadugi/agentic-test
+
+# Or install locally in your project
+npm install @gadugi/agentic-test
+```
+
+### From GitHub (Development)
 ```bash
 # Clone the repository
-git clone https://github.com/Azure/azure-tenant-grapher.git
-cd azure-tenant-grapher/spa/agentic-testing
+git clone https://github.com/rysweet/gadugi-agentic-test.git
+cd gadugi-agentic-test
 
 # Install dependencies
 npm install
@@ -60,12 +99,6 @@ npm run build
 
 # Run tests
 npm test
-```
-
-### From NPM (Coming Soon)
-```bash
-# NPM package publishing is planned for v1.1.0
-npm install -g @gadugi/agentic-test
 ```
 
 ## 🎯 Quick Start
