@@ -284,9 +284,10 @@ export declare class TUIAgent extends EventEmitter implements IAgent {
     private handleWaitForOutputAction;
     private handleResizeTerminalAction;
     private handleKillSessionAction;
+    /**
+     * Get the most recently created session ID when no explicit session specified
+     */
+    private getMostRecentSessionId;
 }
-/**
- * Factory function to create TUIAgent instance
- */
 export declare function createTUIAgent(config?: TUIAgentConfig): TUIAgent;
 //# sourceMappingURL=TUIAgent.d.ts.map

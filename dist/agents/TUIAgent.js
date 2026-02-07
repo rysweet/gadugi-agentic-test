@@ -969,24 +969,20 @@ class TUIAgent extends events_1.EventEmitter {
         const sessionId = step.target || this.getMostRecentSessionId();
         await this.killSession(sessionId);
     }
+    /**
+     * Get the most recently created session ID when no explicit session specified
+     */
+    getMostRecentSessionId() {
+        if (this.sessions.size === 0) {
+            throw new Error('No active TUI sessions');
+        }
+        const sessions = Array.from(this.sessions.values());
+        const sorted = sessions.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+        return sorted[0].id;
+    }
 }
 exports.TUIAgent = TUIAgent;
-/**
- * Factory function to create TUIAgent instance
- */
 function createTUIAgent(config) {
     return new TUIAgent(config);
 }
-getMostRecentSessionId();
-string;
-{
-    const sessions = Array.from(this.sessions.values());
-    if (sessions.length === 0) {
-        throw new Error('No active TUI sessions - spawn a TUI first');
-    }
-    // Return most recently started session
-    const sorted = sessions.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
-    return sorted[0].id;
-}
-// Remove duplicate closing brace if it exists
 //# sourceMappingURL=TUIAgent.js.map

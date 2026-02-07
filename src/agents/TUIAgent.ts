@@ -1294,26 +1294,20 @@ export class TUIAgent extends EventEmitter implements IAgent {
     const sessionId = step.target || this.getMostRecentSessionId();
     await this.killSession(sessionId);
   }
-}
 
-/**
- * Factory function to create TUIAgent instance
- */
-export function createTUIAgent(config?: TUIAgentConfig): TUIAgent {
-  return new TUIAgent(config);
-}
   /**
-   * Get the most recently created session ID for implicit session reference
+   * Get the most recently created session ID when no explicit session specified
    */
   private getMostRecentSessionId(): string {
-    const sessions = Array.from(this.sessions.values());
-    if (sessions.length === 0) {
-      throw new Error('No active TUI sessions - spawn a TUI first');
+    if (this.sessions.size === 0) {
+      throw new Error('No active TUI sessions');
     }
-    // Return most recently started session
+    const sessions = Array.from(this.sessions.values());
     const sorted = sessions.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
     return sorted[0].id;
   }
 }
 
-// Remove duplicate closing brace if it exists
+export function createTUIAgent(config?: TUIAgentConfig): TUIAgent {
+  return new TUIAgent(config);
+}
