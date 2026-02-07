@@ -913,7 +913,7 @@ class TUIAgent extends events_1.EventEmitter {
         return this.spawnTUI(command, args);
     }
     async handleInputAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         const input = step.value || '';
         const inputSim = {
             keys: input,
@@ -925,17 +925,17 @@ class TUIAgent extends events_1.EventEmitter {
         await this.sendInput(sessionId, inputSim);
     }
     async handleMenuNavigationAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         const path = step.value ? step.value.split(',').map((s) => s.trim()) : [];
         return this.navigateMenu(sessionId, path);
     }
     async handleOutputValidationAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         const expected = step.expected || step.value;
         return this.validateOutput(sessionId, expected);
     }
     async handleColorValidationAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         let expectedColors;
         try {
             expectedColors = JSON.parse(step.value || '[]');
@@ -946,17 +946,17 @@ class TUIAgent extends events_1.EventEmitter {
         return this.validateFormatting(sessionId, expectedColors);
     }
     handleCaptureOutputAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         return this.captureOutput(sessionId);
     }
     async handleWaitForOutputAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         const pattern = step.value || '';
         const timeout = step.timeout || this.config.defaultTimeout;
         await this.waitForOutputPattern(sessionId, pattern, timeout);
     }
     async handleResizeTerminalAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         const [cols, rows] = (step.value || '80,24').split(',').map(Number);
         const session = this.sessions.get(sessionId);
         if (session) {
@@ -966,7 +966,7 @@ class TUIAgent extends events_1.EventEmitter {
         }
     }
     async handleKillSessionAction(step) {
-        const sessionId = step.target;
+        const sessionId = step.target || this.getMostRecentSessionId();
         await this.killSession(sessionId);
     }
 }
@@ -977,4 +977,16 @@ exports.TUIAgent = TUIAgent;
 function createTUIAgent(config) {
     return new TUIAgent(config);
 }
+getMostRecentSessionId();
+string;
+{
+    const sessions = Array.from(this.sessions.values());
+    if (sessions.length === 0) {
+        throw new Error('No active TUI sessions - spawn a TUI first');
+    }
+    // Return most recently started session
+    const sorted = sessions.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+    return sorted[0].id;
+}
+// Remove duplicate closing brace if it exists
 //# sourceMappingURL=TUIAgent.js.map

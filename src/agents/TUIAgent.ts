@@ -1223,7 +1223,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   }
 
   private async handleInputAction(step: TestStep): Promise<void> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     const input = step.value || '';
 
     const inputSim: InputSimulation = {
@@ -1239,21 +1239,21 @@ export class TUIAgent extends EventEmitter implements IAgent {
   }
 
   private async handleMenuNavigationAction(step: TestStep): Promise<MenuNavigation> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     const path = step.value ? step.value.split(',').map((s: string) => s.trim()) : [];
 
     return this.navigateMenu(sessionId, path);
   }
 
   private async handleOutputValidationAction(step: TestStep): Promise<boolean> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     const expected = step.expected || step.value;
 
     return this.validateOutput(sessionId, expected);
   }
 
   private async handleColorValidationAction(step: TestStep): Promise<boolean> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     let expectedColors: ColorInfo[];
 
     try {
@@ -1266,12 +1266,12 @@ export class TUIAgent extends EventEmitter implements IAgent {
   }
 
   private handleCaptureOutputAction(step: TestStep): TerminalOutput | null {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     return this.captureOutput(sessionId);
   }
 
   private async handleWaitForOutputAction(step: TestStep): Promise<void> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     const pattern = step.value || '';
     const timeout = step.timeout || this.config.defaultTimeout;
 
@@ -1279,7 +1279,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   }
 
   private async handleResizeTerminalAction(step: TestStep): Promise<void> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     const [cols, rows] = (step.value || '80,24').split(',').map(Number);
 
     const session = this.sessions.get(sessionId);
@@ -1291,7 +1291,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   }
 
   private async handleKillSessionAction(step: TestStep): Promise<void> {
-    const sessionId = step.target;
+    const sessionId = step.target || this.getMostRecentSessionId();
     await this.killSession(sessionId);
   }
 }
@@ -1302,3 +1302,18 @@ export class TUIAgent extends EventEmitter implements IAgent {
 export function createTUIAgent(config?: TUIAgentConfig): TUIAgent {
   return new TUIAgent(config);
 }
+  /**
+   * Get the most recently created session ID for implicit session reference
+   */
+  private getMostRecentSessionId(): string {
+    const sessions = Array.from(this.sessions.values());
+    if (sessions.length === 0) {
+      throw new Error('No active TUI sessions - spawn a TUI first');
+    }
+    // Return most recently started session
+    const sorted = sessions.sort((a, b) => b.startTime.getTime() - a.startTime.getTime());
+    return sorted[0].id;
+  }
+}
+
+// Remove duplicate closing brace if it exists

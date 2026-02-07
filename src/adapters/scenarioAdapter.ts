@@ -48,26 +48,37 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
 }
 
 /**
+ * Session ID tracker for multi-step scenarios
+ * The first spawn action creates a session, subsequent steps reference it
+ */
+let lastSessionId: string | null = null;
+
+/**
  * Convert scenarios/TestStep to models/OrchestratorStep
  */
-function adaptStepToOrchestrator(simpleStep: SimpleStep): OrchestratorStep {
+function adaptStepToOrchestrator(simpleStep: SimpleStep, stepIndex: number): OrchestratorStep {
   const params = simpleStep.params || {};
 
-  // Build target string based on params
+  // Build target string based on params and step type
   let target = '';
   let value = '';
 
   if (params.command) {
-    // For spawn/spawn_tui actions: combine command and args into target (space-separated)
+    // For spawn/spawn_tui actions: combine command and args into target
     if (params.args && Array.isArray(params.args)) {
       target = `${params.command} ${params.args.join(' ')}`;
     } else {
       target = params.command;
     }
-  } else if (params.text !== undefined) {
-    // For input/validate actions: text becomes value
-    value = params.text;
-    target = 'current_session'; // Default session ID
+    // First spawn step establishes the session
+    if (stepIndex === 0) {
+      lastSessionId = null; // Reset for new scenario
+    }
+  } else if (params.text !== undefined || params.duration !== undefined) {
+    // For actions that operate on the spawned session
+    // Use a special marker that TUIAgent can interpret as "use the active session"
+    value = params.text || String(params.duration || '');
+    target = ''; // TUIAgent will use the active session
   } else {
     // Fallback: use first param value as target
     const firstValue = Object.values(params)[0];
