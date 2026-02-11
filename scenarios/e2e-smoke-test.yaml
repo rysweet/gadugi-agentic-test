@@ -1,0 +1,82 @@
+# Simple E2E Test - Framework Self-Test
+# A minimal test to verify the framework can test itself
+
+name: "Framework Self-Test - Basic Validation"
+description: |
+  Minimal end-to-end test that validates the framework's basic functionality
+  by testing its own components. This serves as a smoke test.
+version: "1.0.0"
+
+config:
+  timeout: 60000
+  retries: 0
+  parallel: false
+
+agents:
+  - name: "test-agent"
+    type: "system"
+    config:
+      workingDirectory: "/tmp"
+      shell: "bash"
+      timeout: 30000
+
+steps:
+  - name: "Verify Echo Works"
+    agent: "test-agent"
+    action: "execute_command"
+    params:
+      command: "echo 'Framework is operational'"
+    expect:
+      exit_code: 0
+      stdout_contains: "operational"
+    timeout: 5000
+
+  - name: "Verify Environment"
+    agent: "test-agent"
+    action: "execute_command"
+    params:
+      command: "node --version"
+    expect:
+      exit_code: 0
+    timeout: 5000
+
+  - name: "Test File Operations"
+    agent: "test-agent"
+    action: "execute_command"
+    params:
+      command: |
+        echo "test content" > /tmp/framework-test.txt
+        cat /tmp/framework-test.txt
+        rm /tmp/framework-test.txt
+    expect:
+      exit_code: 0
+      stdout_contains: "test content"
+    timeout: 5000
+
+assertions:
+  - name: "Echo Command Passed"
+    type: "command_success"
+    agent: "test-agent"
+    params:
+      step: "Verify Echo Works"
+
+  - name: "Environment Check Passed"
+    type: "command_success"
+    agent: "test-agent"
+    params:
+      step: "Verify Environment"
+
+  - name: "File Operations Passed"
+    type: "command_success"
+    agent: "test-agent"
+    params:
+      step: "Test File Operations"
+
+metadata:
+  tags:
+    - "smoke-test"
+    - "self-test"
+    - "basic"
+  priority: "critical"
+  author: "agentic-testing-system"
+  test_type: "smoke"

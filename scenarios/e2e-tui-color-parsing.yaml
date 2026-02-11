@@ -1,0 +1,360 @@
+# E2E Test Scenario 5: TUI Color Parsing & Output Validation
+# Tests TUI Agent's ability to parse ANSI colors, handle terminal formatting,
+# and validate complex terminal output patterns
+
+name: "TUI Color Parsing & Output Validation"
+description: |
+  Comprehensive test of TUIAgent's color parsing, ANSI escape sequence handling,
+  and output validation capabilities. Tests real-world terminal application scenarios.
+version: "1.0.0"
+
+config:
+  timeout: 120000  # 2 minutes
+  retries: 1
+  parallel: false
+
+environment:
+  requires: []
+  optional:
+    - TERM
+
+agents:
+  - name: "tui-agent"
+    type: "tui"
+    config:
+      terminalType: "xterm-256color"
+      terminalSize:
+        cols: 80
+        rows: 24
+      defaultTimeout: 30000
+      outputCapture:
+        preserveColors: true
+        bufferSize: 65536
+        captureTiming: true
+      logConfig:
+        logColors: true
+        logOutputs: true
+        logLevel: "debug"
+
+steps:
+  # Test 1: Basic color output
+  - name: "Test Basic ANSI Colors"
+    agent: "tui-agent"
+    action: "spawn_terminal"
+    params:
+      command: "bash"
+      args: ["--norc", "--noprofile"]
+    timeout: 10000
+
+  - name: "Send Color Test Commands"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[31mRed Text\033[0m'
+        echo -e '\033[32mGreen Text\033[0m'
+        echo -e '\033[34mBlue Text\033[0m'
+        echo -e '\033[1;33mBold Yellow\033[0m'
+    expect:
+      output_contains_colors:
+        - color: "red"
+          text: "Red Text"
+        - color: "green"
+          text: "Green Text"
+        - color: "blue"
+          text: "Blue Text"
+        - color: "yellow"
+          style: "bold"
+          text: "Bold Yellow"
+    timeout: 5000
+
+  # Test 2: Background colors
+  - name: "Test Background Colors"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[41mRed Background\033[0m'
+        echo -e '\033[44mBlue Background\033[0m'
+    expect:
+      output_has_bg_colors: true
+    timeout: 5000
+
+  # Test 3: Text styles (bold, underline, etc.)
+  - name: "Test Text Styles"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[1mBold\033[0m'
+        echo -e '\033[4mUnderline\033[0m'
+        echo -e '\033[7mReverse\033[0m'
+    expect:
+      output_has_styles:
+        - "bold"
+        - "underline"
+        - "reverse"
+    timeout: 5000
+
+  # Test 4: Complex color sequences (256 colors)
+  - name: "Test 256 Color Support"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[38;5;208mOrange Text\033[0m'
+        echo -e '\033[48;5;21mBlue BG\033[0m'
+    expect:
+      output_contains: "Orange Text"
+    timeout: 5000
+
+  # Test 5: Test with common CLI tools that use colors
+  - name: "Test ls with Colors"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "ls --color=always /tmp\n"
+    expect:
+      output_not_empty: true
+      ansi_codes_present: true
+    timeout: 5000
+
+  # Test 6: Progress bar simulation
+  - name: "Test Progress Bar Output"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        for i in {1..5}; do
+          echo -ne "\r\033[K["
+          for j in $(seq 1 $i); do echo -n "="; done
+          echo -n ">"
+          for j in $(seq $i 4); do echo -n " "; done
+          echo -n "] ${i}0%"
+          sleep 0.2
+        done
+        echo
+    expect:
+      output_patterns:
+        - "50%"
+        - "=>"
+      carriage_returns_detected: true
+    timeout: 10000
+
+  # Test 7: Table formatting detection
+  - name: "Test Table Output"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        cat << 'TABLE'
+        ┌─────────┬────────┐
+        │ Name    │ Status │
+        ├─────────┼────────┤
+        │ Test1   │ ✓ Pass │
+        │ Test2   │ ✓ Pass │
+        └─────────┴────────┘
+        TABLE
+    expect:
+      output_patterns:
+        - "│"
+        - "✓"
+      table_detected: true
+    timeout: 5000
+
+  # Test 8: Multi-line colored output
+  - name: "Test Multi-line Color Preservation"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        cat << 'EOF'
+        \033[32mLine 1 in green\033[0m
+        \033[33mLine 2 in yellow\033[0m
+        \033[31mLine 3 in red\033[0m
+        EOF
+    expect:
+      output_line_count: ">= 3"
+      colors_preserved: true
+    timeout: 5000
+
+  # Test 9: Cursor positioning codes
+  - name: "Test Cursor Movement"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[2J\033[H'  # Clear and home
+        echo -e '\033[10;20HPositioned Text'
+    expect:
+      clear_screen_detected: true
+      output_contains: "Positioned Text"
+    timeout: 5000
+
+  # Test 10: Strip colors for validation
+  - name: "Validate Clean Text Extraction"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "echo -e '\\033[31mColored\\033[0m Text'\n"
+    expect:
+      clean_text_contains: "Colored Text"
+      ansi_stripped_properly: true
+    timeout: 5000
+
+  # Test 11: Real-world tool: git status with colors
+  - name: "Test Git Status Colors"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        cd /tmp
+        rm -rf test-git-repo
+        git init test-git-repo
+        cd test-git-repo
+        echo "test" > file.txt
+        git status
+    expect:
+      output_contains: "Untracked"
+      colors_detected: true
+    timeout: 15000
+
+  # Test 12: Test spinner/animation detection
+  - name: "Test Spinner Animation"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        chars="/-\\|"
+        for i in {1..10}; do
+          echo -ne "\r${chars:i%4:1} Processing..."
+          sleep 0.1
+        done
+        echo -e "\r✓ Done!       "
+    expect:
+      animation_detected: true
+      output_contains: "Done"
+    timeout: 5000
+
+  # Test 13: Color intensity variations
+  - name: "Test Color Intensity"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[0;31mNormal Red\033[0m'
+        echo -e '\033[1;31mBright Red\033[0m'
+        echo -e '\033[2;31mDim Red\033[0m'
+    expect:
+      intensity_variations_detected: true
+    timeout: 5000
+
+  # Test 14: Output buffer handling with rapid updates
+  - name: "Test Rapid Output Updates"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        for i in {1..50}; do
+          echo "Line $i"
+        done
+    expect:
+      output_contains: "Line 50"
+      all_lines_captured: true
+    timeout: 10000
+
+  # Test 15: Color reset verification
+  - name: "Test Color Reset Handling"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: |
+        echo -e '\033[31mRed\033[0m Normal \033[32mGreen\033[0m'
+    expect:
+      colors_properly_reset: true
+      segments_identified:
+        - text: "Red"
+          color: "red"
+        - text: "Normal"
+          color: "default"
+        - text: "Green"
+          color: "green"
+    timeout: 5000
+
+assertions:
+  - name: "Basic Colors Parsed"
+    type: "color_validation"
+    agent: "tui-agent"
+    params:
+      step: "Send Color Test Commands"
+      colors_detected: ["red", "green", "blue", "yellow"]
+
+  - name: "Background Colors Detected"
+    type: "output_validation"
+    agent: "tui-agent"
+    params:
+      step: "Test Background Colors"
+      has_background_colors: true
+
+  - name: "Text Styles Parsed"
+    type: "style_validation"
+    agent: "tui-agent"
+    params:
+      step: "Test Text Styles"
+      styles_detected: ["bold", "underline"]
+
+  - name: "ANSI Codes Present"
+    type: "ansi_validation"
+    agent: "tui-agent"
+    params:
+      step: "Test ls with Colors"
+      ansi_present: true
+
+  - name: "Progress Bar Detected"
+    type: "pattern_validation"
+    agent: "tui-agent"
+    params:
+      step: "Test Progress Bar Output"
+      pattern: "=>"
+
+  - name: "Table Format Recognized"
+    type: "output_validation"
+    agent: "tui-agent"
+    params:
+      step: "Test Table Output"
+      table_format: true
+
+  - name: "Clean Text Extraction Works"
+    type: "text_extraction"
+    agent: "tui-agent"
+    params:
+      step: "Validate Clean Text Extraction"
+      clean_text: "Colored Text"
+
+cleanup:
+  - name: "Exit Shell Session"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "exit\n"
+
+  - name: "Cleanup Test Repository"
+    agent: "tui-agent"
+    action: "cleanup_all_sessions"
+
+metadata:
+  tags:
+    - "tui"
+    - "color-parsing"
+    - "ansi-codes"
+    - "terminal-output"
+    - "formatting"
+    - "e2e"
+  priority: "high"
+  author: "agentic-testing-system"
+  test_type: "functional"
+  related_features:
+    - "ANSI color support"
+    - "Terminal output capture"
+    - "Text style parsing"
+    - "Progress indicator detection"

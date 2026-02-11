@@ -332,6 +332,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
         case 'execute':
         case 'run':
         case 'command':
+        case 'execute_command':
           result = await this.handleExecuteAction(step);
           break;
           
