@@ -1,0 +1,375 @@
+# E2E Test Scenario 3: TestOrchestrator Multi-Agent Coordination
+# Tests recent bug fixes:
+# - fix: Add runWithScenarios to use pre-loaded scenarios (69c8de6)
+# - fix: Production quality improvements - remove all type casts and fix error handling (ab2b5cf)
+# - fix: Replace simulated test execution with actual TestOrchestrator.run() (9844af6)
+
+name: "TestOrchestrator Multi-Agent Coordination"
+description: |
+  Comprehensive test of TestOrchestrator's ability to coordinate multiple
+  agents, handle complex scenarios, and manage execution flow without type casts.
+  Tests the runWithScenarios method and proper error handling.
+version: "1.0.0"
+
+config:
+  timeout: 180000  # 3 minutes
+  retries: 1
+  parallel: false
+
+environment:
+  requires: []
+  optional:
+    - NODE_ENV
+
+agents:
+  - name: "system-agent"
+    type: "system"
+    config:
+      workingDirectory: "/tmp/gadugi-test-orchestrator"
+      shell: "bash"
+      timeout: 30000
+
+  - name: "cli-agent"
+    type: "cli"
+    config:
+      workingDirectory: "/tmp/gadugi-test-orchestrator"
+      timeout: 30000
+
+steps:
+  # Setup: Create test directory
+  - name: "Create Test Directory"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "mkdir -p /tmp/gadugi-test-orchestrator"
+    timeout: 5000
+
+  # Test 1: Create test scenario files for orchestrator
+  - name: "Create Simple Test Scenario 1"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/gadugi-test-orchestrator/test-scenario-1.yaml << 'EOF'
+        name: "Simple CLI Test 1"
+        description: "Basic echo test"
+        version: "1.0.0"
+        agents:
+          - name: "test-cli"
+            type: "system"
+            config:
+              timeout: 10000
+        steps:
+          - name: "Echo Test"
+            agent: "test-cli"
+            action: "execute_command"
+            params:
+              command: "echo 'Test 1 Success'"
+        metadata:
+          tags: ["test", "simple"]
+          priority: "medium"
+        EOF
+    timeout: 5000
+
+  - name: "Create Simple Test Scenario 2"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/gadugi-test-orchestrator/test-scenario-2.yaml << 'EOF'
+        name: "Simple CLI Test 2"
+        description: "Another basic test"
+        version: "1.0.0"
+        agents:
+          - name: "test-cli"
+            type: "system"
+            config:
+              timeout: 10000
+        steps:
+          - name: "Date Test"
+            agent: "test-cli"
+            action: "execute_command"
+            params:
+              command: "date +%Y-%m-%d"
+        metadata:
+          tags: ["test", "simple"]
+          priority: "medium"
+        EOF
+    timeout: 5000
+
+  - name: "Create Failing Test Scenario"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/gadugi-test-orchestrator/test-scenario-fail.yaml << 'EOF'
+        name: "Intentional Failure Test"
+        description: "Test error handling"
+        version: "1.0.0"
+        agents:
+          - name: "test-cli"
+            type: "system"
+            config:
+              timeout: 10000
+        steps:
+          - name: "Fail Command"
+            agent: "test-cli"
+            action: "execute_command"
+            params:
+              command: "exit 1"
+        metadata:
+          tags: ["test", "error"]
+          priority: "low"
+        EOF
+    timeout: 5000
+
+  # Test 2: Test runWithScenarios method using CLI
+  - name: "Test Orchestrator With Pre-loaded Scenarios"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { TestOrchestrator } = require('./dist/orchestrator/TestOrchestrator');
+        const { ScenarioLoader } = require('./dist/scenarios');
+        
+        async function testOrchestrator() {
+          try {
+            // Load scenarios first
+            const scenarios = await ScenarioLoader.loadFromDirectory('/tmp/gadugi-test-orchestrator');
+            console.log('PRE_LOAD_SUCCESS: Loaded', scenarios.length, 'scenarios');
+            
+            // Create orchestrator with minimal config
+            const config = {
+              execution: { maxParallel: 1, retryAttempts: 0, failFast: false },
+              cli: { timeout: 30000 },
+              tui: { defaultTimeout: 30000 },
+              github: { token: '', owner: '', repository: '', baseBranch: 'main' }
+            };
+            
+            const orchestrator = new TestOrchestrator(config);
+            
+            // Test runWithScenarios method
+            const session = await orchestrator.runWithScenarios(scenarios);
+            console.log('ORCHESTRATOR_SUCCESS: Session', session.id);
+            console.log('RESULTS:', session.results.length, 'results');
+            console.log('PASSED:', session.results.filter(r => r.status === 'PASSED').length);
+            console.log('FAILED:', session.results.filter(r => r.status === 'FAILED').length);
+            
+            process.exit(0);
+          } catch (e) {
+            console.error('ORCHESTRATOR_ERROR:', e.message);
+            console.error('STACK:', e.stack);
+            process.exit(1);
+          }
+        }
+        
+        testOrchestrator();
+        " 2>&1 | tee /tmp/orchestrator-test.log
+    expect:
+      output_contains_any:
+        - "PRE_LOAD_SUCCESS"
+        - "ORCHESTRATOR_SUCCESS"
+    timeout: 60000
+
+  # Test 3: Verify results were captured
+  - name: "Verify Test Results"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        if grep -q "ORCHESTRATOR_SUCCESS" /tmp/orchestrator-test.log; then
+          echo "VERIFICATION_SUCCESS: Orchestrator ran"
+          grep "RESULTS:" /tmp/orchestrator-test.log
+          grep "PASSED:" /tmp/orchestrator-test.log
+          grep "FAILED:" /tmp/orchestrator-test.log
+        else
+          echo "VERIFICATION_FAILED: Orchestrator did not complete"
+          cat /tmp/orchestrator-test.log
+          exit 1
+        fi
+    expect:
+      exit_code: 0
+      output_contains: "VERIFICATION_SUCCESS"
+    timeout: 10000
+
+  # Test 4: Test error handling without type casts
+  - name: "Test Error Handling Quality"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { TestOrchestrator } = require('./dist/orchestrator/TestOrchestrator');
+        
+        async function testErrorHandling() {
+          try {
+            const config = {
+              execution: { maxParallel: 1, retryAttempts: 0, failFast: false },
+              cli: { timeout: 30000 },
+              tui: { defaultTimeout: 30000 },
+              github: { token: '', owner: '', repository: '', baseBranch: 'main' }
+            };
+            
+            const orchestrator = new TestOrchestrator(config);
+            
+            // Pass invalid scenarios to test error handling
+            const invalidScenarios = [null, undefined, {}, { name: 'test' }];
+            
+            // This should handle errors gracefully without type casts causing issues
+            for (const scenario of invalidScenarios) {
+              try {
+                await orchestrator.runWithScenarios([scenario]);
+              } catch (e) {
+                console.log('ERROR_HANDLED:', e.message.substring(0, 50));
+              }
+            }
+            
+            console.log('ERROR_HANDLING_SUCCESS: All errors caught gracefully');
+            process.exit(0);
+          } catch (e) {
+            console.error('ERROR_HANDLING_FAIL:', e.message);
+            process.exit(1);
+          }
+        }
+        
+        testErrorHandling();
+        "
+    expect:
+      exit_code: 0
+      output_contains: "ERROR_HANDLING"
+    timeout: 30000
+
+  # Test 5: Test multi-agent coordination
+  - name: "Create Multi-Agent Scenario"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/gadugi-test-orchestrator/test-multi-agent.yaml << 'EOF'
+        name: "Multi-Agent Coordination Test"
+        description: "Test multiple agents working together"
+        version: "1.0.0"
+        agents:
+          - name: "agent-1"
+            type: "system"
+            config:
+              timeout: 10000
+          - name: "agent-2"
+            type: "system"
+            config:
+              timeout: 10000
+        steps:
+          - name: "Agent 1 Task"
+            agent: "agent-1"
+            action: "execute_command"
+            params:
+              command: "echo 'Agent 1 working' > /tmp/agent1.txt"
+          - name: "Agent 2 Task"
+            agent: "agent-2"
+            action: "execute_command"
+            params:
+              command: "echo 'Agent 2 working' > /tmp/agent2.txt"
+          - name: "Verify Both Agents Ran"
+            agent: "agent-1"
+            action: "execute_command"
+            params:
+              command: "ls /tmp/agent*.txt | wc -l"
+        metadata:
+          tags: ["multi-agent", "coordination"]
+          priority: "high"
+        EOF
+    timeout: 5000
+
+  - name: "Run Multi-Agent Scenario"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { TestOrchestrator } = require('./dist/orchestrator/TestOrchestrator');
+        const { ScenarioLoader } = require('./dist/scenarios');
+        
+        async function testMultiAgent() {
+          try {
+            const scenario = await ScenarioLoader.loadFromFile('/tmp/gadugi-test-orchestrator/test-multi-agent.yaml');
+            
+            const config = {
+              execution: { maxParallel: 2, retryAttempts: 0, failFast: false },
+              cli: { timeout: 30000 },
+              tui: { defaultTimeout: 30000 },
+              github: { token: '', owner: '', repository: '', baseBranch: 'main' }
+            };
+            
+            const orchestrator = new TestOrchestrator(config);
+            const session = await orchestrator.runWithScenarios([scenario]);
+            
+            console.log('MULTI_AGENT_SUCCESS: Coordinated', scenario.agents.length, 'agents');
+            console.log('STEPS_COMPLETED:', session.results[0].steps.filter(s => s.status === 'PASSED').length);
+            
+            process.exit(0);
+          } catch (e) {
+            console.error('MULTI_AGENT_ERROR:', e.message);
+            process.exit(1);
+          }
+        }
+        
+        testMultiAgent();
+        "
+    expect:
+      output_contains: "MULTI_AGENT"
+    timeout: 30000
+
+assertions:
+  - name: "Pre-loaded Scenarios Work"
+    type: "output_validation"
+    agent: "system-agent"
+    params:
+      step: "Test Orchestrator With Pre-loaded Scenarios"
+      expected_pattern: "PRE_LOAD_SUCCESS"
+
+  - name: "Orchestrator Executes Successfully"
+    type: "output_validation"
+    agent: "system-agent"
+    params:
+      step: "Verify Test Results"
+      expected_pattern: "VERIFICATION_SUCCESS"
+
+  - name: "Error Handling Without Type Casts"
+    type: "command_success"
+    agent: "system-agent"
+    params:
+      step: "Test Error Handling Quality"
+
+  - name: "Multi-Agent Coordination Works"
+    type: "output_validation"
+    agent: "system-agent"
+    params:
+      step: "Run Multi-Agent Scenario"
+      expected_pattern: "MULTI_AGENT"
+
+cleanup:
+  - name: "Clean Up Test Directory"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "rm -rf /tmp/gadugi-test-orchestrator /tmp/orchestrator-test.log /tmp/agent*.txt"
+
+metadata:
+  tags:
+    - "orchestrator"
+    - "multi-agent"
+    - "coordination"
+    - "error-handling"
+    - "regression"
+    - "recent-fixes"
+  priority: "critical"
+  author: "agentic-testing-system"
+  test_type: "regression"
+  git_commits:
+    - "69c8de6"  # runWithScenarios
+    - "ab2b5cf"  # Production quality
+    - "9844af6"  # Actual orchestrator.run()

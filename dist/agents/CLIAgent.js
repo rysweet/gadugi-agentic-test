@@ -240,6 +240,7 @@ class CLIAgent extends events_1.EventEmitter {
                 case 'execute':
                 case 'run':
                 case 'command':
+                case 'execute_command':
                     result = await this.handleExecuteAction(step);
                     break;
                 case 'execute_with_input':

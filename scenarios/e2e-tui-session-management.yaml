@@ -1,0 +1,220 @@
+# E2E Test Scenario 1: TUIAgent Session Management & PATH Inheritance
+# Tests recent bug fixes:
+# - fix: TUIAgent inherit PATH from parent process (16d1d3a)
+# - fix: TUIAgent auto-detect current session for implicit references (4176911)
+# - fix: Complete getMostRecentSessionId method (c5d89b3)
+
+name: "TUIAgent Session Management & PATH Inheritance"
+description: |
+  Comprehensive end-to-end test for TUIAgent session management,
+  focusing on PATH environment variable inheritance and session auto-detection.
+  Tests that commands can find executables in PATH and sessions are properly tracked.
+version: "1.0.0"
+
+config:
+  timeout: 120000  # 2 minutes
+  retries: 2
+  parallel: false
+
+environment:
+  requires: []
+  optional:
+    - PATH
+    - HOME
+
+agents:
+  - name: "tui-agent"
+    type: "tui"
+    config:
+      terminalType: "xterm-256color"
+      terminalSize:
+        cols: 80
+        rows: 24
+      defaultTimeout: 30000
+      inputTiming:
+        keystrokeDelay: 10
+        responseDelay: 100
+        stabilizationTimeout: 2000
+      outputCapture:
+        preserveColors: true
+        bufferSize: 65536
+        captureTiming: true
+      performance:
+        enabled: true
+        sampleRate: 1000
+        memoryThreshold: 256
+        cpuThreshold: 80
+      logConfig:
+        logInputs: true
+        logOutputs: true
+        logColors: true
+        logLevel: "debug"
+
+steps:
+  # Step 1: Test basic shell spawn with PATH inheritance
+  - name: "Spawn Shell Session"
+    agent: "tui-agent"
+    action: "spawn_terminal"
+    params:
+      command: "bash"
+      args: ["--norc", "--noprofile"]
+      inheritEnv: true
+    expect:
+      output_contains: "$"
+    timeout: 10000
+
+  # Step 2: Verify PATH is inherited by running which command
+  - name: "Verify PATH Inheritance - which command"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "which node\n"
+    expect:
+      output_contains: "/node"
+      exit_code_not: 1
+    timeout: 5000
+
+  # Step 3: Verify common utilities are accessible
+  - name: "Verify PATH Inheritance - ls command"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "which ls\n"
+    expect:
+      output_contains: "/ls"
+    timeout: 5000
+
+  # Step 4: Test session auto-detection (implicit session reference)
+  - name: "Execute Command Without Explicit Session ID"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      # No session_id specified - should auto-detect
+      text: "echo 'Testing auto-detect'\n"
+    expect:
+      output_contains: "Testing auto-detect"
+    timeout: 5000
+
+  # Step 5: Create a second session to test multi-session handling
+  - name: "Spawn Second Shell Session"
+    agent: "tui-agent"
+    action: "spawn_terminal"
+    params:
+      command: "bash"
+      args: ["--norc", "--noprofile"]
+      inheritEnv: true
+    expect:
+      output_contains: "$"
+    timeout: 10000
+
+  # Step 6: Verify getMostRecentSessionId returns the newest session
+  - name: "Test Most Recent Session Detection"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      # Should target the most recent (second) session
+      text: "echo 'Session 2'\n"
+    expect:
+      output_contains: "Session 2"
+    timeout: 5000
+
+  # Step 7: Test explicit session reference
+  - name: "Reference First Session Explicitly"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      session_index: 0  # Explicitly reference first session
+      text: "echo 'Back to Session 1'\n"
+    expect:
+      output_contains: "Back to Session 1"
+    timeout: 5000
+
+  # Step 8: Test environment variable preservation
+  - name: "Verify Environment Variables Available"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "echo $HOME\n"
+    expect:
+      output_not_empty: true
+    timeout: 5000
+
+  # Step 9: Test custom PATH additions are preserved
+  - name: "Add Custom PATH and Verify"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      text: "export PATH=$PATH:/custom/test/path && echo $PATH\n"
+    expect:
+      output_contains: "/custom/test/path"
+    timeout: 5000
+
+  # Step 10: Verify session cleanup works properly
+  - name: "Exit First Session"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      session_index: 0
+      text: "exit\n"
+    expect:
+      session_exits: true
+    timeout: 5000
+
+  # Step 11: Verify second session still works after first exits
+  - name: "Verify Second Session Still Active"
+    agent: "tui-agent"
+    action: "send_input"
+    params:
+      session_index: 1
+      text: "echo 'Still alive'\n"
+    expect:
+      output_contains: "Still alive"
+    timeout: 5000
+
+assertions:
+  - name: "PATH Inheritance Successful"
+    type: "session_has_path"
+    agent: "tui-agent"
+    params:
+      session_index: 0
+      
+  - name: "Multiple Sessions Tracked"
+    type: "session_count"
+    agent: "tui-agent"
+    params:
+      min_count: 2
+
+  - name: "Auto-Detection Works"
+    type: "command_success"
+    agent: "tui-agent"
+    params:
+      step: "Execute Command Without Explicit Session ID"
+
+  - name: "Session Cleanup Successful"
+    type: "session_closed"
+    agent: "tui-agent"
+    params:
+      session_index: 0
+
+cleanup:
+  - name: "Kill All Remaining Sessions"
+    agent: "tui-agent"
+    action: "cleanup_all_sessions"
+
+metadata:
+  tags:
+    - "tui"
+    - "e2e"
+    - "session-management"
+    - "path-inheritance"
+    - "regression"
+    - "recent-fixes"
+  priority: "critical"
+  author: "agentic-testing-system"
+  test_type: "regression"
+  github_issues:
+    - "#12"  # TUIAgent implementation
+  git_commits:
+    - "16d1d3a"  # PATH inheritance
+    - "4176911"  # Auto-detect session
+    - "c5d89b3"  # getMostRecentSessionId

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Smart UI Testing Runner
  * Uses Playwright's accessibility tree and element detection to test like a user

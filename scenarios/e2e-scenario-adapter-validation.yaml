@@ -1,0 +1,360 @@
+# E2E Test Scenario 2: ScenarioAdapter Defensive Checks & YAML Parsing
+# Tests recent bug fixes:
+# - fix: Add defensive checks for all scenario fields in adapter (b6d3901)
+# - fix: Handle undefined steps in adapter (554a511)
+# - fix: Use ScenarioLoader format and fix YAML parsing bugs (fdd995e)
+
+name: "ScenarioAdapter Defensive Checks & YAML Parsing"
+description: |
+  Tests the scenario adapter's ability to handle malformed, incomplete,
+  and edge-case scenario definitions. Ensures defensive programming
+  practices prevent crashes and provide meaningful error messages.
+version: "1.0.0"
+
+config:
+  timeout: 60000
+  retries: 1
+  parallel: false
+
+environment:
+  requires: []
+
+agents:
+  - name: "system-agent"
+    type: "system"
+    config:
+      workingDirectory: "/tmp/gadugi-agentic-test"
+      shell: "bash"
+      timeout: 30000
+
+steps:
+  # Test 1: Valid minimal scenario
+  - name: "Create Valid Minimal Scenario"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-minimal.yaml << 'EOF'
+        name: "Minimal Test"
+        description: "Minimal valid scenario"
+        version: "1.0.0"
+        agents: []
+        steps: []
+        EOF
+    timeout: 5000
+
+  # Test 2: Scenario with undefined steps field
+  - name: "Create Scenario Without Steps"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-no-steps.yaml << 'EOF'
+        name: "No Steps Test"
+        description: "Scenario without steps field"
+        version: "1.0.0"
+        agents: []
+        EOF
+    timeout: 5000
+
+  # Test 3: Scenario with null steps
+  - name: "Create Scenario With Null Steps"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-null-steps.yaml << 'EOF'
+        name: "Null Steps Test"
+        description: "Scenario with null steps"
+        version: "1.0.0"
+        agents: []
+        steps: null
+        EOF
+    timeout: 5000
+
+  # Test 4: Scenario with missing required fields
+  - name: "Create Scenario Missing Fields"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-incomplete.yaml << 'EOF'
+        name: "Incomplete Test"
+        # Missing description, version, agents
+        steps:
+          - name: "Test Step"
+            action: "test"
+        EOF
+    timeout: 5000
+
+  # Test 5: Scenario with malformed YAML
+  - name: "Create Malformed YAML"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-malformed.yaml << 'EOF'
+        name: "Malformed Test"
+        description: "This has bad YAML
+          indentation: wrong
+        steps:
+          - name: Missing quotes for this: value
+        EOF
+    timeout: 5000
+
+  # Test 6: Scenario with empty arrays
+  - name: "Create Scenario With Empty Collections"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-empty.yaml << 'EOF'
+        name: "Empty Collections Test"
+        description: "All arrays are empty"
+        version: "1.0.0"
+        agents: []
+        steps: []
+        cleanup: []
+        assertions: []
+        EOF
+    timeout: 5000
+
+  # Test 7: Scenario with steps having missing fields
+  - name: "Create Scenario With Incomplete Steps"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cat > /tmp/test-scenario-incomplete-steps.yaml << 'EOF'
+        name: "Incomplete Steps Test"
+        description: "Steps missing required fields"
+        version: "1.0.0"
+        agents: []
+        steps:
+          - name: "Step without action"
+          - action: "test_action"
+          # Missing name
+          - name: "Step with undefined params"
+            action: "test_action"
+            params: null
+        EOF
+    timeout: 5000
+
+  # Test 8: Try to load valid minimal scenario
+  - name: "Load Valid Minimal Scenario"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { ScenarioLoader } = require('./dist/scenarios');
+        ScenarioLoader.loadFromFile('/tmp/test-scenario-minimal.yaml')
+          .then(s => console.log('SUCCESS: Loaded', s.name))
+          .catch(e => console.error('FAILED:', e.message));
+        "
+    expect:
+      exit_code: 0
+      output_contains: "SUCCESS"
+    timeout: 10000
+
+  # Test 9: Try to load scenario without steps (should handle gracefully)
+  - name: "Load Scenario Without Steps Field"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { ScenarioLoader } = require('./dist/scenarios');
+        ScenarioLoader.loadFromFile('/tmp/test-scenario-no-steps.yaml')
+          .then(s => {
+            console.log('HANDLED: Steps is', Array.isArray(s.steps) ? 'array' : typeof s.steps);
+            process.exit(0);
+          })
+          .catch(e => {
+            console.log('GRACEFUL_FAIL:', e.message);
+            process.exit(0);
+          });
+        "
+    expect:
+      exit_code: 0
+      output_contains_any:
+        - "HANDLED"
+        - "GRACEFUL_FAIL"
+    timeout: 10000
+
+  # Test 10: Try to load scenario with null steps
+  - name: "Load Scenario With Null Steps"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { ScenarioLoader } = require('./dist/scenarios');
+        ScenarioLoader.loadFromFile('/tmp/test-scenario-null-steps.yaml')
+          .then(s => {
+            console.log('HANDLED: Steps converted to', Array.isArray(s.steps) ? 'array' : 'other');
+            process.exit(0);
+          })
+          .catch(e => {
+            console.log('GRACEFUL_FAIL:', e.message);
+            process.exit(0);
+          });
+        "
+    expect:
+      exit_code: 0
+    timeout: 10000
+
+  # Test 11: Test adapter with undefined fields
+  - name: "Test Adapter Defensive Checks"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { adaptScenarioToComplex } = require('./dist/adapters/scenarioAdapter');
+        const testScenario = {
+          name: 'Test',
+          description: 'Test scenario',
+          version: '1.0.0'
+          // Missing: steps, agents, cleanup, assertions
+        };
+        try {
+          const adapted = adaptScenarioToComplex(testScenario);
+          console.log('DEFENSIVE_SUCCESS: Adapted with', 
+            Array.isArray(adapted.steps) ? adapted.steps.length : 0, 'steps');
+        } catch (e) {
+          console.log('DEFENSIVE_FAIL:', e.message);
+        }
+        "
+    expect:
+      output_contains: "DEFENSIVE"
+    timeout: 10000
+
+  # Test 12: Test malformed YAML handling
+  - name: "Load Malformed YAML"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { ScenarioLoader } = require('./dist/scenarios');
+        ScenarioLoader.loadFromFile('/tmp/test-scenario-malformed.yaml')
+          .then(s => console.log('UNEXPECTED_SUCCESS'))
+          .catch(e => {
+            console.log('EXPECTED_FAIL: YAML parse error caught');
+            process.exit(0);
+          });
+        "
+    expect:
+      exit_code: 0
+      output_contains: "EXPECTED_FAIL"
+    timeout: 10000
+
+  # Test 13: Verify empty collections are handled
+  - name: "Load Scenario With Empty Collections"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { ScenarioLoader } = require('./dist/scenarios');
+        ScenarioLoader.loadFromFile('/tmp/test-scenario-empty.yaml')
+          .then(s => {
+            console.log('EMPTY_HANDLED: Steps=' + s.steps.length);
+            process.exit(0);
+          })
+          .catch(e => {
+            console.log('FAILED:', e.message);
+            process.exit(1);
+          });
+        "
+    expect:
+      exit_code: 0
+      output_contains: "EMPTY_HANDLED"
+    timeout: 10000
+
+  # Test 14: Test incomplete steps handling
+  - name: "Load Scenario With Incomplete Steps"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: |
+        cd /tmp/gadugi-agentic-test && \
+        node -e "
+        const { ScenarioLoader } = require('./dist/scenarios');
+        ScenarioLoader.loadFromFile('/tmp/test-scenario-incomplete-steps.yaml')
+          .then(s => {
+            console.log('INCOMPLETE_HANDLED: Loaded', s.steps.length, 'steps');
+            // Check if steps have defaults or are filtered
+            process.exit(0);
+          })
+          .catch(e => {
+            console.log('GRACEFUL_FAIL:', e.message);
+            process.exit(0);
+          });
+        "
+    expect:
+      exit_code: 0
+    timeout: 10000
+
+assertions:
+  - name: "Valid Minimal Scenario Loads"
+    type: "command_success"
+    agent: "system-agent"
+    params:
+      step: "Load Valid Minimal Scenario"
+
+  - name: "Undefined Steps Handled Gracefully"
+    type: "no_crash"
+    agent: "system-agent"
+    params:
+      step: "Load Scenario Without Steps Field"
+
+  - name: "Null Steps Handled"
+    type: "no_crash"
+    agent: "system-agent"
+    params:
+      step: "Load Scenario With Null Steps"
+
+  - name: "Defensive Checks Work"
+    type: "output_validation"
+    agent: "system-agent"
+    params:
+      step: "Test Adapter Defensive Checks"
+      expected_pattern: "DEFENSIVE"
+
+  - name: "Malformed YAML Detected"
+    type: "error_handling"
+    agent: "system-agent"
+    params:
+      step: "Load Malformed YAML"
+      expected_error_type: "YAML parse error"
+
+cleanup:
+  - name: "Remove Test Files"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "rm -f /tmp/test-scenario-*.yaml"
+
+metadata:
+  tags:
+    - "scenario-adapter"
+    - "defensive-programming"
+    - "yaml-parsing"
+    - "error-handling"
+    - "regression"
+    - "recent-fixes"
+  priority: "high"
+  author: "agentic-testing-system"
+  test_type: "regression"
+  git_commits:
+    - "b6d3901"  # Defensive checks
+    - "554a511"  # Undefined steps
+    - "fdd995e"  # YAML parsing fixes

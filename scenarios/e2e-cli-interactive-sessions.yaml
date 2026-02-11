@@ -1,0 +1,277 @@
+# E2E Test Scenario 4: CLIAgent Interactive Session Handling
+# Tests CLIAgent capabilities for interactive CLI applications
+
+name: "CLIAgent Interactive Session Handling"
+description: |
+  Comprehensive test of CLIAgent's ability to handle interactive CLI sessions,
+  including stdin/stdout communication, timeout management, and process lifecycle.
+version: "1.0.0"
+
+config:
+  timeout: 120000  # 2 minutes
+  retries: 1
+  parallel: false
+
+environment:
+  requires: []
+
+agents:
+  - name: "cli-agent"
+    type: "cli"
+    config:
+      workingDirectory: "/tmp"
+      defaultTimeout: 30000
+      executionMode: "spawn"
+      captureOutput: true
+      ioConfig:
+        encoding: "utf8"
+        handleInteractivePrompts: true
+      logConfig:
+        logCommands: true
+        logOutput: true
+        logLevel: "debug"
+
+steps:
+  # Test 1: Simple command execution
+  - name: "Execute Simple Echo"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "echo 'Hello from CLI'"
+    expect:
+      exit_code: 0
+      output_contains: "Hello from CLI"
+    timeout: 5000
+
+  # Test 2: Command with stdin input
+  - name: "Test stdin Input"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "cat"
+      stdin: "This is test input\n"
+      timeout: 3000
+    expect:
+      output_contains: "This is test input"
+    timeout: 5000
+
+  # Test 3: Interactive session with bc calculator
+  - name: "Interactive BC Calculator Session"
+    agent: "cli-agent"
+    action: "interactive_session"
+    params:
+      command: "bc"
+      interactions:
+        - send: "2 + 2\n"
+          expect: "4"
+          timeout: 2000
+        - send: "10 * 5\n"
+          expect: "50"
+          timeout: 2000
+        - send: "100 / 4\n"
+          expect: "25"
+          timeout: 2000
+        - send: "quit\n"
+    timeout: 15000
+
+  # Test 4: Environment variable propagation
+  - name: "Test Environment Variables"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "bash"
+      args: ["-c", "echo $TEST_VAR"]
+      environment:
+        TEST_VAR: "CustomValue123"
+    expect:
+      output_contains: "CustomValue123"
+    timeout: 5000
+
+  # Test 5: Working directory handling
+  - name: "Test Working Directory"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "pwd"
+      cwd: "/tmp"
+    expect:
+      output_contains: "/tmp"
+    timeout: 5000
+
+  # Test 6: Timeout handling (command should timeout)
+  - name: "Test Timeout Handling"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "sleep 10"
+      timeout: 2000
+    expect:
+      timeout_occurred: true
+    on_failure: "continue"
+    timeout: 3000
+
+  # Test 7: Exit code validation
+  - name: "Test Non-Zero Exit Code"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "bash"
+      args: ["-c", "exit 42"]
+    expect:
+      exit_code: 42
+    timeout: 5000
+
+  # Test 8: Multiple sequential commands
+  - name: "Sequential Command Execution"
+    agent: "cli-agent"
+    action: "execute_multiple"
+    params:
+      commands:
+        - command: "echo 'First'"
+          expect_output: "First"
+        - command: "echo 'Second'"
+          expect_output: "Second"
+        - command: "echo 'Third'"
+          expect_output: "Third"
+    timeout: 15000
+
+  # Test 9: Long-running process monitoring
+  - name: "Monitor Long-Running Process"
+    agent: "cli-agent"
+    action: "execute_with_monitoring"
+    params:
+      command: "bash"
+      args: ["-c", "for i in {1..5}; do echo Line $i; sleep 0.5; done"]
+      monitor:
+        capture_realtime: true
+        expected_patterns:
+          - "Line 1"
+          - "Line 3"
+          - "Line 5"
+    timeout: 10000
+
+  # Test 10: Test stderr capture
+  - name: "Capture stderr Output"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "bash"
+      args: ["-c", "echo 'Error message' >&2"]
+    expect:
+      stderr_contains: "Error message"
+    timeout: 5000
+
+  # Test 11: Pipe command simulation
+  - name: "Test Piped Commands"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "bash"
+      args: ["-c", "echo 'apple\nbanana\ncherry' | grep banana"]
+    expect:
+      output_contains: "banana"
+      output_not_contains: "apple"
+    timeout: 5000
+
+  # Test 12: Test command with large output
+  - name: "Handle Large Output"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "bash"
+      args: ["-c", "seq 1 1000"]
+      maxBufferSize: 65536
+    expect:
+      output_contains: "1000"
+    timeout: 10000
+
+  # Test 13: Process cleanup verification
+  - name: "Verify Process Cleanup"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "bash"
+      args: ["-c", "echo $$; sleep 1"]
+    expect:
+      exit_code: 0
+    timeout: 5000
+
+  # Test 14: Retry mechanism test
+  - name: "Test Retry on Failure"
+    agent: "cli-agent"
+    action: "execute_with_retry"
+    params:
+      command: "bash"
+      args: ["-c", "exit 1"]
+      retry_strategy:
+        max_attempts: 3
+        retry_delay: 500
+        retry_on_exit_codes: [1]
+    expect:
+      attempts_made: 3
+      final_status: "failed"
+    on_failure: "continue"
+    timeout: 10000
+
+assertions:
+  - name: "Simple Commands Execute"
+    type: "command_success"
+    agent: "cli-agent"
+    params:
+      step: "Execute Simple Echo"
+
+  - name: "Stdin Input Works"
+    type: "output_validation"
+    agent: "cli-agent"
+    params:
+      step: "Test stdin Input"
+      expected_pattern: "test input"
+
+  - name: "Interactive Sessions Work"
+    type: "command_success"
+    agent: "cli-agent"
+    params:
+      step: "Interactive BC Calculator Session"
+
+  - name: "Environment Variables Propagate"
+    type: "output_validation"
+    agent: "cli-agent"
+    params:
+      step: "Test Environment Variables"
+      expected_pattern: "CustomValue123"
+
+  - name: "Timeout Handling Works"
+    type: "timeout_detected"
+    agent: "cli-agent"
+    params:
+      step: "Test Timeout Handling"
+
+  - name: "Exit Codes Captured"
+    type: "exit_code_validation"
+    agent: "cli-agent"
+    params:
+      step: "Test Non-Zero Exit Code"
+      expected_code: 42
+
+  - name: "stderr Captured"
+    type: "stream_validation"
+    agent: "cli-agent"
+    params:
+      step: "Capture stderr Output"
+      stream: "stderr"
+
+cleanup:
+  - name: "Cleanup Any Orphaned Processes"
+    agent: "cli-agent"
+    action: "cleanup"
+
+metadata:
+  tags:
+    - "cli-agent"
+    - "interactive"
+    - "process-management"
+    - "stdin-stdout"
+    - "timeout-handling"
+  priority: "high"
+  author: "agentic-testing-system"
+  test_type: "functional"
