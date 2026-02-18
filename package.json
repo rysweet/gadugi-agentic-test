@@ -19,7 +19,7 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "start": "node dist/cli.js",
-    "prepare": "npm run build || true",
+    "prepare": "[ -d node_modules/typescript ] && npm run build || true",
     "prepublishOnly": "(npm test || true) && (npm run build || true)"
   },
   "keywords": [
