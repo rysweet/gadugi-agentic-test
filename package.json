@@ -47,7 +47,7 @@
     "glob": "^10.3.0",
     "jimp": "^1.6.0",
     "js-yaml": "^4.1.0",
-    "node-pty": "^1.0.0",
+    "node-pty-prebuilt-multiarch": "^0.10.1-pre.5",
     "openai": "^4.20.0",
     "pidusage": "^4.0.1",
     "pixelmatch": "^7.1.0",

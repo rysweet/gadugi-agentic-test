@@ -1,6 +1,6 @@
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
-import * as pty from 'node-pty';
+import * as pty from 'node-pty-prebuilt-multiarch';
 import { ProcessLifecycleManager, ProcessInfo } from './ProcessLifecycleManager';
 import { adaptiveWaiter, waitForTerminalReady, waitForOutput, delay } from './AdaptiveWaiter';
 
@@ -116,7 +116,7 @@ export class TUIAgent extends EventEmitter {
         cols: this.config.dimensions.cols,
         rows: this.config.dimensions.rows,
         cwd: this.config.cwd,
-        env: this.config.env,
+        env: this.config.env as { [key: string]: string },
       });
 
       // Track the process with our lifecycle manager
