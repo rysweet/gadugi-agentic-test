@@ -40,7 +40,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PTYCreators = exports.PTYManager = void 0;
 exports.createPTY = createPTY;
 exports.createShellPTY = createShellPTY;
-const pty = __importStar(require("node-pty"));
+const pty = __importStar(require("node-pty-prebuilt-multiarch"));
 const events_1 = require("events");
 const os_1 = require("os");
 /**

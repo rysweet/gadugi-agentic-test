@@ -3,7 +3,7 @@
  * Provides a unified interface for creating and managing terminal processes
  */
 
-import * as pty from 'node-pty';
+import * as pty from 'node-pty-prebuilt-multiarch';
 import { EventEmitter } from 'events';
 import { platform } from 'os';
 
@@ -114,7 +114,7 @@ export class PTYManager extends EventEmitter {
         // Platform-specific options
         const options: pty.IPtyForkOptions = {
           cwd: this.config.cwd,
-          env: this.config.env,
+          env: this.config.env as { [key: string]: string },
           cols: this.config.cols,
           rows: this.config.rows,
           encoding: this.config.encoding as any,

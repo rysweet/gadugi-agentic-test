@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TUIAgent = void 0;
 const events_1 = require("events");
-const pty = __importStar(require("node-pty"));
+const pty = __importStar(require("node-pty-prebuilt-multiarch"));
 const ProcessLifecycleManager_1 = require("./ProcessLifecycleManager");
 const AdaptiveWaiter_1 = require("./AdaptiveWaiter");
 /**
