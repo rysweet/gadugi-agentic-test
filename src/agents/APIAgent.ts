@@ -16,6 +16,8 @@ import {
   OrchestratorScenario
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
+import { delay } from '../utils/async';
+import { deepEqual } from '../utils/comparison';
 
 /**
  * HTTP methods supported by the API agent
@@ -453,7 +455,7 @@ export class APIAgent extends EventEmitter implements IAgent {
           maxAttempts
         });
         
-        await this.delay(retryDelay);
+        await delay(retryDelay);
       }
     }
     
@@ -527,7 +529,7 @@ export class APIAgent extends EventEmitter implements IAgent {
           
         case 'wait':
           const waitTime = parseInt(step.value || '1000');
-          await this.delay(waitTime);
+          await delay(waitTime);
           result = true;
           break;
           
@@ -750,7 +752,7 @@ export class APIAgent extends EventEmitter implements IAgent {
 
     try {
       const expectedData = JSON.parse(expected);
-      return this.deepEqual(latestResponse.data, expectedData);
+      return deepEqual(latestResponse.data, expectedData);
     } catch {
       // If not JSON, do string comparison
       return JSON.stringify(latestResponse.data).includes(expected);
@@ -793,10 +795,9 @@ export class APIAgent extends EventEmitter implements IAgent {
       throw new Error('Schema validation is disabled');
     }
 
-    // This would require a JSON schema validation library
-    // For now, return true as placeholder
-    this.logger.warn('Schema validation not implemented yet');
-    return true;
+    throw new Error(
+      'Schema validation not implemented. Install ajv and implement, or remove validate_schema step action.'
+    );
   }
 
   private parseHeaders(value?: string): Record<string, string> | undefined {
@@ -918,8 +919,7 @@ export class APIAgent extends EventEmitter implements IAgent {
   }
 
   private getScenarioLogs(): string[] {
-    // Return recent logs related to the current scenario
-    return [];
+    return this.logger ? ['No scenario-specific logs available'] : [];
   }
 
   private setupEventListeners(): void {
@@ -928,31 +928,6 @@ export class APIAgent extends EventEmitter implements IAgent {
     });
   }
 
-  private deepEqual(obj1: any, obj2: any): boolean {
-    if (obj1 === obj2) return true;
-    
-    if (obj1 == null || obj2 == null) return false;
-    
-    if (typeof obj1 !== typeof obj2) return false;
-    
-    if (typeof obj1 !== 'object') return obj1 === obj2;
-    
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    
-    if (keys1.length !== keys2.length) return false;
-    
-    for (const key of keys1) {
-      if (!keys2.includes(key)) return false;
-      if (!this.deepEqual(obj1[key], obj2[key])) return false;
-    }
-    
-    return true;
-  }
-
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }
 
 /**

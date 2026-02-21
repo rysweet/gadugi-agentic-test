@@ -23,6 +23,7 @@ import {
   CommandResult
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
+import { delay } from '../utils/async';
 
 /**
  * TUI Agent configuration options
@@ -266,7 +267,7 @@ const DEFAULT_CONFIG: Required<TUIAgentConfig> = {
  */
 export class TUIAgent extends EventEmitter implements IAgent {
   public readonly name = 'TUIAgent';
-  public readonly type = AgentType.SYSTEM;
+  public readonly type = AgentType.TUI;
 
   private config: Required<TUIAgentConfig>;
   private logger: TestLogger;
@@ -480,13 +481,13 @@ export class TUIAgent extends EventEmitter implements IAgent {
         if (session.process.stdin) {
           session.process.stdin.write(char);
           if (timing > 0) {
-            await this.delay(timing);
+            await delay(timing);
           }
         }
       }
 
       // Wait for response delay
-      await this.delay(this.config.inputTiming.responseDelay);
+      await delay(this.config.inputTiming.responseDelay);
 
       // Wait for output stabilization if requested
       if (waitForStabilization) {
@@ -654,7 +655,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
         session.process.kill('SIGTERM');
 
         // Wait for graceful shutdown
-        await this.delay(1000);
+        await delay(1000);
 
         // Force kill if still running
         if (!session.process.killed) {
@@ -754,7 +755,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
         case 'wait':
           const waitTime = parseInt(step.value || '1000');
-          await this.delay(waitTime);
+          await delay(waitTime);
           result = `Waited ${waitTime}ms`;
           break;
 
@@ -998,7 +999,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
     for (let i = 0; i < count; i++) {
       await this.sendInput(sessionId, this.getKeyMapping(key));
-      await this.delay(this.config.inputTiming.keystrokeDelay);
+      await delay(this.config.inputTiming.keystrokeDelay);
     }
 
     this.menuContext.selectedIndex = targetIndex;
@@ -1207,10 +1208,6 @@ export class TUIAgent extends EventEmitter implements IAgent {
       ...safeConfig,
       environment: environment ? Object.keys(environment) : undefined
     };
-  }
-
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // Step action handlers

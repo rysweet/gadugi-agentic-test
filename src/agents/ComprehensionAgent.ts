@@ -10,7 +10,7 @@ import { join, relative } from 'path';
 import { glob } from 'glob';
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
-import { IAgent } from './index';
+import { IAgent, AgentType } from './index';
 import { OrchestratorScenario, TestStep, VerificationStep, Priority, TestInterface } from '../models/TestModels';
 
 /**
@@ -286,7 +286,7 @@ export class DocumentationLoader {
  */
 export class ComprehensionAgent implements IAgent {
   name = 'ComprehensionAgent';
-  type = 'comprehension';
+  type = AgentType.COMPREHENSION;
 
   private config: ComprehensionAgentConfig;
   private docLoader: DocumentationLoader;

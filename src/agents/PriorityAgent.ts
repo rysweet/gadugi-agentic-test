@@ -212,7 +212,7 @@ const DEFAULT_CONFIG: Required<PriorityAgentConfig> = {
  */
 export class PriorityAgent extends EventEmitter implements IAgent {
   public readonly name = 'PriorityAgent';
-  public readonly type = AgentType.SYSTEM;
+  public readonly type = AgentType.PRIORITY;
 
   private config: Required<PriorityAgentConfig>;
   private logger: TestLogger;
