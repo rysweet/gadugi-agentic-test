@@ -416,29 +416,34 @@ export function createLogger(config?: Partial<LoggerConfig>): TestLogger {
 }
 
 /**
- * Default logger instance for the application
+ * Mutable active logger — swapped by setupLogger() without mutating any instance.
+ * All code should use the `logger` convenience object rather than this directly.
  */
-export const defaultLogger = new TestLogger();
+let _activeLogger: TestLogger = new TestLogger();
+
+/** @deprecated Use the `logger` convenience object instead */
+export const defaultLogger = _activeLogger;
 
 /**
- * Convenience methods using the default logger
+ * Convenience methods that always delegate to the current active logger.
+ * Safe to use before or after setupLogger() is called.
  */
 export const logger = {
-  error: (message: string, meta?: any) => defaultLogger.error(message, meta),
-  warn: (message: string, meta?: any) => defaultLogger.warn(message, meta),
-  info: (message: string, meta?: any) => defaultLogger.info(message, meta),
-  debug: (message: string, meta?: any) => defaultLogger.debug(message, meta),
-  setContext: (context: LogContext) => defaultLogger.setContext(context),
-  clearContext: () => defaultLogger.clearContext(),
-  setLevel: (level: LogLevel) => defaultLogger.setLevel(level),
-  child: (context: LogContext) => defaultLogger.child(context)
+  error: (message: string, meta?: any) => _activeLogger.error(message, meta),
+  warn: (message: string, meta?: any) => _activeLogger.warn(message, meta),
+  info: (message: string, meta?: any) => _activeLogger.info(message, meta),
+  debug: (message: string, meta?: any) => _activeLogger.debug(message, meta),
+  setContext: (context: LogContext) => _activeLogger.setContext(context),
+  clearContext: () => _activeLogger.clearContext(),
+  setLevel: (level: LogLevel) => _activeLogger.setLevel(level),
+  child: (context: LogContext) => _activeLogger.child(context)
 };
 
 /**
- * Setup logger with configuration
+ * Reconfigure the active logger. Replaces the logger instance rather than
+ * mutating it, so all subsequent calls through `logger` use the new config.
  */
 export function setupLogger(config?: Partial<LoggerConfig>): TestLogger {
-  const newLogger = createLogger(config);
-  Object.assign(defaultLogger, newLogger);
-  return defaultLogger;
+  _activeLogger = createLogger(config);
+  return _activeLogger;
 }
