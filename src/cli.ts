@@ -357,7 +357,6 @@ program
           // Run scenarios through the real orchestrator
           const { TestOrchestrator } = await import('./orchestrator');
           const { TestStatus } = await import('./models/TestModels');
-          const { adaptScenarioToComplex } = await import('./adapters/scenarioAdapter');
 
           const testConfig: import('./models/Config').TestConfig = config || {
             execution: { maxParallel: 1, defaultTimeout: 30000, continueOnFailure: true,
@@ -391,8 +390,7 @@ program
           };
 
           const orchestrator = new TestOrchestrator(testConfig);
-          const orchestratorScenarios = scenarios.map(adaptScenarioToComplex);
-          const session = await orchestrator.runWithScenarios(orchestratorScenarios);
+          const session = await orchestrator.runWithScenarios('watch', scenarios);
           const passedCount = session.summary.passed;
           const failedCount = session.summary.failed;
 
