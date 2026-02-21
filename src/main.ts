@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Import core modules
 import { TestOrchestrator, createTestOrchestrator } from './orchestrator';
 import { TestConfig, ExecutionConfig, CLIConfig, UIConfig, GitHubConfig, PriorityConfig, LoggingConfig, ReportingConfig, NotificationConfig } from './models/Config';
-import { TestSession, TestResult, TestScenario, TestInterface, TestStatus, TestSuite } from './models/TestModels';
+import { TestSession, TestResult, OrchestratorScenario, TestInterface, TestStatus, TestSuite } from './models/TestModels';
 import { logger, setupLogger, LogLevel } from './utils/logger';
 import { loadConfigFromYaml, loadConfigFromFile } from './utils/config';
 import { parseYamlScenarios } from './utils/yamlParser';
@@ -354,8 +354,8 @@ export async function loadConfiguration(configPath: string, cliArgs: CliArgument
 /**
  * Discover and load test scenarios
  */
-export async function loadTestScenarios(scenarioFiles?: string[]): Promise<TestScenario[]> {
-  const scenarios: TestScenario[] = [];
+export async function loadTestScenarios(scenarioFiles?: string[]): Promise<OrchestratorScenario[]> {
+  const scenarios: OrchestratorScenario[] = [];
   
   // Default scenario directory
   const scenarioDir = path.join(process.cwd(), 'scenarios');
@@ -401,7 +401,7 @@ export async function loadTestScenarios(scenarioFiles?: string[]): Promise<TestS
 /**
  * Filter scenarios based on test suite configuration
  */
-export function filterScenariosForSuite(scenarios: TestScenario[], suite: string): TestScenario[] {
+export function filterScenariosForSuite(scenarios: OrchestratorScenario[], suite: string): OrchestratorScenario[] {
   const suiteConfig = TEST_SUITES[suite];
   if (!suiteConfig) {
     logger.warn(`Unknown test suite: ${suite}, using all scenarios`);
@@ -414,7 +414,7 @@ export function filterScenariosForSuite(scenarios: TestScenario[], suite: string
     return scenarios;
   }
   
-  const filtered: TestScenario[] = [];
+  const filtered: OrchestratorScenario[] = [];
   
   for (const scenario of scenarios) {
     for (const pattern of patterns) {
@@ -495,7 +495,7 @@ export function displayResults(session: TestSession): void {
  * Perform dry run - discover and display scenarios without execution
  */
 export async function performDryRun(
-  scenarios: TestScenario[],
+  scenarios: OrchestratorScenario[],
   suite: string
 ): Promise<void> {
   const filteredScenarios = filterScenariosForSuite(scenarios, suite);
@@ -709,7 +709,7 @@ export {
   TestConfig,
   TestSession,
   TestResult,
-  TestScenario,
+  OrchestratorScenario,
   createTestOrchestrator
 };
 

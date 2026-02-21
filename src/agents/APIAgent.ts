@@ -13,7 +13,7 @@ import {
   TestStep, 
   TestStatus, 
   StepResult, 
-  TestScenario 
+  OrchestratorScenario
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
 
@@ -282,7 +282,7 @@ export class APIAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test scenario
    */
-  async execute(scenario: TestScenario): Promise<any> {
+  async execute(scenario: OrchestratorScenario): Promise<any> {
     if (!this.isInitialized) {
       throw new Error('Agent not initialized. Call initialize() first.');
     }

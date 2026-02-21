@@ -10,11 +10,11 @@
 import { io, Socket } from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { 
-  TestStep, 
-  TestStatus, 
-  StepResult, 
-  TestScenario 
+import {
+  TestStep,
+  TestStatus,
+  StepResult,
+  OrchestratorScenario
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
 
@@ -274,7 +274,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
   /**
    * Execute a test scenario
    */
-  async execute(scenario: TestScenario): Promise<any> {
+  async execute(scenario: OrchestratorScenario): Promise<any> {
     if (!this.isInitialized) {
       throw new Error('Agent not initialized. Call initialize() first.');
     }

@@ -18,7 +18,7 @@ import {
   TestError,
   Priority
 } from '../models/TestModels';
-import { TestScenario } from '../scenarios';
+import { ScenarioDefinition } from '../scenarios';
 import {
   TestConfig,
   ExecutionConfig,
@@ -158,7 +158,7 @@ export class TestOrchestrator extends EventEmitter {
   /**
    * Run a complete testing session with pre-loaded scenarios
    */
-  async runWithScenarios(suite: string, loadedScenarios: TestScenario[]): Promise<TestSession> {
+  async runWithScenarios(suite: string, loadedScenarios: ScenarioDefinition[]): Promise<TestSession> {
     logger.info(`Starting test session with suite: ${suite}`);
 
     // Initialize agents before use

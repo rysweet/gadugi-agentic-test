@@ -1,14 +1,14 @@
-import { TUIAgent } from '../core/TUIAgent';
+import { PtyTerminal } from '../core/PtyTerminal';
 import { ProcessLifecycleManager } from '../core/ProcessLifecycleManager';
 import { waitForTerminalReady, delay } from '../core/AdaptiveWaiter';
 
-describe('TUIAgent', () => {
-  let agent: TUIAgent;
+describe('PtyTerminal', () => {
+  let agent: PtyTerminal;
   let processManager: ProcessLifecycleManager;
 
   beforeEach(() => {
     processManager = new ProcessLifecycleManager();
-    agent = new TUIAgent({}, processManager);
+    agent = new PtyTerminal({}, processManager);
   });
 
   afterEach(async () => {
@@ -19,7 +19,7 @@ describe('TUIAgent', () => {
 
   describe('Initialization', () => {
     it('should initialize with default configuration', () => {
-      const agent = new TUIAgent();
+      const agent = new PtyTerminal();
       expect(agent).toBeDefined();
       expect(agent.isRunning()).toBe(false);
     });
@@ -31,12 +31,12 @@ describe('TUIAgent', () => {
         timeout: 60000
       };
 
-      const agent = new TUIAgent(config);
+      const agent = new PtyTerminal(config);
       expect(agent).toBeDefined();
     });
 
     it('should detect shell based on platform', () => {
-      const agent = new TUIAgent();
+      const agent = new PtyTerminal();
       // Should not throw and should have a valid shell configured
       expect(agent).toBeDefined();
     });
@@ -56,13 +56,13 @@ describe('TUIAgent', () => {
     it('should prevent double start', async () => {
       await agent.start();
 
-      await expect(agent.start()).rejects.toThrow('TUIAgent is already started');
+      await expect(agent.start()).rejects.toThrow('PtyTerminal is already started');
     });
 
     it('should prevent start after destroy', async () => {
       await agent.destroy();
 
-      await expect(agent.start()).rejects.toThrow('Cannot start a destroyed TUIAgent');
+      await expect(agent.start()).rejects.toThrow('Cannot start a destroyed PtyTerminal');
     });
 
     it('should handle process ready event', async () => {
@@ -186,7 +186,7 @@ describe('TUIAgent', () => {
 
       await expect(
         agent.executeCommand('echo "test"')
-      ).rejects.toThrow('TUIAgent is not started or is destroyed');
+      ).rejects.toThrow('PtyTerminal is not started or is destroyed');
     });
   });
 
@@ -218,7 +218,7 @@ describe('TUIAgent', () => {
 
       expect(() => {
         agent.resize({ cols: 80, rows: 24 });
-      }).toThrow('TUIAgent is not started or is destroyed');
+      }).toThrow('PtyTerminal is not started or is destroyed');
     });
   });
 
@@ -273,11 +273,11 @@ describe('TUIAgent', () => {
 
   describe('Zombie Process Prevention', () => {
     it('should not create zombie processes with multiple agents', async () => {
-      const agents: TUIAgent[] = [];
+      const agents: PtyTerminal[] = [];
 
       // Create multiple agents
       for (let i = 0; i < 5; i++) {
-        const testAgent = new TUIAgent({}, processManager);
+        const testAgent = new PtyTerminal({}, processManager);
         await testAgent.start();
         agents.push(testAgent);
       }
@@ -300,11 +300,11 @@ describe('TUIAgent', () => {
     });
 
     it('should handle abrupt termination without zombies', async () => {
-      const agents: TUIAgent[] = [];
+      const agents: PtyTerminal[] = [];
 
       // Create agents and start long-running processes
       for (let i = 0; i < 3; i++) {
-        const testAgent = new TUIAgent({}, processManager);
+        const testAgent = new PtyTerminal({}, processManager);
         await testAgent.start();
         agents.push(testAgent);
 

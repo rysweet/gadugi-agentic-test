@@ -1,5 +1,5 @@
 import { ProcessLifecycleManager } from '../core/ProcessLifecycleManager';
-import { TUIAgent } from '../core/TUIAgent';
+import { PtyTerminal } from '../core/PtyTerminal';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -79,12 +79,12 @@ describe('Zombie Process Prevention Integration', () => {
 
   describe('TUI Agent Zombie Prevention', () => {
     it('should handle multiple TUI agents without zombies', async () => {
-      const agents: TUIAgent[] = [];
+      const agents: PtyTerminal[] = [];
       const agentCount = 10;
 
       // Create multiple TUI agents
       for (let i = 0; i < agentCount; i++) {
-        const agent = new TUIAgent({
+        const agent = new PtyTerminal({
           dimensions: { cols: 80, rows: 24 }
         }, processManager);
         await agent.start();
@@ -112,11 +112,11 @@ describe('Zombie Process Prevention Integration', () => {
     }, 20000);
 
     it('should handle agent failures without leaving zombies', async () => {
-      const agents: TUIAgent[] = [];
+      const agents: PtyTerminal[] = [];
 
       // Create agents
       for (let i = 0; i < 5; i++) {
-        const agent = new TUIAgent({}, processManager);
+        const agent = new PtyTerminal({}, processManager);
         await agent.start();
         agents.push(agent);
       }
