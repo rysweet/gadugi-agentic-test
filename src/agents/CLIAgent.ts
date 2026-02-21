@@ -824,8 +824,9 @@ export class CLIAgent extends EventEmitter implements IAgent {
   }
 
   private setEnvironmentVariable(name: string, value: string): void {
+    // Update local config only — do NOT mutate process.env as it contaminates
+    // all subsequent tests and other agents running in the same process.
     this.config.environment[name] = value;
-    process.env[name] = value;
     this.logger.debug(`Set environment variable: ${name}=${value}`);
   }
 

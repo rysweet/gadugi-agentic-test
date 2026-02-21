@@ -1194,8 +1194,9 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
   private setEnvironmentVariables(variables: Record<string, string>): void {
     for (const [name, value] of Object.entries(variables)) {
+      // Update local config only — do NOT mutate process.env as it contaminates
+      // all subsequent tests and other agents running in the same process.
       this.config.environment[name] = value;
-      process.env[name] = value;
       this.logger.debug(`Set environment variable: ${name}=${value}`);
     }
   }
