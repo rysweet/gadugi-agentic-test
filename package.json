@@ -4,6 +4,11 @@
   "description": "Intelligent multi-agent testing framework for Electron, CLI, and web applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./cli": "./dist/cli.js",
+    "./lib": "./dist/lib.js"
+  },
   "bin": {
     "gadugi-test": "./dist/cli.js",
     "gadugi-smart-test": "./dist/runners/SmartUITestRunner.js"

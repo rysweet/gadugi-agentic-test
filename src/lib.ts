@@ -1,0 +1,590 @@
+/**
+ * Programmatic library API for the Agentic Testing System
+ *
+ * This module provides all non-CLI functionality: configuration,
+ * scenario loading, filtering, result persistence, and the
+ * programmatic `runTests()` entry point. It intentionally has
+ * NO Commander imports and NO process-level side effects (signal
+ * handlers, unhandledRejection listeners, etc.).
+ */
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { pathExists } from 'fs-extra';
+import { v4 as uuidv4 } from 'uuid';
+
+// Import core modules
+import { TestOrchestrator, createTestOrchestrator } from './orchestrator';
+import { TestConfig } from './models/Config';
+import { TestSession, OrchestratorScenario, TestInterface, TestStatus } from './models/TestModels';
+// Backward-compatible alias
+type TestScenario = OrchestratorScenario;
+import { logger, setupLogger, LogLevel } from './utils/logger';
+import { loadConfigFromFile } from './utils/config';
+import { parseYamlScenarios } from './utils/yamlParser';
+
+/**
+ * Command line arguments interface (used by loadConfiguration)
+ */
+export interface CliArguments {
+  config: string;
+  suite: 'smoke' | 'full' | 'regression';
+  dryRun: boolean;
+  noIssues: boolean;
+  logLevel: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
+  output?: string;
+  parallel?: number;
+  timeout?: number;
+  scenarioFiles?: string[];
+  verbose: boolean;
+  debug: boolean;
+}
+
+/**
+ * Suite configuration for selecting test scenarios
+ */
+interface SuiteConfig {
+  name: string;
+  description: string;
+  patterns: string[];
+  tags: string[];
+}
+
+/**
+ * Test suite configuration mapping
+ */
+export const TEST_SUITES: Record<string, SuiteConfig> = {
+  smoke: {
+    name: 'smoke',
+    description: 'Quick smoke tests for critical functionality',
+    patterns: ['smoke:', 'critical:', 'auth:'],
+    tags: ['smoke', 'critical', 'auth']
+  },
+  regression: {
+    name: 'regression',
+    description: 'Full regression test suite',
+    patterns: ['*'],
+    tags: []
+  },
+  full: {
+    name: 'full',
+    description: 'Complete test suite including all scenarios',
+    patterns: ['*'],
+    tags: []
+  }
+};
+
+/**
+ * Default configuration factory
+ */
+export function createDefaultConfig(): TestConfig {
+  // Filter out undefined values from process.env to match Record<string, string> type
+  const envVars: Record<string, string> = Object.entries(process.env).reduce((acc, [key, value]) => {
+    if (value !== undefined) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as Record<string, string>);
+
+  const defaultConfig: TestConfig = {
+    execution: {
+      maxParallel: 3,
+      defaultTimeout: 300000,
+      continueOnFailure: true,
+      maxRetries: 2,
+      retryDelay: 1000,
+      randomizeOrder: false,
+      resourceLimits: {
+        maxMemory: 1024 * 1024 * 1024, // 1GB
+        maxCpuUsage: 80,
+        maxDiskUsage: 1024 * 1024 * 1024, // 1GB
+        maxExecutionTime: 600000, // 10 minutes
+        maxOpenFiles: 100
+      },
+      cleanup: {
+        cleanupAfterEach: true,
+        cleanupAfterAll: true,
+        cleanupDirectories: ['./temp', './screenshots'],
+        cleanupFiles: ['*.tmp', '*.log'],
+        terminateProcesses: [],
+        stopServices: [],
+        customCleanupScripts: []
+      }
+    },
+    cli: {
+      executablePath: 'uv run atg',
+      workingDirectory: process.cwd(),
+      defaultTimeout: 30000,
+      environment: {
+        NODE_ENV: 'test',
+        ...envVars
+      },
+      captureOutput: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+      maxRetries: 2,
+      retryDelay: 1000
+    },
+    ui: {
+      browser: 'chromium',
+      headless: true,
+      viewport: {
+        width: 1280,
+        height: 720
+      },
+      baseUrl: 'http://localhost:3000',
+      defaultTimeout: 30000,
+      screenshotDir: './outputs/screenshots',
+      recordVideo: false,
+      slowMo: 100
+    },
+    tui: {
+      terminal: 'xterm',
+      defaultDimensions: {
+        width: 80,
+        height: 24
+      },
+      encoding: 'utf8',
+      defaultTimeout: 30000,
+      pollingInterval: 100,
+      captureScreenshots: true,
+      recordSessions: false,
+      colorMode: '24bit',
+      interpretAnsi: true,
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+      shellArgs: [],
+      environment: envVars,
+      workingDirectory: process.cwd(),
+      accessibility: {
+        highContrast: false,
+        largeText: false,
+        screenReader: false
+      },
+      performance: {
+        refreshRate: 60,
+        maxBufferSize: 1024 * 1024, // 1MB
+        hardwareAcceleration: false
+      }
+    },
+    github: {
+      token: process.env.GITHUB_TOKEN || '',
+      owner: process.env.GITHUB_OWNER || '',
+      repository: process.env.GITHUB_REPOSITORY || '',
+      baseBranch: 'main',
+      createIssuesOnFailure: false,
+      issueLabels: ['bug', 'automated-test'],
+      issueTitleTemplate: 'Test Failure: {{scenario.name}}',
+      issueBodyTemplate: `
+# Test Failure Report
+
+**Scenario:** {{scenario.name}}
+**Test ID:** {{scenario.id}}
+**Failure Time:** {{failure.timestamp}}
+
+## Error Details
+{{failure.message}}
+
+## Stack Trace
+\`\`\`
+{{failure.stackTrace}}
+\`\`\`
+
+## Reproduction Steps
+{{scenario.steps}}
+
+---
+*This issue was automatically generated by the Agentic Testing System*
+      `.trim(),
+      createPullRequestsForFixes: false,
+      autoAssignUsers: []
+    },
+    priority: {
+      enabled: true,
+      executionOrder: ['critical', 'high', 'medium', 'low'],
+      failFastOnCritical: true,
+      maxParallelByPriority: {
+        critical: 1,
+        high: 2,
+        medium: 3,
+        low: 5
+      },
+      timeoutMultipliers: {
+        critical: 2.0,
+        high: 1.5,
+        medium: 1.0,
+        low: 0.8
+      },
+      retryCountsByPriority: {
+        critical: 3,
+        high: 2,
+        medium: 1,
+        low: 0
+      }
+    },
+    logging: {
+      level: 'info',
+      console: true,
+      format: 'structured',
+      includeTimestamp: true,
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFiles: 5,
+      compress: true
+    },
+    reporting: {
+      outputDir: './outputs/reports',
+      formats: ['html', 'json'],
+      includeScreenshots: true,
+      includeLogs: true,
+      customTemplates: {},
+      generationTimeout: 30000
+    },
+    notifications: {
+      enabled: false,
+      channels: [],
+      triggers: [],
+      templates: {}
+    },
+    plugins: {}
+  };
+
+  return defaultConfig;
+}
+
+/**
+ * Load and merge configuration from file and environment
+ */
+export async function loadConfiguration(configPath: string, cliArgs: CliArguments): Promise<TestConfig> {
+  let config: TestConfig;
+
+  // Try to load configuration from file
+  if (await pathExists(configPath)) {
+    logger.info(`Loading configuration from: ${configPath}`);
+    try {
+      config = await loadConfigFromFile(configPath);
+    } catch (error) {
+      logger.warn(`Failed to load config from ${configPath}, using defaults:`, error);
+      config = createDefaultConfig();
+    }
+  } else {
+    logger.warn(`Config file not found: ${configPath}, using defaults`);
+    config = createDefaultConfig();
+  }
+
+  // Override with command line arguments and environment variables
+  if (cliArgs.noIssues && config.github) {
+    config.github.createIssuesOnFailure = false;
+  }
+
+  if (cliArgs.parallel) {
+    config.execution.maxParallel = cliArgs.parallel;
+  }
+
+  if (cliArgs.timeout) {
+    config.execution.defaultTimeout = cliArgs.timeout;
+  }
+
+  // Set logging level
+  config.logging.level = cliArgs.logLevel.toLowerCase() as 'debug' | 'info' | 'warn' | 'error';
+
+  // Load GitHub configuration from environment
+  if (config.github) {
+    config.github.token = process.env.GITHUB_TOKEN || config.github.token;
+    config.github.owner = process.env.GITHUB_OWNER || config.github.owner;
+    config.github.repository = process.env.GITHUB_REPOSITORY || config.github.repository;
+  }
+
+  return config;
+}
+
+/**
+ * Discover and load test scenarios
+ */
+export async function loadTestScenarios(scenarioFiles?: string[]): Promise<TestScenario[]> {
+  const scenarios: TestScenario[] = [];
+
+  // Default scenario directory
+  const scenarioDir = path.join(process.cwd(), 'scenarios');
+
+  if (scenarioFiles && scenarioFiles.length > 0) {
+    // Load specific files
+    for (const file of scenarioFiles) {
+      try {
+        const content = await fs.readFile(file, 'utf-8');
+        const fileScenarios = await parseYamlScenarios(content);
+        scenarios.push(...fileScenarios);
+        logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
+      } catch (error) {
+        logger.error(`Failed to load scenarios from ${file}:`, error);
+      }
+    }
+  } else {
+    // Load all YAML files from scenario directory
+    try {
+      if (await pathExists(scenarioDir)) {
+        const files = await fs.readdir(scenarioDir);
+        const yamlFiles = files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'));
+
+        for (const file of yamlFiles) {
+          const filePath = path.join(scenarioDir, file);
+          const content = await fs.readFile(filePath, 'utf-8');
+          const fileScenarios = await parseYamlScenarios(content);
+          scenarios.push(...fileScenarios);
+          logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
+        }
+      } else {
+        logger.warn(`Scenario directory not found: ${scenarioDir}`);
+      }
+    } catch (error) {
+      logger.error('Failed to load scenarios from directory:', error);
+    }
+  }
+
+  logger.info(`Loaded ${scenarios.length} total test scenarios`);
+  return scenarios;
+}
+
+/**
+ * Filter scenarios based on test suite configuration
+ */
+export function filterScenariosForSuite(scenarios: TestScenario[], suite: string): TestScenario[] {
+  const suiteConfig = TEST_SUITES[suite];
+  if (!suiteConfig) {
+    logger.warn(`Unknown test suite: ${suite}, using all scenarios`);
+    return scenarios;
+  }
+
+  const patterns = suiteConfig.patterns;
+
+  if (patterns.includes('*')) {
+    return scenarios;
+  }
+
+  const filtered: TestScenario[] = [];
+
+  for (const scenario of scenarios) {
+    for (const pattern of patterns) {
+      if (pattern.endsWith(':')) {
+        // Prefix match
+        const prefix = pattern.slice(0, -1);
+        if (scenario.id.startsWith(prefix) ||
+            scenario.tags?.some(tag => tag.startsWith(prefix))) {
+          filtered.push(scenario);
+          break;
+        }
+      } else if (pattern.includes('*')) {
+        // Glob pattern
+        const regex = new RegExp(pattern.replace('*', '.*'));
+        if (regex.test(scenario.id) ||
+            scenario.tags?.some(tag => regex.test(tag))) {
+          filtered.push(scenario);
+          break;
+        }
+      } else {
+        // Exact match
+        if (scenario.id === pattern ||
+            scenario.tags?.includes(pattern)) {
+          filtered.push(scenario);
+          break;
+        }
+      }
+    }
+  }
+
+  return filtered;
+}
+
+/**
+ * Save test results to output file
+ */
+export async function saveResults(session: TestSession, outputPath: string): Promise<void> {
+  const outputDir = path.dirname(outputPath);
+  await fs.mkdir(outputDir, { recursive: true });
+
+  const resultsData = {
+    sessionId: session.id,
+    startTime: session.startTime.toISOString(),
+    endTime: session.endTime?.toISOString() || null,
+    summary: session.summary,
+    results: session.results
+  };
+
+  await fs.writeFile(outputPath, JSON.stringify(resultsData, null, 2));
+  logger.info(`Results saved to: ${outputPath}`);
+}
+
+/**
+ * Display test session summary
+ */
+export function displayResults(session: TestSession): void {
+  console.log('\n' + '='.repeat(60));
+  console.log('TEST SESSION RESULTS');
+  console.log('='.repeat(60));
+  console.log(`Session ID: ${session.id}`);
+
+  const duration = session.endTime && session.startTime
+    ? (session.endTime.getTime() - session.startTime.getTime()) / 1000
+    : 0;
+  console.log(`Duration: ${duration.toFixed(2)} seconds`);
+  console.log(`Total Tests: ${session.summary.total}`);
+  console.log(`Passed: ${session.summary.passed}`);
+  console.log(`Failed: ${session.summary.failed}`);
+  console.log(`Skipped: ${session.summary.skipped}`);
+
+  const passRate = session.summary.total > 0
+    ? (session.summary.passed / session.summary.total) * 100
+    : 0;
+  console.log(`Pass Rate: ${passRate.toFixed(1)}%`);
+}
+
+/**
+ * Perform dry run - discover and display scenarios without execution
+ */
+export async function performDryRun(
+  scenarios: TestScenario[],
+  suite: string
+): Promise<void> {
+  const filteredScenarios = filterScenariosForSuite(scenarios, suite);
+
+  console.log('\n' + '='.repeat(60));
+  console.log('DRY RUN MODE - Not executing tests');
+  console.log('='.repeat(60));
+  console.log(`Would execute ${filteredScenarios.length} scenarios for suite '${suite}':`);
+
+  for (const scenario of filteredScenarios) {
+    console.log(`  - [${scenario.interface || TestInterface.CLI}] ${scenario.id}: ${scenario.name}`);
+    if (scenario.description) {
+      console.log(`    ${scenario.description}`);
+    }
+    if (scenario.tags && scenario.tags.length > 0) {
+      console.log(`    Tags: ${scenario.tags.join(', ')}`);
+    }
+  }
+}
+
+/**
+ * Setup graceful shutdown handlers.
+ *
+ * This installs process-level signal handlers and should only be
+ * called from CLI entry points, never from library code.
+ */
+export function setupGracefulShutdown(orchestrator: TestOrchestrator): void {
+  const shutdown = (signal: string) => {
+    logger.info(`Received ${signal}, shutting down gracefully...`);
+    orchestrator.abort();
+
+    // Give some time for cleanup
+    setTimeout(() => {
+      logger.warn('Forcing shutdown');
+      process.exit(1);
+    }, 5000);
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+  // Handle unhandled rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection:', { reason, promise });
+    process.exit(1);
+  });
+
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    process.exit(1);
+  });
+}
+
+/**
+ * Programmatic API for running tests
+ */
+export interface ProgrammaticTestOptions {
+  configPath?: string;
+  suite?: 'smoke' | 'full' | 'regression';
+  scenarioFiles?: string[];
+  config?: Partial<TestConfig>;
+  dryRun?: boolean;
+  outputFile?: string;
+}
+
+/**
+ * Run tests programmatically.
+ *
+ * Unlike the CLI entry points, this function does NOT install
+ * signal handlers. Callers who want graceful shutdown should
+ * call `setupGracefulShutdown()` separately.
+ */
+export async function runTests(options: ProgrammaticTestOptions = {}): Promise<TestSession> {
+  // Setup default options
+  const opts: ProgrammaticTestOptions = {
+    configPath: './config/test-config.yaml',
+    suite: 'smoke',
+    dryRun: false,
+    ...options
+  };
+
+  // Setup logging
+  setupLogger({ level: LogLevel.INFO });
+
+  // Load configuration
+  const baseConfig = opts.configPath
+    ? await loadConfiguration(opts.configPath, { noIssues: false } as CliArguments)
+    : createDefaultConfig();
+
+  const config = opts.config
+    ? { ...baseConfig, ...opts.config }
+    : baseConfig;
+
+  // Load scenarios
+  const scenarios = await loadTestScenarios(opts.scenarioFiles);
+
+  // Create orchestrator
+  const orchestrator = createTestOrchestrator(config);
+
+  // NOTE: No setupGracefulShutdown() call here.
+  // Signal handlers belong in the CLI path, not the library path.
+
+  // Handle dry run
+  if (opts.dryRun) {
+    await performDryRun(scenarios, opts.suite || 'smoke');
+
+    // Return a mock session for dry run
+    return {
+      id: uuidv4(),
+      startTime: new Date(),
+      endTime: new Date(),
+      status: TestStatus.PASSED,
+      results: [],
+      summary: {
+        total: scenarios.length,
+        passed: 0,
+        failed: 0,
+        skipped: 0
+      }
+    };
+  }
+
+  // Run test session
+  const session = await orchestrator.run(opts.suite, opts.scenarioFiles);
+
+  // Save results if requested
+  if (opts.outputFile) {
+    await saveResults(session, opts.outputFile);
+  }
+
+  return session;
+}
+
+// Re-export types that library consumers need
+export {
+  TestOrchestrator,
+  createTestOrchestrator,
+  TestConfig,
+  TestSession,
+  TestStatus,
+  TestInterface,
+  LogLevel,
+  setupLogger
+};
+
+export type { TestResult, TestSuite, OrchestratorScenario } from './models/TestModels';
+/** @deprecated Use OrchestratorScenario */
+export type { OrchestratorScenario as TestScenario } from './models/TestModels';

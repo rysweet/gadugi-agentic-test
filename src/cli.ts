@@ -15,6 +15,7 @@ import * as chokidar from 'chokidar';
 import chalk from 'chalk';
 import * as dotenv from 'dotenv';
 import { SingleBar, Presets } from 'cli-progress';
+import { createDefaultConfig } from './lib';
 
 // Load environment variables from .env file if it exists
 try {
@@ -149,108 +150,17 @@ program
         // Import orchestrator
         const { TestOrchestrator } = await import('./orchestrator');
 
-        // Create minimal test config with all required fields
-        const testConfig: import('./models/Config').TestConfig = config || {
-          execution: {
-            maxParallel: 1,
-            defaultTimeout: parseInt(options.timeout),
-            continueOnFailure: true,
-            maxRetries: 0,
-            retryDelay: 1000,
-            randomizeOrder: false,
-            resourceLimits: {
-              maxMemory: 1024 * 1024 * 1024, // 1GB
-              maxCpuUsage: 80,
-              maxDiskUsage: 1024 * 1024 * 1024 * 10, // 10GB
-              maxExecutionTime: parseInt(options.timeout),
-              maxOpenFiles: 1000
-            },
-            cleanup: {
-              cleanupAfterEach: false,
-              cleanupAfterAll: false,
-              cleanupDirectories: [],
-              cleanupFiles: [],
-              terminateProcesses: [],
-              stopServices: [],
-              customCleanupScripts: []
-            }
-          },
-          cli: {
-            executablePath: 'node',
-            workingDirectory: process.cwd(),
-            defaultTimeout: parseInt(options.timeout),
-            environment: {},
-            captureOutput: true,
-            maxRetries: 0,
-            retryDelay: 1000
-          },
-          ui: {
-            browser: 'chromium',
-            headless: false,
-            viewport: { width: 1280, height: 720 },
-            baseUrl: 'http://localhost:3000',
-            defaultTimeout: parseInt(options.timeout),
-            screenshotDir: './screenshots',
-            recordVideo: false
-          },
-          tui: {
-            terminal: 'xterm',
-            defaultDimensions: { width: 80, height: 24 },
-            encoding: 'utf8',
-            defaultTimeout: parseInt(options.timeout),
-            pollingInterval: 100,
-            captureScreenshots: false,
-            recordSessions: false,
-            colorMode: '24bit',
-            interpretAnsi: true,
-            shell: process.env.SHELL || '/bin/bash',
-            shellArgs: [],
-            environment: {},
-            workingDirectory: process.cwd(),
-            accessibility: {
-              highContrast: false,
-              screenReader: false,
-              largeText: false
-            },
-            performance: {
-              refreshRate: 60,
-              maxBufferSize: 100000,
-              hardwareAcceleration: false
-            }
-          },
-          priority: {
-            enabled: false,
-            executionOrder: ['critical', 'high', 'medium', 'low'],
-            failFastOnCritical: false,
-            maxParallelByPriority: {},
-            timeoutMultipliers: {},
-            retryCountsByPriority: {}
-          },
-          logging: {
-            level: 'info',
-            console: true,
-            format: 'text',
-            includeTimestamp: true,
-            maxFileSize: 10 * 1024 * 1024,
-            maxFiles: 5,
-            compress: false
-          },
-          reporting: {
-            outputDir: './test-results',
-            formats: ['json'],
-            includeScreenshots: true,
-            includeLogs: true,
-            customTemplates: {},
-            generationTimeout: 30000
-          },
-          notifications: {
-            enabled: false,
-            channels: [],
-            triggers: [],
-            templates: {}
-          },
-          plugins: {}
-        };
+        // Use shared default config, with CLI timeout override
+        const testConfig: import('./models/Config').TestConfig = config || (() => {
+          const defaults = createDefaultConfig();
+          const timeoutMs = parseInt(options.timeout);
+          defaults.execution.defaultTimeout = timeoutMs;
+          defaults.execution.resourceLimits.maxExecutionTime = timeoutMs;
+          defaults.cli.defaultTimeout = timeoutMs;
+          defaults.ui.defaultTimeout = timeoutMs;
+          defaults.tui.defaultTimeout = timeoutMs;
+          return defaults;
+        })();
 
         const orchestrator = new TestOrchestrator(testConfig);
 
@@ -356,36 +266,7 @@ program
           // Run scenarios through the real orchestrator
           const { TestOrchestrator } = await import('./orchestrator');
 
-          const testConfig: import('./models/Config').TestConfig = config || {
-            execution: { maxParallel: 1, defaultTimeout: 30000, continueOnFailure: true,
-              maxRetries: 0, retryDelay: 0, randomizeOrder: false,
-              resourceLimits: { maxMemory: 1024*1024*1024, maxCpuUsage: 80, maxDiskUsage: 1024*1024*1024, maxExecutionTime: 60000, maxOpenFiles: 100 },
-              cleanup: { cleanupAfterEach: true, cleanupAfterAll: true, cleanupDirectories: [], cleanupFiles: [], terminateProcesses: [], stopServices: [], customCleanupScripts: [] }
-            },
-            cli: { executablePath: 'node', workingDirectory: process.cwd(), defaultTimeout: 30000,
-              environment: {}, captureOutput: true, shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash', maxRetries: 0, retryDelay: 0 },
-            ui: { browser: 'chromium', headless: true, viewport: { width: 1280, height: 720 },
-              baseUrl: 'http://localhost:3000', defaultTimeout: 30000, screenshotDir: './outputs/screenshots', recordVideo: false, slowMo: 0 },
-            tui: { terminal: 'xterm', defaultDimensions: { width: 80, height: 24 }, encoding: 'utf8',
-              defaultTimeout: 30000, pollingInterval: 100, captureScreenshots: false, recordSessions: false,
-              colorMode: '24bit', interpretAnsi: true, shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
-              shellArgs: [], environment: {}, workingDirectory: process.cwd(),
-              accessibility: { highContrast: false, largeText: false, screenReader: false },
-              performance: { refreshRate: 60, maxBufferSize: 1024*1024, hardwareAcceleration: false } },
-            github: { token: '', owner: '', repository: '', baseBranch: 'main',
-              createIssuesOnFailure: false, issueLabels: [], issueTitleTemplate: '', issueBodyTemplate: '',
-              createPullRequestsForFixes: false, autoAssignUsers: [] },
-            priority: { enabled: true, executionOrder: ['critical','high','medium','low'],
-              failFastOnCritical: false, maxParallelByPriority: { critical:1, high:1, medium:1, low:1 },
-              timeoutMultipliers: { critical:1, high:1, medium:1, low:1 },
-              retryCountsByPriority: { critical:0, high:0, medium:0, low:0 } },
-            logging: { level: 'info', console: true, format: 'structured', includeTimestamp: true,
-              maxFileSize: 10*1024*1024, maxFiles: 5, compress: false },
-            reporting: { outputDir: './outputs/reports', formats: ['json'], includeScreenshots: false,
-              includeLogs: false, customTemplates: {}, generationTimeout: 30000 },
-            notifications: { enabled: false, channels: [], triggers: [], templates: {} },
-            plugins: {}
-          };
+          const testConfig: import('./models/Config').TestConfig = config || createDefaultConfig();
 
           const orchestrator = new TestOrchestrator(testConfig);
           const session = await orchestrator.runWithScenarios('watch', scenarios);
