@@ -15,6 +15,7 @@ import { spawn, ChildProcess, SpawnOptions } from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import pidusage from 'pidusage';
 import { IAgent, AgentType } from './index';
 import {
   TestStep,
@@ -275,6 +276,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   private currentScenarioId?: string;
   private sessions: Map<string, TerminalSession> = new Map();
   private performanceMonitor?: NodeJS.Timeout;
+  private performanceMetricsHistory: PerformanceMetrics[] = [];
   private menuContext?: MenuNavigation;
 
   constructor(config: TUIAgentConfig = {}) {
@@ -1144,24 +1146,35 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
   private startPerformanceMonitoring(): void {
     this.performanceMonitor = setInterval(() => {
-      this.collectPerformanceMetrics();
+      this.collectPerformanceMetrics().catch((err) => {
+        this.logger.warn('Failed to collect performance metrics', { error: err?.message });
+      });
     }, this.config.performance.sampleRate);
   }
 
-  private collectPerformanceMetrics(): void {
-    // Implementation would collect actual performance metrics
-    // This is a placeholder for the real implementation
-    this.emit('performanceMetrics', {
-      timestamp: new Date(),
+  private async collectPerformanceMetrics(): Promise<void> {
+    const stats = await pidusage(process.pid);
+    const metric: PerformanceMetrics = {
       memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
-      cpuUsage: 0, // Would need actual CPU monitoring
-      activeSessions: this.sessions.size
+      cpuUsage: stats.cpu,
+      responseTime: 0,
+      renderTime: 0,
+    };
+
+    this.performanceMetricsHistory.push(metric);
+    if (this.performanceMetricsHistory.length > 100) {
+      this.performanceMetricsHistory.shift();
+    }
+
+    this.emit('performanceMetrics', {
+      ...metric,
+      timestamp: new Date(),
+      activeSessions: this.sessions.size,
     });
   }
 
   private getPerformanceMetrics(): PerformanceMetrics[] {
-    // Return collected performance metrics
-    return []; // Placeholder
+    return [...this.performanceMetricsHistory];
   }
 
   private getSessionInfo(): Record<string, any> {
