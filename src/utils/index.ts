@@ -9,6 +9,8 @@ export * from './config';
 export * from './retry';
 export * from './screenshot';
 export * from './fileUtils';
+export * from './async';
+export * from './comparison';
 
 // Legacy exports for backward compatibility
 import winston from 'winston';

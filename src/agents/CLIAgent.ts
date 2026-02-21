@@ -18,6 +18,8 @@ import {
   CommandResult 
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
+import { delay } from '../utils/async';
+import { deepEqual } from '../utils/comparison';
 
 /**
  * Configuration options for the CLIAgent
@@ -144,7 +146,7 @@ const DEFAULT_CONFIG: Required<CLIAgentConfig> = {
  */
 export class CLIAgent extends EventEmitter implements IAgent {
   public readonly name = 'CLIAgent';
-  public readonly type = AgentType.SYSTEM;
+  public readonly type = AgentType.CLI;
   
   private config: Required<CLIAgentConfig>;
   private logger: TestLogger;
@@ -311,7 +313,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
           maxAttempts
         });
         
-        await this.delay(this.config.retryConfig.retryDelay);
+        await delay(this.config.retryConfig.retryDelay);
       }
     }
     
@@ -363,7 +365,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
           
         case 'wait':
           const waitTime = parseInt(step.value || '1000');
-          await this.delay(waitTime);
+          await delay(waitTime);
           break;
           
         case 'set_environment':
@@ -431,7 +433,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
         case 'json':
           try {
             const parsed = JSON.parse(output);
-            return this.deepEqual(parsed, expected.value);
+            return deepEqual(parsed, expected.value);
           } catch (error) {
             return false;
           }
@@ -788,7 +790,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
         processInfo.process.kill('SIGTERM');
         
         // Wait for graceful shutdown
-        await this.delay(1000);
+        await delay(1000);
         
         // Force kill if still running
         if (!processInfo.process.killed) {
@@ -928,31 +930,6 @@ export class CLIAgent extends EventEmitter implements IAgent {
     };
   }
 
-  private deepEqual(obj1: any, obj2: any): boolean {
-    if (obj1 === obj2) return true;
-    
-    if (obj1 == null || obj2 == null) return false;
-    
-    if (typeof obj1 !== typeof obj2) return false;
-    
-    if (typeof obj1 !== 'object') return obj1 === obj2;
-    
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    
-    if (keys1.length !== keys2.length) return false;
-    
-    for (const key of keys1) {
-      if (!keys2.includes(key)) return false;
-      if (!this.deepEqual(obj1[key], obj2[key])) return false;
-    }
-    
-    return true;
-  }
-
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 }
 
 /**

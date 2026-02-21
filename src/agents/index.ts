@@ -3,11 +3,11 @@
  */
 
 // Base agent interface
-export interface IAgent {
+export interface IAgent<TScenario = unknown, TResult = unknown> {
   name: string;
   type: string;
   initialize(): Promise<void>;
-  execute(scenario: any): Promise<any>;
+  execute(scenario: TScenario): Promise<TResult>;
   cleanup(): Promise<void>;
 }
 
@@ -20,7 +20,8 @@ export enum AgentType {
   WEBSOCKET = 'websocket',
   GITHUB = 'github',
   SYSTEM = 'system',
-  COMPREHENSION = 'comprehension'
+  COMPREHENSION = 'comprehension',
+  PRIORITY = 'priority'
 }
 
 // Re-export all agent implementations

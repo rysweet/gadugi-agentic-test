@@ -48,12 +48,6 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
 }
 
 /**
- * Session ID tracker for multi-step scenarios
- * The first spawn action creates a session, subsequent steps reference it
- */
-let lastSessionId: string | null = null;
-
-/**
  * Convert scenarios/TestStep to models/OrchestratorStep
  */
 function adaptStepToOrchestrator(simpleStep: SimpleStep, stepIndex: number): OrchestratorStep {
@@ -69,10 +63,6 @@ function adaptStepToOrchestrator(simpleStep: SimpleStep, stepIndex: number): Orc
       target = `${params.command} ${params.args.join(' ')}`;
     } else {
       target = params.command;
-    }
-    // First spawn step establishes the session
-    if (stepIndex === 0) {
-      lastSessionId = null; // Reset for new scenario
     }
   } else if (params.text !== undefined || params.duration !== undefined) {
     // For actions that operate on the spawned session

@@ -13,7 +13,7 @@ import * as path from 'path';
 import { TestFailure, TestResult, TestError } from '../models/TestModels';
 import { GitHubConfig } from '../models/Config';
 import { TestLogger, logger } from '../utils/logger';
-import { IAgent, AgentType } from './index';
+import { AgentType } from './index';
 
 /**
  * GitHub API rate limit information
@@ -200,7 +200,7 @@ const DEFAULT_CONFIG: Partial<IssueReporterConfig> = {
  * and issue management with advanced features like deduplication,
  * template-based issue creation, and rate limiting.
  */
-export class IssueReporter implements IAgent {
+export class IssueReporter {
   public readonly name = 'IssueReporter';
   public readonly type = AgentType.GITHUB;
 
@@ -252,13 +252,6 @@ export class IssueReporter implements IAgent {
       this.logger.error('Failed to initialize IssueReporter', { error: (error as Error).message });
       throw error;
     }
-  }
-
-  /**
-   * Execute scenario (not applicable for this agent)
-   */
-  async execute(scenario: any): Promise<any> {
-    throw new Error('IssueReporter does not support direct scenario execution');
   }
 
   /**
