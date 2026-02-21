@@ -198,6 +198,11 @@ export declare class IssueReporter implements IAgent {
      */
     private generateIssueContent;
     /**
+     * Return a safe subset of environment variables for issue templates.
+     * Never includes secrets (tokens, keys, passwords).
+     */
+    private getSafeEnvironment;
+    /**
      * Render template with variables
      */
     private renderTemplate;

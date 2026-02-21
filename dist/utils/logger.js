@@ -312,28 +312,32 @@ function createLogger(config) {
     return new TestLogger(config);
 }
 /**
- * Default logger instance for the application
+ * Mutable active logger — swapped by setupLogger() without mutating any instance.
+ * All code should use the `logger` convenience object rather than this directly.
  */
-exports.defaultLogger = new TestLogger();
+let _activeLogger = new TestLogger();
+/** @deprecated Use the `logger` convenience object instead */
+exports.defaultLogger = _activeLogger;
 /**
- * Convenience methods using the default logger
+ * Convenience methods that always delegate to the current active logger.
+ * Safe to use before or after setupLogger() is called.
  */
 exports.logger = {
-    error: (message, meta) => exports.defaultLogger.error(message, meta),
-    warn: (message, meta) => exports.defaultLogger.warn(message, meta),
-    info: (message, meta) => exports.defaultLogger.info(message, meta),
-    debug: (message, meta) => exports.defaultLogger.debug(message, meta),
-    setContext: (context) => exports.defaultLogger.setContext(context),
-    clearContext: () => exports.defaultLogger.clearContext(),
-    setLevel: (level) => exports.defaultLogger.setLevel(level),
-    child: (context) => exports.defaultLogger.child(context)
+    error: (message, meta) => _activeLogger.error(message, meta),
+    warn: (message, meta) => _activeLogger.warn(message, meta),
+    info: (message, meta) => _activeLogger.info(message, meta),
+    debug: (message, meta) => _activeLogger.debug(message, meta),
+    setContext: (context) => _activeLogger.setContext(context),
+    clearContext: () => _activeLogger.clearContext(),
+    setLevel: (level) => _activeLogger.setLevel(level),
+    child: (context) => _activeLogger.child(context)
 };
 /**
- * Setup logger with configuration
+ * Reconfigure the active logger. Replaces the logger instance rather than
+ * mutating it, so all subsequent calls through `logger` use the new config.
  */
 function setupLogger(config) {
-    const newLogger = createLogger(config);
-    Object.assign(exports.defaultLogger, newLogger);
-    return exports.defaultLogger;
+    _activeLogger = createLogger(config);
+    return _activeLogger;
 }
 //# sourceMappingURL=logger.js.map

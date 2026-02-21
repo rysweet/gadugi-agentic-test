@@ -532,7 +532,7 @@ class IssueReporter {
             failureMessage: failure.message,
             stackTrace: failure.stackTrace,
             timestamp: failure.timestamp.toISOString(),
-            environment: process.env,
+            environment: this.getSafeEnvironment(),
             screenshots: failure.screenshots,
             logs: failure.logs,
             reproductionSteps: this.generateReproductionSteps(failure),
@@ -551,6 +551,20 @@ class IssueReporter {
             labels: [...(this.config.issueLabels || []), this.determinePriorityLabel(failure)],
             assignees: this.config.autoAssignUsers
         };
+    }
+    /**
+     * Return a safe subset of environment variables for issue templates.
+     * Never includes secrets (tokens, keys, passwords).
+     */
+    getSafeEnvironment() {
+        const SAFE_KEYS = ['NODE_ENV', 'CI', 'GITHUB_ACTIONS', 'GITHUB_RUN_ID',
+            'GITHUB_WORKFLOW', 'RUNNER_OS', 'RUNNER_ARCH', 'GITHUB_REF', 'GITHUB_SHA'];
+        const safe = {};
+        for (const key of SAFE_KEYS) {
+            if (process.env[key])
+                safe[key] = process.env[key];
+        }
+        return safe;
     }
     /**
      * Render template with variables

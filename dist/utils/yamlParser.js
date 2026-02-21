@@ -97,8 +97,8 @@ class YamlParser {
         try {
             const absolutePath = path_1.default.resolve(this.config.baseDir, filePath);
             const content = await promises_1.default.readFile(absolutePath, 'utf-8');
-            // Parse YAML content
-            const parsed = yaml.load(content);
+            // Parse YAML content (use JSON_SCHEMA to prevent !!js/function code execution)
+            const parsed = yaml.load(content, { schema: yaml.JSON_SCHEMA });
             if (!parsed) {
                 throw new YamlParseError('Empty or invalid YAML file', filePath);
             }
@@ -159,6 +159,11 @@ class YamlParser {
         // Handle include directive
         if (content.include && typeof content.include === 'string') {
             const includePath = path_1.default.resolve(baseDir, content.include);
+            // Prevent path traversal: include must stay within the configured base directory
+            const allowedBase = path_1.default.resolve(this.config.baseDir);
+            if (!includePath.startsWith(allowedBase + path_1.default.sep) && includePath !== allowedBase) {
+                throw new YamlParseError(`Include path escapes base directory: ${content.include}`);
+            }
             // Prevent circular includes
             if (this.processedFiles.has(includePath)) {
                 throw new YamlParseError(`Circular include detected: ${includePath}`);
@@ -166,7 +171,7 @@ class YamlParser {
             this.processedFiles.add(includePath);
             try {
                 const includeContent = await promises_1.default.readFile(includePath, 'utf-8');
-                const parsed = yaml.load(includeContent);
+                const parsed = yaml.load(includeContent, { schema: yaml.JSON_SCHEMA });
                 // Merge variables if provided
                 let result = parsed;
                 if (content.variables && typeof parsed === 'object') {

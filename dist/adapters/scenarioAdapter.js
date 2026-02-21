@@ -92,15 +92,11 @@ function adaptStepToOrchestrator(simpleStep, stepIndex) {
  */
 function mapPriority(priority) {
     switch (priority?.toLowerCase()) {
-        case 'critical':
-        case 'high':
-            return TestModels_1.Priority.CRITICAL;
-        case 'medium':
-            return TestModels_1.Priority.HIGH;
-        case 'low':
-            return TestModels_1.Priority.MEDIUM;
-        default:
-            return TestModels_1.Priority.MEDIUM;
+        case 'critical': return TestModels_1.Priority.CRITICAL;
+        case 'high': return TestModels_1.Priority.HIGH;
+        case 'medium': return TestModels_1.Priority.MEDIUM;
+        case 'low': return TestModels_1.Priority.LOW;
+        default: return TestModels_1.Priority.MEDIUM;
     }
 }
 /**

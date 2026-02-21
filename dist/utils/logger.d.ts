@@ -153,12 +153,11 @@ export declare class TestLogger {
  * Create a logger instance with the specified configuration
  */
 export declare function createLogger(config?: Partial<LoggerConfig>): TestLogger;
-/**
- * Default logger instance for the application
- */
+/** @deprecated Use the `logger` convenience object instead */
 export declare const defaultLogger: TestLogger;
 /**
- * Convenience methods using the default logger
+ * Convenience methods that always delegate to the current active logger.
+ * Safe to use before or after setupLogger() is called.
  */
 export declare const logger: {
     error: (message: string, meta?: any) => void;
@@ -171,7 +170,8 @@ export declare const logger: {
     child: (context: LogContext) => TestLogger;
 };
 /**
- * Setup logger with configuration
+ * Reconfigure the active logger. Replaces the logger instance rather than
+ * mutating it, so all subsequent calls through `logger` use the new config.
  */
 export declare function setupLogger(config?: Partial<LoggerConfig>): TestLogger;
 //# sourceMappingURL=logger.d.ts.map

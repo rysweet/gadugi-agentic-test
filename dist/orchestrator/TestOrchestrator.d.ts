@@ -90,7 +90,8 @@ export declare class TestOrchestrator extends EventEmitter {
      */
     private executeMixedScenarios;
     /**
-     * Execute scenarios in parallel with concurrency limit
+     * Execute scenarios in parallel with a hard concurrency limit.
+     * Uses a semaphore counter so at most maxParallel handlers run at once.
      */
     private executeParallel;
     /**

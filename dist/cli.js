@@ -170,9 +170,8 @@ program
                 logWarning('No scenarios found to execute');
                 return;
             }
-            // Import orchestrator and config defaults
+            // Import orchestrator
             const { TestOrchestrator } = await Promise.resolve().then(() => __importStar(require('./orchestrator')));
-            const { TestStatus } = await Promise.resolve().then(() => __importStar(require('./models/TestModels')));
             // Create minimal test config with all required fields
             const testConfig = config || {
                 execution: {
@@ -365,19 +364,42 @@ program
                     logWarning('No scenarios found to execute');
                     return;
                 }
-                // Simple execution simulation
-                let passedCount = 0;
-                let failedCount = 0;
-                for (const scenario of scenarios) {
-                    // Simulate execution
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    if (Math.random() > 0.2) { // 80% pass rate
-                        passedCount++;
-                    }
-                    else {
-                        failedCount++;
-                    }
-                }
+                // Run scenarios through the real orchestrator
+                const { TestOrchestrator } = await Promise.resolve().then(() => __importStar(require('./orchestrator')));
+                const testConfig = config || {
+                    execution: { maxParallel: 1, defaultTimeout: 30000, continueOnFailure: true,
+                        maxRetries: 0, retryDelay: 0, randomizeOrder: false,
+                        resourceLimits: { maxMemory: 1024 * 1024 * 1024, maxCpuUsage: 80, maxDiskUsage: 1024 * 1024 * 1024, maxExecutionTime: 60000, maxOpenFiles: 100 },
+                        cleanup: { cleanupAfterEach: true, cleanupAfterAll: true, cleanupDirectories: [], cleanupFiles: [], terminateProcesses: [], stopServices: [], customCleanupScripts: [] }
+                    },
+                    cli: { executablePath: 'node', workingDirectory: process.cwd(), defaultTimeout: 30000,
+                        environment: {}, captureOutput: true, shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash', maxRetries: 0, retryDelay: 0 },
+                    ui: { browser: 'chromium', headless: true, viewport: { width: 1280, height: 720 },
+                        baseUrl: 'http://localhost:3000', defaultTimeout: 30000, screenshotDir: './outputs/screenshots', recordVideo: false, slowMo: 0 },
+                    tui: { terminal: 'xterm', defaultDimensions: { width: 80, height: 24 }, encoding: 'utf8',
+                        defaultTimeout: 30000, pollingInterval: 100, captureScreenshots: false, recordSessions: false,
+                        colorMode: '24bit', interpretAnsi: true, shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
+                        shellArgs: [], environment: {}, workingDirectory: process.cwd(),
+                        accessibility: { highContrast: false, largeText: false, screenReader: false },
+                        performance: { refreshRate: 60, maxBufferSize: 1024 * 1024, hardwareAcceleration: false } },
+                    github: { token: '', owner: '', repository: '', baseBranch: 'main',
+                        createIssuesOnFailure: false, issueLabels: [], issueTitleTemplate: '', issueBodyTemplate: '',
+                        createPullRequestsForFixes: false, autoAssignUsers: [] },
+                    priority: { enabled: true, executionOrder: ['critical', 'high', 'medium', 'low'],
+                        failFastOnCritical: false, maxParallelByPriority: { critical: 1, high: 1, medium: 1, low: 1 },
+                        timeoutMultipliers: { critical: 1, high: 1, medium: 1, low: 1 },
+                        retryCountsByPriority: { critical: 0, high: 0, medium: 0, low: 0 } },
+                    logging: { level: 'info', console: true, format: 'structured', includeTimestamp: true,
+                        maxFileSize: 10 * 1024 * 1024, maxFiles: 5, compress: false },
+                    reporting: { outputDir: './outputs/reports', formats: ['json'], includeScreenshots: false,
+                        includeLogs: false, customTemplates: {}, generationTimeout: 30000 },
+                    notifications: { enabled: false, channels: [], triggers: [], templates: {} },
+                    plugins: {}
+                };
+                const orchestrator = new TestOrchestrator(testConfig);
+                const session = await orchestrator.runWithScenarios('watch', scenarios);
+                const passedCount = session.summary.passed;
+                const failedCount = session.summary.failed;
                 // Report results
                 console.log('\n' + chalk_1.default.bold('Watch Mode - Test Results:'));
                 console.log(chalk_1.default.green(`✓ Passed: ${passedCount}`));

@@ -431,23 +431,38 @@ class TestOrchestrator extends events_1.EventEmitter {
         }
     }
     /**
-     * Execute scenarios in parallel with concurrency limit
+     * Execute scenarios in parallel with a hard concurrency limit.
+     * Uses a semaphore counter so at most maxParallel handlers run at once.
      */
     async executeParallel(items, handler) {
         const results = [];
-        const executing = [];
-        for (const item of items) {
-            if (this.abortController.signal.aborted) {
-                break;
-            }
-            const promise = handler(item).then(result => { results.push(result); }, error => { results.push(error); });
-            executing.push(promise);
-            if (executing.length >= this.maxParallel) {
-                await Promise.race(executing);
-                executing.splice(0, executing.findIndex(p => p));
-            }
-        }
-        await Promise.all(executing);
+        let running = 0;
+        let index = 0;
+        await new Promise((resolveAll) => {
+            const tryNext = () => {
+                while (running < this.maxParallel && index < items.length) {
+                    if (this.abortController.signal.aborted) {
+                        index = items.length; // skip remaining
+                        break;
+                    }
+                    const item = items[index++];
+                    running++;
+                    handler(item).then(result => { results.push(result); }, error => { results.push(error); }).finally(() => {
+                        running--;
+                        if (index < items.length) {
+                            tryNext();
+                        }
+                        else if (running === 0) {
+                            resolveAll();
+                        }
+                    });
+                }
+                if (index >= items.length && running === 0) {
+                    resolveAll();
+                }
+            };
+            tryNext();
+        });
         return results;
     }
     /**

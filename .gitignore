@@ -51,3 +51,7 @@ tmp/
 # Output directories
 outputs/
 reports/
+
+# Amplihack runtime directories (auto-generated)
+.claude/logs/
+.claude/runtime/
