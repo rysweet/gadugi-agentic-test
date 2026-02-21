@@ -20,9 +20,13 @@ import { spawn, ChildProcess } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-// Mock child_process for controlled testing
+// Mock child_process for controlled testing.
+// exec must be included because DockerMonitor.ts calls promisify(exec) at
+// module load time (line 12). Without exec in the mock, promisify receives
+// undefined and throws immediately when the module is imported. (#37)
 jest.mock('child_process', () => ({
-  spawn: jest.fn()
+  spawn: jest.fn(),
+  exec: jest.fn()
 }));
 
 describe('TUIAgent', () => {
