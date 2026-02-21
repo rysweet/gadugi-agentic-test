@@ -46,14 +46,14 @@ Additional security findings not yet tracked as issues:
 - `config.ts:186` — `GITHUB_TOKEN` written to disk via `exportToFile()`
 - `SystemAgent.ts:714` — Shell injection via Docker container IDs
 
-### 🔴 High Priority Bugs
+### ✅ High Priority Bugs (Fixed)
 
 | Issue | File | Description |
 |-------|------|-------------|
-| [#21](https://github.com/rysweet/gadugi-agentic-test/issues/21) | `cli.ts:361` | Watch command uses `Math.random()` simulation — never runs real tests |
-| [#23](https://github.com/rysweet/gadugi-agentic-test/issues/23) | `TestOrchestrator.ts:507` | `executeParallel()` concurrency limit never enforced (splice no-op) |
-| [#24](https://github.com/rysweet/gadugi-agentic-test/issues/24) | `logger.ts:440` | `setupLogger()` corrupts singleton via `Object.assign` |
-| [#14](https://github.com/rysweet/gadugi-agentic-test/issues/14) | Multiple | Duplicate incompatible type systems (pre-existing) |
+| [#21](https://github.com/rysweet/gadugi-agentic-test/issues/21) ✅ | `cli.ts:361` | Watch command — **fixed**: uses real `TestOrchestrator.runWithScenarios()` |
+| [#23](https://github.com/rysweet/gadugi-agentic-test/issues/23) ✅ | `TestOrchestrator.ts:507` | Concurrency limiter — **fixed**: semaphore counter enforces `maxParallel` |
+| [#24](https://github.com/rysweet/gadugi-agentic-test/issues/24) ✅ | `logger.ts:440` | setupLogger — **fixed**: swaps `_activeLogger` reference, no mutation |
+| [#14](https://github.com/rysweet/gadugi-agentic-test/issues/14) | Multiple | Duplicate incompatible type systems (pre-existing, open) |
 
 Additional bugs not yet tracked as issues:
 - `ElectronUIAgent.ts:793` — All dialogs auto-accepted, suppresses real error dialogs
@@ -109,24 +109,22 @@ Additional architecture findings:
 
 ## Fix Status
 
-**Completed during audit (7 fixes, CI passing):**
+**Completed during audit (10 fixes, CI passing):**
 - ✅ #19 — `getSafeEnvironment()` allowlist prevents secrets in issue bodies
 - ✅ #20 — `yaml.load()` safe schema + path traversal guard
-- ✅ #22 — Priority mapping corrected
+- ✅ #21 — Watch command now uses real `TestOrchestrator.runWithScenarios()`
+- ✅ #22 — Priority mapping corrected (medium→MEDIUM, low→LOW)
+- ✅ #23 — `executeParallel()` semaphore enforces `maxParallel`
+- ✅ #24 — `setupLogger()` swaps reference instead of mutating instance
 - ✅ #30 — `process.env` mutation removed from TUIAgent and CLIAgent
 - ✅ Jest strict mode re-enabled; coverage thresholds added
 
-**Open — Sprint 1 (correctness):**
-- [ ] #23 — Replace broken `executeParallel()` with `p-limit`
-- [ ] #21 — Replace `Math.random()` watch simulation with real orchestrator
-- [ ] #24 — Replace `Object.assign` singleton mutation in `setupLogger()`
+**Open — Architecture (tracked as GitHub issues):**
+- [#25](https://github.com/rysweet/gadugi-agentic-test/issues/25) — Rename one TUIAgent to eliminate naming collision
+- [#26](https://github.com/rysweet/gadugi-agentic-test/issues/26) — Consolidate to single CLI entry point
+- [#14](https://github.com/rysweet/gadugi-agentic-test/issues/14) — Resolve duplicate type systems
+- [#29](https://github.com/rysweet/gadugi-agentic-test/issues/29) — Remove/implement stub methods
 
-**Open — Sprint 2 (architecture):**
-- [ ] #25 — Rename one TUIAgent to eliminate naming collision
-- [ ] #26 — Consolidate to single CLI entry point
-- [ ] #14 — Resolve duplicate type systems
-- [ ] #29 — Remove/implement stub methods
-
-**Open — Ongoing:**
-- [ ] #27 — Add tests for `TestOrchestrator`, `ScenarioLoader`, `CLIAgent`
-- [ ] #28 — Split oversized agent files; extract shared `delay()` and `deepEqual()`
+**Open — Quality (tracked as GitHub issues):**
+- [#27](https://github.com/rysweet/gadugi-agentic-test/issues/27) — Add tests for `TestOrchestrator`, `ScenarioLoader`, `CLIAgent`
+- [#28](https://github.com/rysweet/gadugi-agentic-test/issues/28) — Split oversized agent files; extract shared `delay()` and `deepEqual()`
