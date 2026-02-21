@@ -98,15 +98,11 @@ function adaptStepToOrchestrator(simpleStep: SimpleStep, stepIndex: number): Orc
  */
 function mapPriority(priority?: string): Priority {
   switch (priority?.toLowerCase()) {
-    case 'critical':
-    case 'high':
-      return Priority.CRITICAL;
-    case 'medium':
-      return Priority.HIGH;
-    case 'low':
-      return Priority.MEDIUM;
-    default:
-      return Priority.MEDIUM;
+    case 'critical': return Priority.CRITICAL;
+    case 'high':     return Priority.HIGH;
+    case 'medium':   return Priority.MEDIUM;
+    case 'low':      return Priority.LOW;
+    default:         return Priority.MEDIUM;
   }
 }
 

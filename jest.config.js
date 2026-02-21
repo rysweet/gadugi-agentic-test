@@ -11,8 +11,7 @@ module.exports = {
       isolatedModules: true,
       tsconfig: {
         skipLibCheck: true,
-        noEmitOnError: false,
-        strict: false
+        noEmitOnError: false
       }
     }]
   },
@@ -31,6 +30,14 @@ module.exports = {
     'lcov',
     'html'
   ],
+  coverageThreshold: {
+    global: {
+      lines: 15,
+      branches: 10,
+      functions: 15,
+      statements: 15
+    }
+  },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 30000,
   verbose: true,
