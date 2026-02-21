@@ -146,9 +146,8 @@ program
           return;
         }
         
-        // Import orchestrator and config defaults
+        // Import orchestrator
         const { TestOrchestrator } = await import('./orchestrator');
-        const { TestStatus } = await import('./models/TestModels');
 
         // Create minimal test config with all required fields
         const testConfig: import('./models/Config').TestConfig = config || {
@@ -356,7 +355,6 @@ program
           
           // Run scenarios through the real orchestrator
           const { TestOrchestrator } = await import('./orchestrator');
-          const { TestStatus } = await import('./models/TestModels');
 
           const testConfig: import('./models/Config').TestConfig = config || {
             execution: { maxParallel: 1, defaultTimeout: 30000, continueOnFailure: true,

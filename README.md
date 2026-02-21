@@ -1204,6 +1204,16 @@ SOFTWARE.
 
 ---
 
+## 📋 Project Documentation
+
+| Document | Description |
+|----------|-------------|
+| [GETTING_STARTED.md](GETTING_STARTED.md) | Quick-start guide |
+| [API_REFERENCE.md](API_REFERENCE.md) | Full API reference |
+| [docs/quality-audit-2026-02.md](docs/quality-audit-2026-02.md) | February 2026 quality audit — 10 bugs fixed, open issues tracked |
+| [docs/ResourceOptimizer.md](docs/ResourceOptimizer.md) | ResourceOptimizer architecture |
+| [docs/screenshot-diff-guide.md](docs/screenshot-diff-guide.md) | Visual regression guide |
+
 ## 🙏 Acknowledgments
 
 - **Cherokee Nation** - For inspiration behind the "Gadugi" name representing cooperative spirit
