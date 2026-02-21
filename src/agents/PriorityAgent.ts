@@ -8,13 +8,13 @@
 
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { 
-  TestFailure, 
-  TestResult, 
-  TestStatus, 
-  Priority, 
+import {
+  TestFailure,
+  TestResult,
+  TestStatus,
+  Priority,
   TestInterface,
-  TestScenario 
+  OrchestratorScenario
 } from '../models/TestModels';
 import { TestLogger, createLogger, LogLevel } from '../utils/logger';
 
@@ -79,7 +79,7 @@ export interface AnalysisContext {
   /** Historical test results */
   history: TestResult[];
   /** Test scenario information */
-  scenarios: Map<string, TestScenario>;
+  scenarios: Map<string, OrchestratorScenario>;
   /** Previous priority assignments */
   previousPriorities: Map<string, PriorityAssignment>;
   /** System metadata */
@@ -255,7 +255,7 @@ export class PriorityAgent extends EventEmitter implements IAgent {
   /**
    * Execute priority analysis on a scenario (implements IAgent interface)
    */
-  async execute(scenario: TestScenario): Promise<PriorityAssignment | null> {
+  async execute(scenario: OrchestratorScenario): Promise<PriorityAssignment | null> {
     if (!this.isInitialized) {
       throw new Error('PriorityAgent not initialized. Call initialize() first.');
     }

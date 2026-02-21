@@ -13,9 +13,9 @@ export interface TerminalDimensions {
 }
 
 /**
- * TUI Agent configuration
+ * PTY terminal configuration
  */
-export interface TUIAgentConfig {
+export interface PtyTerminalConfig {
   shell?: string;
   env?: NodeJS.ProcessEnv;
   cwd?: string;
@@ -24,9 +24,9 @@ export interface TUIAgentConfig {
 }
 
 /**
- * TUI Agent events
+ * PTY terminal events
  */
-export interface TUIAgentEvents {
+export interface PtyTerminalEvents {
   data: (data: string) => void;
   exit: (exitCode: number | null, signal: string | null) => void;
   error: (error: Error) => void;
@@ -35,22 +35,22 @@ export interface TUIAgentEvents {
 }
 
 /**
- * TUIAgent
+ * PtyTerminal
  *
- * Terminal User Interface Agent that manages terminal processes
+ * PTY-based terminal manager that manages terminal processes
  * with integrated ProcessLifecycleManager to prevent zombie processes.
  */
-export class TUIAgent extends EventEmitter {
+export class PtyTerminal extends EventEmitter {
   private ptyProcess: pty.IPty | null = null;
   private processInfo: ProcessInfo | null = null;
   private processManager: ProcessLifecycleManager;
-  private config: Required<TUIAgentConfig>;
+  private config: Required<PtyTerminalConfig>;
   private isDestroyed = false;
   private outputBuffer = '';
   private inputHistory: string[] = [];
 
   constructor(
-    config: TUIAgentConfig = {},
+    config: PtyTerminalConfig = {},
     processManager?: ProcessLifecycleManager
   ) {
     super();
@@ -102,11 +102,11 @@ export class TUIAgent extends EventEmitter {
    */
   public async start(): Promise<void> {
     if (this.isDestroyed) {
-      throw new Error('Cannot start a destroyed TUIAgent');
+      throw new Error('Cannot start a destroyed PtyTerminal');
     }
 
     if (this.ptyProcess) {
-      throw new Error('TUIAgent is already started');
+      throw new Error('PtyTerminal is already started');
     }
 
     try {
@@ -170,7 +170,7 @@ export class TUIAgent extends EventEmitter {
    */
   public write(data: string): void {
     if (!this.ptyProcess || this.isDestroyed) {
-      throw new Error('TUIAgent is not started or is destroyed');
+      throw new Error('PtyTerminal is not started or is destroyed');
     }
 
     this.ptyProcess.write(data);
@@ -195,7 +195,7 @@ export class TUIAgent extends EventEmitter {
     } = {}
   ): Promise<string> {
     if (!this.ptyProcess || this.isDestroyed) {
-      throw new Error('TUIAgent is not started or is destroyed');
+      throw new Error('PtyTerminal is not started or is destroyed');
     }
 
     const timeout = options.timeout || this.config.timeout;
@@ -267,7 +267,7 @@ export class TUIAgent extends EventEmitter {
    */
   public resize(dimensions: TerminalDimensions): void {
     if (!this.ptyProcess || this.isDestroyed) {
-      throw new Error('TUIAgent is not started or is destroyed');
+      throw new Error('PtyTerminal is not started or is destroyed');
     }
 
     this.ptyProcess.resize(dimensions.cols, dimensions.rows);

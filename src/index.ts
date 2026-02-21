@@ -1,6 +1,8 @@
 // Core exports
 export { ProcessLifecycleManager, processLifecycleManager } from './core/ProcessLifecycleManager';
-export { TUIAgent } from './core/TUIAgent';
+export { PtyTerminal } from './core/PtyTerminal';
+/** @deprecated Use PtyTerminal instead - renamed to resolve naming conflict with agents/TUIAgent */
+export { PtyTerminal as TUIAgent } from './core/PtyTerminal';
 export { ResourceOptimizer, resourceOptimizer } from './core/ResourceOptimizer';
 export {
   AdaptiveWaiter,
@@ -23,9 +25,14 @@ export type {
 
 export type {
   TerminalDimensions,
-  TUIAgentConfig,
-  TUIAgentEvents
-} from './core/TUIAgent';
+  PtyTerminalConfig,
+  PtyTerminalEvents
+} from './core/PtyTerminal';
+
+/** @deprecated Use PtyTerminalConfig instead */
+export type { PtyTerminalConfig as TUIAgentConfig } from './core/PtyTerminal';
+/** @deprecated Use PtyTerminalEvents instead */
+export type { PtyTerminalEvents as TUIAgentEvents } from './core/PtyTerminal';
 
 export type {
   ResourceOptimizerConfig,

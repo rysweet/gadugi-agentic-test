@@ -8,7 +8,7 @@ import * as path from 'path';
 
 // Scenario loader utility
 export class ScenarioLoader {
-  static async loadFromFile(filePath: string): Promise<TestScenario> {
+  static async loadFromFile(filePath: string): Promise<ScenarioDefinition> {
     const content = await fs.readFile(filePath, 'utf-8');
     const raw = yaml.load(content) as any;
 
@@ -28,7 +28,7 @@ export class ScenarioLoader {
     }
   }
 
-  static async loadFromDirectory(dirPath: string): Promise<TestScenario[]> {
+  static async loadFromDirectory(dirPath: string): Promise<ScenarioDefinition[]> {
     const files = await fs.readdir(dirPath);
     const yamlFiles = files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'));
 
@@ -39,7 +39,7 @@ export class ScenarioLoader {
     return scenarios;
   }
 
-  private static convertLegacyFormat(raw: any): TestScenario {
+  private static convertLegacyFormat(raw: any): ScenarioDefinition {
     // Legacy format has application + scenarios array
     // Convert first scenario to new format (for now, only load first scenario)
     const firstScenario = raw.scenarios[0];
@@ -72,19 +72,19 @@ export class ScenarioLoader {
     };
   }
 
-  private static validateScenario(scenario: any): TestScenario {
+  private static validateScenario(scenario: any): ScenarioDefinition {
     if (!scenario.name) {
       throw new Error('Scenario must have a name');
     }
     if (!scenario.steps || !Array.isArray(scenario.steps)) {
       throw new Error('Scenario must have steps array');
     }
-    return scenario as TestScenario;
+    return scenario as ScenarioDefinition;
   }
 }
 
 // Scenario interfaces
-export interface TestScenario {
+export interface ScenarioDefinition {
   name: string;
   description?: string;
   version?: string;
@@ -96,6 +96,9 @@ export interface TestScenario {
   cleanup?: TestStep[];
   metadata?: ScenarioMetadata;
 }
+
+/** @deprecated Use ScenarioDefinition instead - renamed to resolve naming conflict with models/TestModels.TestScenario */
+export type TestScenario = ScenarioDefinition;
 
 export interface ScenarioConfig {
   timeout?: number;

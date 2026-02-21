@@ -11,7 +11,7 @@ import { glob } from 'glob';
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
 import { IAgent } from './index';
-import { TestScenario, TestStep, VerificationStep, Priority, TestInterface } from '../models/TestModels';
+import { OrchestratorScenario, TestStep, VerificationStep, Priority, TestInterface } from '../models/TestModels';
 
 /**
  * LLM provider types
@@ -510,10 +510,10 @@ Extract and return ONLY valid JSON in this exact format:
    * @param featureSpec - Feature specification
    * @returns List of test scenarios
    */
-  async generateTestScenarios(featureSpec: FeatureSpec): Promise<TestScenario[]> {
+  async generateTestScenarios(featureSpec: FeatureSpec): Promise<OrchestratorScenario[]> {
     logger.info(`Generating test scenarios for feature: ${featureSpec.name}`);
     
-    const scenarios: TestScenario[] = [];
+    const scenarios: OrchestratorScenario[] = [];
     let scenarioId = 1;
 
     // Generate success path scenario
@@ -542,7 +542,7 @@ Extract and return ONLY valid JSON in this exact format:
    * @param scenarioId - Scenario ID number
    * @returns Success test scenario
    */
-  private async generateSuccessScenario(spec: FeatureSpec, scenarioId: number): Promise<TestScenario> {
+  private async generateSuccessScenario(spec: FeatureSpec, scenarioId: number): Promise<OrchestratorScenario> {
     const id = `${spec.name.replace(/\s+/g, '_').toLowerCase()}_${scenarioId}`;
     
     return {
@@ -570,7 +570,7 @@ Extract and return ONLY valid JSON in this exact format:
    * @param scenarioId - Scenario ID number
    * @returns Failure test scenario
    */
-  private async generateFailureScenario(spec: FeatureSpec, failureMode: string, scenarioId: number): Promise<TestScenario> {
+  private async generateFailureScenario(spec: FeatureSpec, failureMode: string, scenarioId: number): Promise<OrchestratorScenario> {
     const id = `${spec.name.replace(/\s+/g, '_').toLowerCase()}_${scenarioId}`;
     
     return {
@@ -604,7 +604,7 @@ Extract and return ONLY valid JSON in this exact format:
    * @param scenarioId - Scenario ID number
    * @returns Edge case test scenario
    */
-  private async generateEdgeCaseScenario(spec: FeatureSpec, edgeCase: string, scenarioId: number): Promise<TestScenario> {
+  private async generateEdgeCaseScenario(spec: FeatureSpec, edgeCase: string, scenarioId: number): Promise<OrchestratorScenario> {
     const id = `${spec.name.replace(/\s+/g, '_').toLowerCase()}_${scenarioId}`;
     
     return {
@@ -808,12 +808,12 @@ Extract and return ONLY valid JSON in this exact format:
    * Process all discovered features and generate comprehensive test scenarios
    * @returns Comprehensive list of test scenarios
    */
-  async processDiscoveredFeatures(): Promise<TestScenario[]> {
+  async processDiscoveredFeatures(): Promise<OrchestratorScenario[]> {
     logger.info('Processing discovered features and generating test scenarios');
     
     try {
       const discoveredFeatures = await this.discoverFeatures();
-      const allScenarios: TestScenario[] = [];
+      const allScenarios: OrchestratorScenario[] = [];
 
       for (const feature of discoveredFeatures) {
         try {

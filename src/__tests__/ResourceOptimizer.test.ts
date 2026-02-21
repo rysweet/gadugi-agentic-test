@@ -1,16 +1,16 @@
 import { ResourceOptimizer, ResourceOptimizerConfig } from '../core/ResourceOptimizer';
 import { ProcessLifecycleManager } from '../core/ProcessLifecycleManager';
-import { TUIAgent, TUIAgentConfig } from '../core/TUIAgent';
+import { PtyTerminal, PtyTerminalConfig } from '../core/PtyTerminal';
 
-// Mock the TUIAgent to avoid actual terminal processes in tests
-jest.mock('../core/TUIAgent');
+// Mock the PtyTerminal to avoid actual terminal processes in tests
+jest.mock('../core/PtyTerminal');
 
 describe('ResourceOptimizer', () => {
   let resourceOptimizer: ResourceOptimizer;
   let mockProcessManager: ProcessLifecycleManager;
 
-  // Helper to create mock TUIAgent instances
-  const createMockTUIAgent = (config: TUIAgentConfig = {}): jest.Mocked<TUIAgent> => {
+  // Helper to create mock PtyTerminal instances
+  const createMockPtyTerminal = (config: PtyTerminalConfig = {}): jest.Mocked<PtyTerminal> => {
     const mockAgent = {
       start: jest.fn().mockResolvedValue(undefined),
       destroy: jest.fn().mockResolvedValue(undefined),
@@ -23,10 +23,10 @@ describe('ResourceOptimizer', () => {
         startTime: new Date(),
         status: 'running' as const
       })
-    } as unknown as jest.Mocked<TUIAgent>;
+    } as unknown as jest.Mocked<PtyTerminal>;
 
     // Mock the constructor to return our mock instance
-    (TUIAgent as jest.MockedClass<typeof TUIAgent>).mockImplementation(() => mockAgent);
+    (PtyTerminal as jest.MockedClass<typeof PtyTerminal>).mockImplementation(() => mockAgent);
 
     return mockAgent;
   };
@@ -77,9 +77,9 @@ describe('ResourceOptimizer', () => {
 
   describe('Terminal Connection Pooling', () => {
     it('should create and acquire terminal connections', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
 
-      const config: TUIAgentConfig = { shell: '/bin/bash', cwd: '/tmp' };
+      const config: PtyTerminalConfig = { shell: '/bin/bash', cwd: '/tmp' };
       const terminal = await resourceOptimizer.acquireTerminal(config);
 
       expect(terminal).toBe(mockAgent);
@@ -92,10 +92,10 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should reuse idle terminals with same configuration', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       mockAgent.clearOutput.mockImplementation(() => {});
 
-      const config: TUIAgentConfig = { shell: '/bin/bash', cwd: '/tmp' };
+      const config: PtyTerminalConfig = { shell: '/bin/bash', cwd: '/tmp' };
 
       // Acquire and release terminal
       const terminal1 = await resourceOptimizer.acquireTerminal(config);
@@ -110,13 +110,13 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should respect pool size limits', async () => {
-      const terminals: TUIAgent[] = [];
-      const configs: TUIAgentConfig[] = [];
+      const terminals: PtyTerminal[] = [];
+      const configs: PtyTerminalConfig[] = [];
 
       // Fill the pool to maxSize (5)
       for (let i = 0; i < 5; i++) {
-        createMockTUIAgent(); // Create new mock for each acquisition
-        const config: TUIAgentConfig = { shell: '/bin/bash', cwd: `/tmp${i}` };
+        createMockPtyTerminal(); // Create new mock for each acquisition
+        const config: PtyTerminalConfig = { shell: '/bin/bash', cwd: `/tmp${i}` };
         configs.push(config);
         terminals.push(await resourceOptimizer.acquireTerminal(config));
       }
@@ -126,7 +126,7 @@ describe('ResourceOptimizer', () => {
       expect(metrics.pool.activeResources).toBe(5);
 
       // Try to acquire one more - should timeout since pool is full
-      const config6: TUIAgentConfig = { shell: '/bin/bash', cwd: '/tmp6' };
+      const config6: PtyTerminalConfig = { shell: '/bin/bash', cwd: '/tmp6' };
       const acquisitionPromise = resourceOptimizer.acquireTerminal(config6);
 
       // Should timeout
@@ -134,13 +134,13 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should wait for available terminal when pool is full', async () => {
-      const terminals: TUIAgent[] = [];
-      const configs: TUIAgentConfig[] = [];
+      const terminals: PtyTerminal[] = [];
+      const configs: PtyTerminalConfig[] = [];
 
       // Fill the pool
       for (let i = 0; i < 5; i++) {
-        createMockTUIAgent();
-        const config: TUIAgentConfig = { shell: '/bin/bash', cwd: `/tmp${i}` };
+        createMockPtyTerminal();
+        const config: PtyTerminalConfig = { shell: '/bin/bash', cwd: `/tmp${i}` };
         configs.push(config);
         terminals.push(await resourceOptimizer.acquireTerminal(config));
       }
@@ -159,10 +159,10 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should clean up idle resources', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       mockAgent.destroy = jest.fn().mockResolvedValue(undefined);
 
-      const config: TUIAgentConfig = { shell: '/bin/bash', cwd: '/tmp' };
+      const config: PtyTerminalConfig = { shell: '/bin/bash', cwd: '/tmp' };
       const terminal = await resourceOptimizer.acquireTerminal(config);
       await resourceOptimizer.releaseTerminal(terminal);
 
@@ -292,7 +292,7 @@ describe('ResourceOptimizer', () => {
   describe('Resource Metrics', () => {
     it('should provide comprehensive metrics', async () => {
       // Create some resources and buffers
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       const terminal = await resourceOptimizer.acquireTerminal({ shell: '/bin/bash' });
       const bufferId = resourceOptimizer.createBuffer('Test data');
 
@@ -317,11 +317,11 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should track acquisition times', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
 
       // Acquire and release several terminals to build acquisition time data
       for (let i = 0; i < 5; i++) {
-        createMockTUIAgent(); // New mock for each iteration
+        createMockPtyTerminal(); // New mock for each iteration
         const terminal = await resourceOptimizer.acquireTerminal({ shell: '/bin/bash', cwd: `/tmp${i}` });
         await resourceOptimizer.releaseTerminal(terminal);
       }
@@ -335,7 +335,7 @@ describe('ResourceOptimizer', () => {
 
   describe('Error Handling', () => {
     it('should handle terminal start failures', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       mockAgent.start.mockRejectedValue(new Error('Failed to start terminal'));
 
       await expect(resourceOptimizer.acquireTerminal({ shell: '/bin/bash' }))
@@ -347,7 +347,7 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should handle terminal cleanup failures gracefully', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       mockAgent.clearOutput.mockImplementation(() => {
         throw new Error('Cleanup failed');
       });
@@ -364,9 +364,9 @@ describe('ResourceOptimizer', () => {
 
     it('should reject pending acquisitions on destroy', async () => {
       // Fill the pool
-      const terminals: TUIAgent[] = [];
+      const terminals: PtyTerminal[] = [];
       for (let i = 0; i < 5; i++) {
-        createMockTUIAgent();
+        createMockPtyTerminal();
         terminals.push(await resourceOptimizer.acquireTerminal({ shell: '/bin/bash', cwd: `/tmp${i}` }));
       }
 
@@ -390,7 +390,7 @@ describe('ResourceOptimizer', () => {
     });
 
     it('should clean up all resources on destroy', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       mockAgent.destroy = jest.fn().mockResolvedValue(undefined);
 
       // Create some resources
@@ -414,7 +414,7 @@ describe('ResourceOptimizer', () => {
 
   describe('Event Emission', () => {
     it('should emit resource lifecycle events', async () => {
-      const mockAgent = createMockTUIAgent();
+      const mockAgent = createMockPtyTerminal();
       mockAgent.destroy = jest.fn().mockResolvedValue(undefined);
 
       const resourceCreatedSpy = jest.fn();

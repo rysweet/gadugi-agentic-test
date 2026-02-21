@@ -22,7 +22,7 @@ import {
   TestStatus,
   Priority,
   TestInterface,
-  TestScenario
+  OrchestratorScenario
 } from '../../models/TestModels';
 import { LogLevel } from '../../utils/logger';
 
@@ -352,7 +352,7 @@ export async function comprehensiveReportExample(): Promise<void> {
     await agent.initialize();
 
     // Create comprehensive test scenario
-    const scenarios = new Map<string, TestScenario>();
+    const scenarios = new Map<string, OrchestratorScenario>();
     scenarios.set('critical-login', {
       id: 'critical-login',
       name: 'User Login Flow',

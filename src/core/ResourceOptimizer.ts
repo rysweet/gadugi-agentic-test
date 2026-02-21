@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { ProcessLifecycleManager } from './ProcessLifecycleManager';
-import { TUIAgent, TUIAgentConfig } from './TUIAgent';
+import { PtyTerminal, PtyTerminalConfig } from './PtyTerminal';
 
 /**
  * Resource pool configuration
@@ -60,8 +60,8 @@ interface PooledResource<T> {
  * Terminal connection pool entry
  */
 interface TerminalConnection {
-  agent: TUIAgent;
-  config: TUIAgentConfig;
+  agent: PtyTerminal;
+  config: PtyTerminalConfig;
 }
 
 /**
@@ -222,7 +222,7 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Acquire a terminal connection from the pool
    */
-  public async acquireTerminal(config: TUIAgentConfig = {}): Promise<TUIAgent> {
+  public async acquireTerminal(config: PtyTerminalConfig = {}): Promise<PtyTerminal> {
     if (this.isDestroying) {
       throw new Error('ResourceOptimizer is being destroyed');
     }
@@ -261,7 +261,7 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Release a terminal back to the pool
    */
-  public async releaseTerminal(agent: TUIAgent): Promise<void> {
+  public async releaseTerminal(agent: PtyTerminal): Promise<void> {
     const resource = this.findResourceByAgent(agent);
     if (!resource) {
       return; // Already released or not from pool
@@ -555,9 +555,9 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Create a new terminal connection
    */
-  private async createTerminal(config: TUIAgentConfig): Promise<TUIAgent> {
+  private async createTerminal(config: PtyTerminalConfig): Promise<PtyTerminal> {
     const terminalId = this.generateId('terminal');
-    const agent = new TUIAgent(config, this.processManager);
+    const agent = new PtyTerminal(config, this.processManager);
 
     const pooledResource: PooledResource<TerminalConnection> = {
       id: terminalId,
@@ -586,7 +586,7 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Wait for available terminal
    */
-  private async waitForTerminal(configKey: string, startTime: number): Promise<TUIAgent> {
+  private async waitForTerminal(configKey: string, startTime: number): Promise<PtyTerminal> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         this.removeFromWaitingQueue(configKey, resolve);
@@ -616,7 +616,7 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Find resource by agent instance
    */
-  private findResourceByAgent(agent: TUIAgent): PooledResource<TerminalConnection> | null {
+  private findResourceByAgent(agent: PtyTerminal): PooledResource<TerminalConnection> | null {
     for (const resource of this.terminalPool.values()) {
       if (resource.resource.agent === agent) {
         return resource;
@@ -684,7 +684,7 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Get configuration key for pooling
    */
-  private getConfigKey(config: TUIAgentConfig): string {
+  private getConfigKey(config: PtyTerminalConfig): string {
     return JSON.stringify({
       shell: config.shell,
       cwd: config.cwd,

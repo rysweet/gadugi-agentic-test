@@ -1,8 +1,8 @@
 /**
- * Adapter to convert between scenarios/TestScenario and models/OrchestratorScenario formats
+ * Adapter to convert between scenarios/ScenarioDefinition and models/OrchestratorScenario formats
  */
 
-import { TestScenario as SimpleScenario, TestStep as SimpleStep } from '../scenarios';
+import { ScenarioDefinition as SimpleScenario, TestStep as SimpleStep } from '../scenarios';
 import { OrchestratorScenario as ComplexScenario, OrchestratorStep, Priority, TestInterface } from '../models/TestModels';
 import { v4 as uuidv4 } from 'uuid';
 

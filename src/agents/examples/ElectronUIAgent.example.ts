@@ -6,7 +6,7 @@
  */
 
 import { ElectronUIAgent } from '../ElectronUIAgent';
-import { TestScenario, TestStep, Priority, TestInterface } from '../../models/TestModels';
+import { OrchestratorScenario, TestStep, Priority, TestInterface } from '../../models/TestModels';
 import { LogLevel } from '../../utils/logger';
 
 /**
@@ -88,7 +88,7 @@ async function fullScenarioTest(): Promise<void> {
   });
 
   // Define a complete test scenario
-  const scenario: TestScenario = {
+  const scenario: OrchestratorScenario = {
     id: 'spa-build-workflow',
     name: 'SPA Build Workflow Test',
     description: 'Complete workflow test for your application SPA',
