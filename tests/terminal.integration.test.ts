@@ -708,8 +708,8 @@ echo -e "\nComplete!"
       const cursorScript = path.join(tempDir, 'cursor.sh');
       await fs.writeFile(cursorScript, `#!/bin/bash
 echo -e "Line 1\nLine 2\nLine 3"
-echo -e "\033[2A\033[10GModified"
-echo -e "\033[2B"
+echo -e "\x1b[2A\x1b[10GModified"
+echo -e "\x1b[2B"
 echo "Done"
 `, { mode: 0o755 });
 
@@ -717,7 +717,7 @@ echo "Done"
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const output = agent.captureOutput(sessionId);
-      expect(output?.raw).toContain('\033['); // Should contain escape sequences
+      expect(output?.raw).toContain('\x1b['); // Should contain escape sequences
       expect(output?.text).toContain('Modified');
       expect(output?.text).toContain('Done');
     });
