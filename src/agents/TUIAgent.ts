@@ -884,7 +884,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   }
 
   private generateSessionId(): string {
-    return `tui_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `tui_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private processSpecialKeys(input: string): string {
@@ -1289,16 +1289,8 @@ export class TUIAgent extends EventEmitter implements IAgent {
     await this.waitForOutputPattern(sessionId, pattern, timeout);
   }
 
-  private async handleResizeTerminalAction(step: TestStep): Promise<void> {
-    const sessionId = step.target || this.getMostRecentSessionId();
-    const [cols, rows] = (step.value || '80,24').split(',').map(Number);
-
-    const session = this.sessions.get(sessionId);
-    if (session) {
-      session.size = { cols, rows };
-      // In a real implementation, you would resize the actual terminal
-      this.logger.debug(`Terminal resized`, { sessionId, cols, rows });
-    }
+  private async handleResizeTerminalAction(_step: TestStep): Promise<void> {
+    throw new Error('resize_terminal action is not yet implemented');
   }
 
   private async handleKillSessionAction(step: TestStep): Promise<void> {

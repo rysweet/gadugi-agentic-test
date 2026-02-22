@@ -569,7 +569,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
           break;
           
         case 'add_listener':
-          this.addEventListener(step.target, step.value);
+          this.addEventListener(step.target);
           result = true;
           break;
           
@@ -930,7 +930,7 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
            this.connectionInfo?.state === ConnectionState.CONNECTED;
   }
 
-  private addEventListener(event: string, handlerStr?: string): void {
+  private addEventListener(event: string): void {
     const handler = (data: any) => {
       this.logger.debug(`Event received: ${event}`, { data });
     };
@@ -1049,11 +1049,11 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
   }
 
   private generateConnectionId(): string {
-    return `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `conn_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private generateMessageId(): string {
-    return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private applyEnvironmentConfig(environment: Record<string, string>): void {
@@ -1076,7 +1076,11 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
   }
 
   private getScenarioLogs(): string[] {
-    return this.logger ? ['No scenario-specific logs available'] : [];
+    return this.messageHistory.map(msg => {
+      const dir = msg.direction === 'sent' ? 'SENT' : 'RECV';
+      const data = typeof msg.data === 'string' ? msg.data : JSON.stringify(msg.data);
+      return `[${msg.timestamp.toISOString()}] [${dir}] ${msg.event}: ${data}`;
+    });
   }
 
   private setupEventListeners(): void {

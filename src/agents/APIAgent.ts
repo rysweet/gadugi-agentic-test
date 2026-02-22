@@ -533,12 +533,6 @@ export class APIAgent extends EventEmitter implements IAgent {
           result = true;
           break;
           
-        case 'clear_cookies':
-          // Note: Axios doesn't handle cookies automatically like browsers
-          // This would need to be implemented if cookie support is needed
-          result = true;
-          break;
-          
         default:
           throw new Error(`Unsupported API action: ${step.action}`);
       }
@@ -896,7 +890,7 @@ export class APIAgent extends EventEmitter implements IAgent {
   }
 
   private generateRequestId(): string {
-    return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private applyEnvironmentConfig(environment: Record<string, string>): void {
@@ -919,7 +913,15 @@ export class APIAgent extends EventEmitter implements IAgent {
   }
 
   private getScenarioLogs(): string[] {
-    return this.logger ? ['No scenario-specific logs available'] : [];
+    const logs: string[] = [];
+    for (const response of this.responseHistory) {
+      const req = this.requestHistory.find(r => r.id === response.requestId);
+      const method = req ? req.method : 'UNKNOWN';
+      const url = req ? req.url : 'unknown';
+      const ts = response.timestamp.toISOString();
+      logs.push(`[${ts}] ${method} ${url} → ${response.status} ${response.statusText} (${response.duration}ms)`);
+    }
+    return logs;
   }
 
   private setupEventListeners(): void {

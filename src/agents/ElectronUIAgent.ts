@@ -698,7 +698,7 @@ export class ElectronUIAgent extends EventEmitter implements IAgent {
 
       // Store state snapshot
       const snapshot: StateSnapshot = {
-        id: `${timestamp.getTime()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `${timestamp.getTime()}_${Math.random().toString(36).slice(2, 11)}`,
         timestamp,
         state,
         scenarioId: this.currentScenarioId

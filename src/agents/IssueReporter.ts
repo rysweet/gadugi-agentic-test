@@ -669,7 +669,7 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
     let stackTraceHash: string | undefined;
     if (failure.stackTrace) {
       stackTraceHash = crypto
-        .createHash('md5')
+        .createHash('sha256')
         .update(failure.stackTrace)
         .digest('hex')
         .substring(0, 8);
@@ -900,13 +900,17 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
     if (this.rateLimitInfo && this.rateLimitInfo.remaining <= this.config.rateLimitBuffer!) {
       const waitTime = this.rateLimitInfo.reset.getTime() - Date.now();
       if (waitTime > 0) {
+        const MAX_WAIT_MS = 60_000;
+        if (waitTime > MAX_WAIT_MS) {
+          throw new Error(`GitHub rate limit exceeded, would need to wait ${Math.ceil(waitTime / 1000)}s. Try again later.`);
+        }
         this.logger.warn('Rate limit approaching, waiting for reset', {
           remaining: this.rateLimitInfo.remaining,
           resetTime: this.rateLimitInfo.reset.toISOString(),
           waitTimeMs: waitTime
         });
-        
-        await new Promise(resolve => setTimeout(resolve, waitTime + 1000));
+
+        await new Promise(resolve => setTimeout(resolve, Math.min(waitTime + 1000, MAX_WAIT_MS)));
         await this.updateRateLimitInfo();
       }
     }

@@ -85,10 +85,9 @@ export type {
   APIResponse,
   RequestPerformance
 } from './APIAgent';
-export { WebSocketAgent, createWebSocketAgent } from './WebSocketAgent';
+export { WebSocketAgent, createWebSocketAgent, ConnectionState } from './WebSocketAgent';
 export type {
   WebSocketAgentConfig,
-  ConnectionState,
   WebSocketMessage,
   ConnectionMetrics,
   LatencyMeasurement,
