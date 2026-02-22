@@ -6,21 +6,23 @@
  */
 
 // Smart UI Test Runner - Uses Playwright's accessibility tree and element detection
-export {
+import {
   SmartUITestRunner,
   createSmartUITestRunner,
   runSmartUITests
 } from './SmartUITestRunner';
+export { SmartUITestRunner, createSmartUITestRunner, runSmartUITests };
 
 // Comprehensive UI Test Runner - Systematically exercises all tabs and features
-export {
+import {
   ComprehensiveUITestRunner,
   createComprehensiveUITestRunner,
   runComprehensiveUITests
 } from './ComprehensiveUITestRunner';
+export { ComprehensiveUITestRunner, createComprehensiveUITestRunner, runComprehensiveUITests };
 
 // Re-export common types for convenience
-export type { TestResult, TestStatus, TestStep } from '../models/TestModels';
+export type { TestResult, TestStatus } from '../models/TestModels';
 
 /**
  * Available test runners
@@ -49,16 +51,11 @@ export function createTestRunner(
   type: TestRunnerType,
   config?: RunnerConfig
 ) {
-  // Dynamic imports to avoid circular dependencies
   switch (type) {
-    case TestRunners.Smart: {
-      const { createSmartUITestRunner } = require('./SmartUITestRunner');
+    case TestRunners.Smart:
       return createSmartUITestRunner(config?.screenshotsDir);
-    }
-    case TestRunners.Comprehensive: {
-      const { createComprehensiveUITestRunner } = require('./ComprehensiveUITestRunner');
+    case TestRunners.Comprehensive:
       return createComprehensiveUITestRunner(config?.screenshotsDir);
-    }
     default:
       throw new Error(`Unknown test runner type: ${type}`);
   }
@@ -71,16 +68,11 @@ export async function runTestRunner(
   type: TestRunnerType,
   config?: RunnerConfig
 ) {
-  // Dynamic imports to avoid circular dependencies
   switch (type) {
-    case TestRunners.Smart: {
-      const { runSmartUITests } = require('./SmartUITestRunner');
+    case TestRunners.Smart:
       return await runSmartUITests(config?.screenshotsDir);
-    }
-    case TestRunners.Comprehensive: {
-      const { runComprehensiveUITests } = require('./ComprehensiveUITestRunner');
+    case TestRunners.Comprehensive:
       return await runComprehensiveUITests(config?.screenshotsDir);
-    }
     default:
       throw new Error(`Unknown test runner type: ${type}`);
   }

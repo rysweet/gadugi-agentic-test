@@ -218,12 +218,8 @@ export class AdaptiveWaiter {
     options: WaitOptions = {}
   ): Promise<WaitResult<T>> {
     return this.waitForCondition(async () => {
-      try {
-        const result = await operation();
-        return result as T;
-      } catch (error) {
-        throw error; // Let waitForCondition handle the retry logic
-      }
+      const result = await operation();
+      return result as T;
     }, options);
   }
 
@@ -296,8 +292,7 @@ export class AdaptiveWaiter {
     const actualDelay = Math.max(1, ms + jitterMs);
 
     return new Promise(resolve => {
-      const timer = setTimeout(() => resolve(), actualDelay);
-      return timer;
+      setTimeout(() => resolve(), actualDelay);
     });
   }
 

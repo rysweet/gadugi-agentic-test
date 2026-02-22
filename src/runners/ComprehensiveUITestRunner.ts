@@ -69,16 +69,17 @@ export class ComprehensiveUITestRunner {
       const p = this.page;
       const t = this.tester;
 
-      await t.testTab(p, 'Build',         [t.testTenantIdInput.bind(t), t.testBuildButton.bind(t)]);
-      await t.testTab(p, 'Generate Spec', [t.testSpecGeneration.bind(t)]);
-      await t.testTab(p, 'Generate IaC',  [t.testFormatSelector.bind(t)]);
-      await t.testTab(p, 'Create Tenant', [t.testSpecUpload.bind(t)]);
-      await t.testTab(p, 'Visualize',     [t.testGraphVisualization.bind(t)]);
-      await t.testTab(p, 'Agent Mode',    [t.testAgentInterface.bind(t)]);
-      await t.testTab(p, 'Threat Model',  [t.testThreatModelGeneration.bind(t)]);
-      await t.testTab(p, 'Config',        [t.testConfigFields.bind(t), t.testSaveConfig.bind(t)]);
-      await t.testTab(p, 'Status',        [t.testSystemStatus.bind(t), t.testNeo4jStatus.bind(t)]);
-      await t.testTab(p, 'Help',          [t.testHelpContent.bind(t)]);
+      const addScreenshot = (p: string | null) => { if (p) screenshots.push(p); };
+      addScreenshot(await t.testTab(p, 'Build',         [t.testTenantIdInput.bind(t), t.testBuildButton.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Generate Spec', [t.testSpecGeneration.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Generate IaC',  [t.testFormatSelector.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Create Tenant', [t.testSpecUpload.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Visualize',     [t.testGraphVisualization.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Agent Mode',    [t.testAgentInterface.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Threat Model',  [t.testThreatModelGeneration.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Config',        [t.testConfigFields.bind(t), t.testSaveConfig.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Status',        [t.testSystemStatus.bind(t), t.testNeo4jStatus.bind(t)]));
+      addScreenshot(await t.testTab(p, 'Help',          [t.testHelpContent.bind(t)]));
 
       // Responsiveness tests
       t.logSection('UI Responsiveness Tests');
