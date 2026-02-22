@@ -42,6 +42,8 @@ screenshots/*.jpg
 test-results.json
 smart-test-results.json
 ai-test-results.json
+.priority-history.json
+.priority-patterns.json
 
 # Temporary files
 *.tmp

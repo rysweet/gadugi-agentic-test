@@ -7,6 +7,8 @@
  */
 
 import { EventEmitter } from 'events';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { IAgent, AgentType } from './index';
 import {
   TestFailure,
@@ -56,6 +58,10 @@ export interface PriorityAgentConfig {
   customRules?: PriorityRule[];
   /** Logging configuration */
   logLevel?: LogLevel;
+  /** File path for persisting analysis history (default: .priority-history.json in cwd) */
+  historyPath?: string;
+  /** File path for persisting pattern cache (default: .priority-patterns.json in cwd) */
+  patternCachePath?: string;
 }
 
 /**
@@ -204,7 +210,9 @@ const DEFAULT_CONFIG: Required<PriorityAgentConfig> = {
   patternSensitivity: 0.7,
   minSamplesForTrends: 5,
   customRules: [],
-  logLevel: LogLevel.INFO
+  logLevel: LogLevel.INFO,
+  historyPath: '',
+  patternCachePath: ''
 };
 
 /**
@@ -253,7 +261,11 @@ export class PriorityAgent extends EventEmitter implements IAgent {
   }
 
   /**
-   * Execute priority analysis on a scenario (implements IAgent interface)
+   * Execute priority analysis on a scenario (implements IAgent interface).
+   *
+   * Returns null when the scenario has no steps (nothing to analyze).
+   * Otherwise constructs a real TestFailure from the scenario context and
+   * delegates to analyzePriority().
    */
   async execute(scenario: OrchestratorScenario): Promise<PriorityAssignment | null> {
     if (!this.isInitialized) {
@@ -261,17 +273,23 @@ export class PriorityAgent extends EventEmitter implements IAgent {
     }
 
     this.logger.info(`Executing priority analysis for scenario: ${scenario.id}`);
-    
-    // For the IAgent interface, we need a test failure to analyze
-    // This is a simplified implementation that would need actual failure data
-    const mockFailure: TestFailure = {
+
+    // Nothing to analyze when the scenario has no steps
+    if (!scenario.steps || scenario.steps.length === 0) {
+      this.logger.debug(`Scenario ${scenario.id} has no steps - skipping priority analysis`);
+      return null;
+    }
+
+    // Build a real failure from the scenario's own metadata
+    const failure: TestFailure = {
       scenarioId: scenario.id,
       timestamp: new Date(),
-      message: 'Mock failure for priority analysis',
-      category: 'execution'
+      message: scenario.description || scenario.name,
+      category: this.inferCategory(scenario),
+      isKnownIssue: false
     };
 
-    return this.analyzePriority(mockFailure);
+    return this.analyzePriority(failure);
   }
 
   /**
@@ -1088,24 +1106,111 @@ export class PriorityAgent extends EventEmitter implements IAgent {
     this.analysisHistory.get(assignment.scenarioId)!.push(assignment);
   }
 
+  /**
+   * Infer a failure category from a scenario's interface type and tags.
+   */
+  private inferCategory(scenario: OrchestratorScenario): string {
+    // Check tags first for explicit category hints
+    const tags = scenario.tags || [];
+    for (const tag of tags) {
+      const lower = tag.toLowerCase();
+      if (lower.includes('security') || lower.includes('auth')) return 'security';
+      if (lower.includes('performance') || lower.includes('load')) return 'performance';
+      if (lower.includes('regression')) return 'regression';
+      if (lower.includes('smoke')) return 'smoke';
+    }
+
+    // Fall back to interface type
+    switch (scenario.interface) {
+      case TestInterface.GUI:
+        return 'ui';
+      case TestInterface.CLI:
+        return 'cli';
+      case TestInterface.TUI:
+        return 'tui';
+      case TestInterface.API:
+        return 'api';
+      default:
+        return 'execution';
+    }
+  }
+
+  private resolveHistoryPath(): string {
+    return this.config.historyPath || path.join(process.cwd(), '.priority-history.json');
+  }
+
+  private resolvePatternCachePath(): string {
+    return this.config.patternCachePath || path.join(process.cwd(), '.priority-patterns.json');
+  }
+
   private async loadAnalysisHistory(): Promise<void> {
-    // In a real implementation, this would load from persistent storage
-    this.logger.debug('Loading analysis history from storage');
+    const historyPath = this.resolveHistoryPath();
+    this.logger.debug('Loading analysis history from storage', { historyPath });
+    try {
+      const content = await fs.readFile(historyPath, 'utf-8');
+      const raw = JSON.parse(content) as Record<string, Array<PriorityAssignment & { timestamp: string }>>;
+      for (const [scenarioId, assignments] of Object.entries(raw)) {
+        this.analysisHistory.set(
+          scenarioId,
+          assignments.map(a => ({ ...a, timestamp: new Date(a.timestamp) }))
+        );
+      }
+      this.logger.debug(`Loaded analysis history for ${this.analysisHistory.size} scenarios`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        this.logger.warn('Failed to load analysis history', { error });
+      }
+      // No history file yet - start with an empty map (already initialised)
+    }
   }
 
   private async saveAnalysisHistory(): Promise<void> {
-    // In a real implementation, this would save to persistent storage
-    this.logger.debug('Saving analysis history to storage');
+    const historyPath = this.resolveHistoryPath();
+    this.logger.debug('Saving analysis history to storage', { historyPath });
+    try {
+      const data: Record<string, PriorityAssignment[]> = {};
+      for (const [scenarioId, assignments] of this.analysisHistory.entries()) {
+        data[scenarioId] = assignments;
+      }
+      await fs.writeFile(historyPath, JSON.stringify(data, null, 2), 'utf-8');
+      this.logger.debug(`Saved analysis history for ${this.analysisHistory.size} scenarios`);
+    } catch (error) {
+      this.logger.warn('Failed to save analysis history', { error });
+    }
   }
 
   private async loadPatternCache(): Promise<void> {
-    // In a real implementation, this would load from persistent storage
-    this.logger.debug('Loading pattern cache from storage');
+    const patternCachePath = this.resolvePatternCachePath();
+    this.logger.debug('Loading pattern cache from storage', { patternCachePath });
+    try {
+      const content = await fs.readFile(patternCachePath, 'utf-8');
+      const raw = JSON.parse(content) as Array<FailurePattern & { firstSeen: string; lastSeen: string }>;
+      for (const pattern of raw) {
+        this.patternCache.set(pattern.id, {
+          ...pattern,
+          firstSeen: new Date(pattern.firstSeen),
+          lastSeen: new Date(pattern.lastSeen)
+        });
+      }
+      this.logger.debug(`Loaded ${this.patternCache.size} cached patterns`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        this.logger.warn('Failed to load pattern cache', { error });
+      }
+      // No cache file yet - start empty
+    }
   }
 
   private async savePatternCache(): Promise<void> {
-    // In a real implementation, this would save to persistent storage
-    this.logger.debug('Saving pattern cache to storage');
+    const patternCachePath = this.resolvePatternCachePath();
+    this.logger.debug('Saving pattern cache to storage', { patternCachePath });
+    try {
+      const data = Array.from(this.patternCache.values());
+      await fs.writeFile(patternCachePath, JSON.stringify(data, null, 2), 'utf-8');
+      this.logger.debug(`Saved ${data.length} patterns to cache`);
+    } catch (error) {
+      this.logger.warn('Failed to save pattern cache', { error });
+    }
   }
 }
 
@@ -1126,5 +1231,7 @@ export const defaultPriorityAgentConfig: PriorityAgentConfig = {
   patternSensitivity: 0.7,
   minSamplesForTrends: 5,
   customRules: [],
-  logLevel: LogLevel.INFO
+  logLevel: LogLevel.INFO,
+  historyPath: '',
+  patternCachePath: ''
 };
