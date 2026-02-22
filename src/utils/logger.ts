@@ -31,7 +31,7 @@ export interface LogContext {
   /** Session or run ID */
   sessionId?: string;
   /** Additional metadata */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -216,36 +216,36 @@ export class TestLogger {
   /**
    * Log an error message
    */
-  error(message: string, meta?: any): void {
-    this.logger.error(message, { ...this.context, ...meta });
+  error(message: string, meta?: unknown): void {
+    this.logger.error(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta as Record<string, unknown> : { meta }) });
   }
 
   /**
    * Log a warning message
    */
-  warn(message: string, meta?: any): void {
-    this.logger.warn(message, { ...this.context, ...meta });
+  warn(message: string, meta?: unknown): void {
+    this.logger.warn(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta as Record<string, unknown> : { meta }) });
   }
 
   /**
    * Log an info message
    */
-  info(message: string, meta?: any): void {
-    this.logger.info(message, { ...this.context, ...meta });
+  info(message: string, meta?: unknown): void {
+    this.logger.info(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta as Record<string, unknown> : { meta }) });
   }
 
   /**
    * Log an HTTP message
    */
-  http(message: string, meta?: any): void {
-    this.logger.http(message, { ...this.context, ...meta });
+  http(message: string, meta?: unknown): void {
+    this.logger.http(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta as Record<string, unknown> : { meta }) });
   }
 
   /**
    * Log a debug message
    */
-  debug(message: string, meta?: any): void {
-    this.logger.debug(message, { ...this.context, ...meta });
+  debug(message: string, meta?: unknown): void {
+    this.logger.debug(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta as Record<string, unknown> : { meta }) });
   }
 
   /**
@@ -300,7 +300,7 @@ export class TestLogger {
   /**
    * Log performance metrics
    */
-  performance(operation: string, duration: number, metadata?: Record<string, any>): void {
+  performance(operation: string, duration: number, metadata?: Record<string, unknown>): void {
     this.info(`Performance: ${operation} took ${duration}ms`, {
       event: 'performance',
       operation,
@@ -429,10 +429,10 @@ export const defaultLogger = _activeLogger;
  * Safe to use before or after setupLogger() is called.
  */
 export const logger = {
-  error: (message: string, meta?: any) => _activeLogger.error(message, meta),
-  warn: (message: string, meta?: any) => _activeLogger.warn(message, meta),
-  info: (message: string, meta?: any) => _activeLogger.info(message, meta),
-  debug: (message: string, meta?: any) => _activeLogger.debug(message, meta),
+  error: (message: string, meta?: unknown) => _activeLogger.error(message, meta),
+  warn: (message: string, meta?: unknown) => _activeLogger.warn(message, meta),
+  info: (message: string, meta?: unknown) => _activeLogger.info(message, meta),
+  debug: (message: string, meta?: unknown) => _activeLogger.debug(message, meta),
   setContext: (context: LogContext) => _activeLogger.setContext(context),
   clearContext: () => _activeLogger.clearContext(),
   setLevel: (level: LogLevel) => _activeLogger.setLevel(level),

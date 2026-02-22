@@ -272,7 +272,7 @@ export class AdaptiveWaiter {
   public async waitForAny(
     conditions: WaitCondition[],
     options: WaitOptions = {}
-  ): Promise<WaitResult<any>> {
+  ): Promise<WaitResult<unknown>> {
     return this.waitForCondition(async () => {
       for (let i = 0; i < conditions.length; i++) {
         try {
