@@ -219,7 +219,7 @@ export class ConfigManager {
       if (extension === '.json') {
         fileConfig = JSON.parse(fileContent);
       } else if (extension === '.yaml' || extension === '.yml') {
-        fileConfig = yaml.load(fileContent);
+        fileConfig = yaml.load(fileContent, { schema: yaml.JSON_SCHEMA });
       } else {
         throw new ConfigError(`Unsupported config file format: ${extension}`, filePath);
       }

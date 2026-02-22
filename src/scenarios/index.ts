@@ -10,7 +10,7 @@ import * as path from 'path';
 export class ScenarioLoader {
   static async loadFromFile(filePath: string): Promise<ScenarioDefinition> {
     const content = await fs.readFile(filePath, 'utf-8');
-    const raw = yaml.load(content) as any;
+    const raw = yaml.load(content, { schema: yaml.JSON_SCHEMA }) as any;
 
     // Handle three formats:
     // Format 1: Top-level name, steps, assertions (canonical format)

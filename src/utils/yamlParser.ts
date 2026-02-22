@@ -151,7 +151,7 @@ export class YamlParser {
    */
   parseScenario(yamlContent: string, variables: VariableContext = this.createDefaultVariableContext()): OrchestratorScenario {
     try {
-      const parsed = yaml.load(yamlContent) as RawScenario;
+      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as unknown as RawScenario;
       if (!parsed) {
         throw new YamlParseError('Empty or invalid YAML content');
       }
@@ -419,7 +419,7 @@ export class YamlParser {
 
     try {
       const content = await fs.readFile(filePath, 'utf-8');
-      const parsed = yaml.load(content);
+      const parsed = yaml.load(content, { schema: yaml.JSON_SCHEMA });
 
       if (!parsed) {
         errors.push('Empty or invalid YAML file');
