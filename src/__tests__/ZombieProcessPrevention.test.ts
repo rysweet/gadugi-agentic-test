@@ -160,6 +160,11 @@ describe('Zombie Process Prevention Integration', () => {
     it('should clean up entire process groups', async () => {
       const processes: any[] = [];
 
+      // Capture baseline before spawning so assertion is relative to system state,
+      // not an absolute threshold that fails on busy machines (fixes #40).
+      const baselineProcesses = await getProcessesByCommand(['sleep', 'sh']);
+      const baselineProcessCount = baselineProcesses.length;
+
       // Create processes that spawn child processes
       for (let i = 0; i < 5; i++) {
         const process = processManager.startProcess('sh', [
@@ -187,16 +192,19 @@ describe('Zombie Process Prevention Integration', () => {
       const zombieCount = await getZombieProcessCount();
       expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
 
-      // Verify no processes from our groups remain
-      // Note: This test can be flaky due to system processes with similar names
-      // We'll just verify that zombie count didn't increase
-      const ourProcesses = await getProcessesByCommand(['sleep', 'sh']);
-      // Instead of expecting 0, just ensure we cleaned up our test processes
-      // System may have other sleep/sh processes running
-      expect(ourProcesses.length).toBeLessThan(200); // Reasonable upper bound
+      // Verify no test-spawned processes remain. Compare against pre-test baseline
+      // so the assertion is unaffected by unrelated system processes (fixes #40).
+      // Allow +10 for child processes that may not all be reaped immediately.
+      const remainingProcesses = await getProcessesByCommand(['sleep', 'sh']);
+      expect(remainingProcesses.length).toBeLessThanOrEqual(baselineProcessCount + 10);
     }, 15000);
 
     it('should handle nested process groups', async () => {
+      // Capture baseline before spawning so assertion is relative to system state,
+      // not an absolute threshold that fails on busy machines (fixes #40).
+      const baselineProcesses = await getProcessesByCommand(['sleep', 'bash']);
+      const baselineProcessCount = baselineProcesses.length;
+
       const process = processManager.startProcess('bash', [
         '-c',
         `
@@ -229,10 +237,11 @@ describe('Zombie Process Prevention Integration', () => {
       const zombieCount = await getZombieProcessCount();
       expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
 
-      // Verify all nested processes are gone
+      // Verify all nested processes are gone. Compare against pre-test baseline
+      // so the assertion is unaffected by unrelated system processes (fixes #40).
+      // Allow +10 for deeply nested processes that may not all be reaped immediately.
       const remainingProcesses = await getProcessesByCommand(['sleep', 'bash']);
-      // Instead of expecting 0, just ensure we didn't leak too many processes
-      expect(remainingProcesses.length).toBeLessThan(50); // Reasonable upper bound
+      expect(remainingProcesses.length).toBeLessThanOrEqual(baselineProcessCount + 10);
     }, 20000);
   });
 
