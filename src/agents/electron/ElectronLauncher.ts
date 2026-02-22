@@ -2,6 +2,7 @@
  * ElectronLauncher - Handles Electron application launch, teardown, and lifecycle management
  */
 
+import { EventEmitter } from 'events';
 import {
   _electron as electron,
   ElectronApplication,
@@ -18,8 +19,11 @@ import { ProcessInfo } from '../../models/AppState';
 
 /**
  * Manages Electron application lifecycle: launch, page setup, teardown, and data export.
+ *
+ * Extends EventEmitter so callers can observe dialog events:
+ *   launcher.on('dialog', ({ type, message }) => { ... })
  */
-export class ElectronLauncher {
+export class ElectronLauncher extends EventEmitter {
   private config: ElectronUIAgentConfig;
   private logger: TestLogger;
 
@@ -29,6 +33,7 @@ export class ElectronLauncher {
   public consoleMessages: ConsoleMessage[] = [];
 
   constructor(config: ElectronUIAgentConfig, logger: TestLogger) {
+    super();
     this.config = config;
     this.logger = logger;
   }
@@ -202,7 +207,21 @@ export class ElectronLauncher {
 
     this.page.on('dialog', async (dialog: Dialog) => {
       this.logger.info(`Dialog appeared: ${dialog.type()} - ${dialog.message()}`);
-      await dialog.accept();
+      // Record dialog in state for test assertions
+      this.emit('dialog', { type: dialog.type(), message: dialog.message() });
+
+      if (dialog.type() === 'alert') {
+        // Auto-accept informational alerts (backward compatible)
+        await dialog.accept();
+      } else {
+        // Dismiss confirm/prompt dialogs and log as warning
+        // Tests that need these dialogs should handle them explicitly
+        this.logger.warn(`Non-alert dialog dismissed: ${dialog.type()} - "${dialog.message()}"`, {
+          dialogType: dialog.type(),
+          message: dialog.message()
+        });
+        await dialog.dismiss();
+      }
     });
 
     this.page.on('pageerror', (error: Error) => {
