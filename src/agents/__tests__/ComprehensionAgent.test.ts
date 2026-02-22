@@ -2,7 +2,7 @@
  * ComprehensionAgent Test Suite
  */
 
-import { ComprehensionAgent, DocumentationLoader, createComprehensionAgent } from '../ComprehensionAgent';
+import { ComprehensionAgent, DocumentationLoader, createComprehensionAgent, defaultComprehensionAgentConfig } from '../ComprehensionAgent';
 import { Priority, TestInterface } from '../../models/TestModels';
 
 // Mock OpenAI
@@ -179,7 +179,7 @@ Usage: atg build --tenant-id <id>
       });
     });
 
-    it('should handle LLM errors gracefully', async () => {
+    it('should propagate LLM errors to callers instead of returning fake data', async () => {
       // Mock OpenAI to throw an error
       const mockOpenAI = require('openai').default;
       mockOpenAI.mockImplementationOnce(() => ({
@@ -201,11 +201,40 @@ Usage: atg build --tenant-id <id>
       });
 
       await newAgent.initialize();
-      const result = await newAgent.analyzeFeature('test documentation');
 
-      expect(result.name).toBe('Unknown Feature');
-      expect(result.purpose).toBe('Feature purpose not determined');
-      
+      // analyzeFeature must throw on LLM failure - not silently return fake data
+      await expect(newAgent.analyzeFeature('test documentation')).rejects.toThrow('API Error');
+
+      await newAgent.cleanup();
+    });
+
+    it('processDiscoveredFeatures skips features when analyzeFeature throws', async () => {
+      // Mock OpenAI to throw an error so analyzeFeature propagates it
+      const mockOpenAI = require('openai').default;
+      mockOpenAI.mockImplementationOnce(() => ({
+        chat: {
+          completions: {
+            create: jest.fn().mockRejectedValue(new Error('LLM unavailable'))
+          }
+        }
+      }));
+
+      const newAgent = createComprehensionAgent({
+        llm: {
+          provider: 'openai',
+          apiKey: 'test-key',
+          model: 'gpt-4',
+          temperature: 0.1,
+          maxTokens: 4000
+        }
+      });
+
+      await newAgent.initialize();
+
+      // processDiscoveredFeatures should catch per-feature errors and return empty array
+      const scenarios = await newAgent.processDiscoveredFeatures();
+      expect(Array.isArray(scenarios)).toBe(true);
+
       await newAgent.cleanup();
     });
   });
@@ -365,5 +394,79 @@ describe('createComprehensionAgent', () => {
 
     // Restore environment
     process.env = originalEnv;
+  });
+});
+
+describe('API key validation (Fix H-8)', () => {
+  it('should throw when openai apiKey is empty string', async () => {
+    const agent = createComprehensionAgent({
+      llm: {
+        provider: 'openai',
+        apiKey: '',
+        model: 'gpt-4',
+        temperature: 0.1,
+        maxTokens: 4000
+      }
+    });
+
+    await expect(agent.initialize()).rejects.toThrow(
+      "LLM provider 'openai' requires an API key. Set the appropriate environment variable."
+    );
+  });
+
+  it('should throw when openai apiKey is whitespace only', async () => {
+    const agent = createComprehensionAgent({
+      llm: {
+        provider: 'openai',
+        apiKey: '   ',
+        model: 'gpt-4',
+        temperature: 0.1,
+        maxTokens: 4000
+      }
+    });
+
+    await expect(agent.initialize()).rejects.toThrow(
+      "LLM provider 'openai' requires an API key. Set the appropriate environment variable."
+    );
+  });
+
+  it('should throw when azure apiKey is empty string', async () => {
+    const agent = createComprehensionAgent({
+      llm: {
+        provider: 'azure',
+        apiKey: '',
+        model: 'gpt-4',
+        temperature: 0.1,
+        maxTokens: 4000,
+        endpoint: 'https://test.openai.azure.com',
+        deployment: 'gpt-4'
+      }
+    });
+
+    await expect(agent.initialize()).rejects.toThrow(
+      "LLM provider 'azure' requires an API key. Set the appropriate environment variable."
+    );
+  });
+
+  it('should not throw when apiKey is non-empty', async () => {
+    const agent = createComprehensionAgent({
+      llm: {
+        provider: 'openai',
+        apiKey: 'valid-api-key',
+        model: 'gpt-4',
+        temperature: 0.1,
+        maxTokens: 4000
+      }
+    });
+
+    await expect(agent.initialize()).resolves.not.toThrow();
+    await agent.cleanup();
+  });
+});
+
+describe('defaultComprehensionAgentConfig (Fix L-5)', () => {
+  it('should include apiVersion field', () => {
+    expect(defaultComprehensionAgentConfig.llm.apiVersion).toBeDefined();
+    expect(defaultComprehensionAgentConfig.llm.apiVersion).toBe('2024-02-01');
   });
 });

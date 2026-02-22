@@ -340,6 +340,10 @@ export class ComprehensionAgent implements IAgent {
   private async initializeLLMClient(): Promise<void> {
     const { llm } = this.config;
 
+    if (!llm.apiKey || llm.apiKey.trim() === '') {
+      throw new Error(`LLM provider '${llm.provider}' requires an API key. Set the appropriate environment variable.`);
+    }
+
     if (llm.provider === 'azure') {
       if (!llm.endpoint || !llm.deployment) {
         throw new Error('Azure OpenAI requires endpoint and deployment configuration');
@@ -379,66 +383,50 @@ export class ComprehensionAgent implements IAgent {
    * Analyze a feature from documentation using LLM
    * @param featureDoc - Feature documentation text
    * @returns FeatureSpec with extracted information
+   * @throws Error if the LLM call fails or returns unparseable content
    */
   async analyzeFeature(featureDoc: string): Promise<FeatureSpec> {
     logger.debug('Analyzing feature with LLM');
-    
-    try {
-      const client = await this.getLLMClient();
-      const { llm } = this.config;
 
-      // Truncate context if too long
-      const context = featureDoc.length > this.config.maxContextLength
-        ? featureDoc.substring(0, this.config.maxContextLength) + '...'
-        : featureDoc;
+    const client = await this.getLLMClient();
+    const { llm } = this.config;
 
-      const prompt = this.buildFeatureAnalysisPrompt(context);
+    // Truncate context if too long
+    const context = featureDoc.length > this.config.maxContextLength
+      ? featureDoc.substring(0, this.config.maxContextLength) + '...'
+      : featureDoc;
 
-      const response = await client.chat.completions.create({
-        model: llm.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a test scenario generator and feature analyst. Extract structured information from documentation and return valid JSON only.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: llm.temperature,
-        max_tokens: llm.maxTokens
-      });
+    const prompt = this.buildFeatureAnalysisPrompt(context);
 
-      const content = response.choices[0].message.content;
-      if (!content) {
-        throw new Error('No content in LLM response');
-      }
+    const response = await client.chat.completions.create({
+      model: llm.model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a test scenario generator and feature analyst. Extract structured information from documentation and return valid JSON only.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: llm.temperature,
+      max_tokens: llm.maxTokens
+    });
 
-      // Extract and parse JSON from response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON found in LLM response');
-      }
-
-      const featureData = JSON.parse(jsonMatch[0]);
-      return this.parseFeatureSpec(featureData);
-
-    } catch (error) {
-      logger.error(`LLM analysis failed: ${error}`);
-      
-      // Return a basic spec as fallback
-      return {
-        name: 'Unknown Feature',
-        purpose: 'Feature purpose not determined',
-        inputs: [],
-        outputs: [],
-        successCriteria: ['Feature executes without error'],
-        failureModes: ['Feature fails to execute'],
-        edgeCases: [],
-        dependencies: []
-      };
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error('No content in LLM response');
     }
+
+    // Extract and parse JSON from response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('No JSON found in LLM response');
+    }
+
+    const featureData = JSON.parse(jsonMatch[0]);
+    return this.parseFeatureSpec(featureData);
   }
 
   /**
@@ -886,7 +874,8 @@ export const defaultComprehensionAgentConfig: ComprehensionAgentConfig = {
     apiKey: process.env.OPENAI_API_KEY || '',
     model: 'gpt-4',
     temperature: 0.1,
-    maxTokens: 4000
+    maxTokens: 4000,
+    apiVersion: '2024-02-01'
   },
   docsDir: 'docs',
   includePatterns: ['**/*.md'],
