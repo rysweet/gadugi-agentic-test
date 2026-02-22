@@ -167,6 +167,47 @@ export class YamlParser {
   }
 
   /**
+   * Parse multiple scenarios from a YAML string (content, not file path).
+   *
+   * This is the correct function to use when you already have YAML content
+   * in memory (e.g. after calling fs.readFile). Use loadScenarios() when
+   * you want to load directly from a file path.
+   */
+  async parseScenariosFromString(
+    yamlContent: string,
+    variables: VariableContext = this.createDefaultVariableContext()
+  ): Promise<OrchestratorScenario[]> {
+    try {
+      // Use JSON_SCHEMA to prevent !!js/function code execution
+      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as any;
+      if (!parsed) {
+        throw new YamlParseError('Empty or invalid YAML content');
+      }
+
+      const substituted = this.substituteVariables(parsed, variables);
+
+      if (Array.isArray(substituted)) {
+        return substituted.map((scenario, index) =>
+          this.validateAndConvertScenario(scenario, `inline[${index}]`)
+        );
+      } else if (substituted.scenarios) {
+        return substituted.scenarios.map((scenario: any, index: number) =>
+          this.validateAndConvertScenario(scenario, `inline[scenarios][${index}]`)
+        );
+      } else {
+        return [this.validateAndConvertScenario(substituted, 'inline')];
+      }
+    } catch (error: unknown) {
+      if (error instanceof YamlParseError || error instanceof ValidationError) {
+        throw error;
+      }
+      throw new YamlParseError(
+        `Failed to parse YAML content: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
    * Process include directives in YAML content
    */
   private async processIncludes(content: any, baseDir: string, depth: number): Promise<any> {
@@ -525,6 +566,20 @@ export async function loadScenariosFromFile(filePath: string, variables?: Variab
 export function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): OrchestratorScenario {
   const parser = createYamlParser();
   return parser.parseScenario(yamlContent, variables);
+}
+
+/**
+ * Convenience function to parse multiple scenarios from a YAML string.
+ *
+ * Unlike parseYamlScenarios / loadScenariosFromFile which expect a file path,
+ * this function accepts YAML content that is already in memory.
+ */
+export async function parseScenariosFromString(
+  yamlContent: string,
+  variables?: VariableContext
+): Promise<OrchestratorScenario[]> {
+  const parser = createYamlParser();
+  return parser.parseScenariosFromString(yamlContent, variables);
 }
 
 /**
