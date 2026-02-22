@@ -83,8 +83,9 @@ export class UIFlowTester {
 
   /**
    * Navigate to a named tab, capture a screenshot, then run the provided tests.
+   * Returns the screenshot path if captured, or null on failure.
    */
-  async testTab(page: Page, tabName: string, tests: TabTestFunction[]): Promise<void> {
+  async testTab(page: Page, tabName: string, tests: TabTestFunction[]): Promise<string | null> {
     this.logSection(`Testing ${tabName} Tab`);
 
     try {
@@ -103,8 +104,11 @@ export class UIFlowTester {
           this.logError(test.name || 'Unknown test', error as Error);
         }
       }
+
+      return screenshotPath;
     } catch (error) {
       this.logError(`Failed to test ${tabName} tab`, error as Error);
+      return null;
     }
   }
 

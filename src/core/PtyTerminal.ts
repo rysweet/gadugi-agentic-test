@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 import * as pty from 'node-pty-prebuilt-multiarch';
 import { ProcessLifecycleManager, ProcessInfo } from './ProcessLifecycleManager';
 import { adaptiveWaiter, waitForTerminalReady, waitForOutput, delay } from './AdaptiveWaiter';
+import { logger } from '../utils/logger';
 
 /**
  * Terminal dimensions
@@ -332,7 +333,7 @@ export class PtyTerminal extends EventEmitter {
         try {
           this.ptyProcess.kill();
         } catch (error) {
-          // Ignore errors during cleanup
+          logger.warn('Error killing PTY process during cleanup:', error);
         }
         this.ptyProcess = null;
       }
