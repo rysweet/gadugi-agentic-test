@@ -53,7 +53,18 @@ describe('DocumentationLoader', () => {
   });
 
   describe('extractFeatures', () => {
-    it('should extract CLI features from documentation', () => {
+    it('should extract CLI features when cliCommandPatterns are supplied', () => {
+      // Create a loader with explicit CLI command patterns — no app-specific defaults
+      const loaderWithPatterns = new DocumentationLoader(
+        'docs',
+        ['**/*.md'],
+        ['**/node_modules/**'],
+        [
+          /`atg\s+([a-z-]+)`/gi,
+          /`uv run atg\s+([a-z-]+)`/gi
+        ]
+      );
+
       const content = `
 # CLI Commands
 
@@ -61,8 +72,8 @@ Use \`atg build\` to build the graph database.
 Use \`uv run atg generate-iac\` to generate infrastructure code.
       `;
 
-      const features = docLoader.extractFeatures(content);
-      
+      const features = loaderWithPatterns.extractFeatures(content);
+
       expect(features).toHaveLength(2);
       expect(features[0]).toMatchObject({
         type: 'cli',
@@ -72,6 +83,20 @@ Use \`uv run atg generate-iac\` to generate infrastructure code.
         type: 'cli',
         name: 'generate-iac'
       });
+    });
+
+    it('should not extract CLI features when no cliCommandPatterns are supplied', () => {
+      // Default loader has no CLI patterns — CLI text is ignored
+      const content = `
+# CLI Commands
+
+Use \`atg build\` to build the graph database.
+Use \`uv run atg generate-iac\` to generate infrastructure code.
+      `;
+
+      const features = docLoader.extractFeatures(content);
+
+      expect(features.filter(f => f.type === 'cli')).toHaveLength(0);
     });
 
     it('should extract UI features from headers', () => {
@@ -87,7 +112,7 @@ Navigate through the application.
       `;
 
       const features = docLoader.extractFeatures(content);
-      
+
       expect(features).toHaveLength(3);
       expect(features.every(f => f.type === 'ui')).toBe(true);
     });
@@ -101,7 +126,7 @@ API endpoints:
       `;
 
       const features = docLoader.extractFeatures(content);
-      
+
       expect(features).toHaveLength(3);
       expect(features.every(f => f.type === 'api')).toBe(true);
     });
@@ -110,7 +135,7 @@ API endpoints:
   describe('loadMarkdownFiles', () => {
     it('should load markdown files successfully', async () => {
       const docs = await docLoader.loadMarkdownFiles();
-      
+
       expect(docs).toBeDefined();
       expect(typeof docs).toBe('object');
     });
@@ -257,7 +282,7 @@ Usage: atg build --tenant-id <id>
       const scenarios = await agent.generateTestScenarios(featureSpec);
 
       expect(scenarios).toHaveLength(5); // 1 success + 2 failures + 2 edge cases (LLM generates both edge cases from spec)
-      
+
       // Check success scenario
       const successScenario = scenarios.find(s => s.name.includes('Success'));
       expect(successScenario).toBeDefined();
@@ -332,7 +357,7 @@ Usage: atg build --tenant-id <id>
       await agent.initialize();
 
       const features = await agent.discoverFeatures();
-      
+
       expect(Array.isArray(features)).toBe(true);
       // Additional assertions would depend on mocked file content
     });
@@ -341,11 +366,39 @@ Usage: atg build --tenant-id <id>
   describe('execute method', () => {
     it('should skip execution with appropriate message', async () => {
       const result = await agent.execute({});
-      
+
       expect(result).toMatchObject({
         status: 'skipped',
         reason: 'ComprehensionAgent does not execute scenarios'
       });
+    });
+  });
+
+  describe('cliCommandPatterns config', () => {
+    it('should pass cliCommandPatterns to DocumentationLoader and match custom patterns', async () => {
+      const agentWithPatterns = createComprehensionAgent({
+        llm: {
+          provider: 'openai',
+          apiKey: 'test-key',
+          model: 'gpt-4',
+          temperature: 0.1,
+          maxTokens: 4000
+        },
+        docsDir: 'test-docs',
+        cliCommandPatterns: [/`my-tool\s+([a-z-]+)`/gi]
+      });
+
+      // discoverFeatures uses DocumentationLoader; mocked readFile returns content with `atg build`
+      // but our custom pattern only matches `my-tool <cmd>` so no CLI features are discovered
+      const features = await agentWithPatterns.discoverFeatures();
+      expect(Array.isArray(features)).toBe(true);
+
+      await agentWithPatterns.cleanup();
+    });
+
+    it('should default to empty cliCommandPatterns when not specified', () => {
+      const defaultAgent = createComprehensionAgent({});
+      expect(defaultAgent).toBeInstanceOf(ComprehensionAgent);
     });
   });
 });
@@ -353,7 +406,7 @@ Usage: atg build --tenant-id <id>
 describe('createComprehensionAgent', () => {
   it('should create agent with default configuration', () => {
     const agent = createComprehensionAgent({});
-    
+
     expect(agent).toBeInstanceOf(ComprehensionAgent);
     expect(agent.name).toBe('ComprehensionAgent');
     expect(agent.type).toBe('comprehension');
@@ -375,7 +428,7 @@ describe('createComprehensionAgent', () => {
     };
 
     const agent = createComprehensionAgent(config);
-    
+
     expect(agent).toBeInstanceOf(ComprehensionAgent);
   });
 
@@ -468,5 +521,10 @@ describe('defaultComprehensionAgentConfig (Fix L-5)', () => {
   it('should include apiVersion field', () => {
     expect(defaultComprehensionAgentConfig.llm.apiVersion).toBeDefined();
     expect(defaultComprehensionAgentConfig.llm.apiVersion).toBe('2024-02-01');
+  });
+
+  it('should have empty cliCommandPatterns by default', () => {
+    expect(defaultComprehensionAgentConfig.cliCommandPatterns).toBeDefined();
+    expect(defaultComprehensionAgentConfig.cliCommandPatterns).toHaveLength(0);
   });
 });

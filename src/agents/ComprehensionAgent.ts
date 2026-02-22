@@ -11,7 +11,8 @@ import { logger } from '../utils/logger';
 import { IAgent, AgentType } from './index';
 import { OrchestratorScenario } from '../models/TestModels';
 import { ComprehensionAgentConfig, FeatureSpec, DiscoveredFeature } from './comprehension/types';
-import { DocumentationLoader, OutputComprehender } from './comprehension/OutputComprehender';
+import { DocumentationLoader } from './comprehension/DocumentationLoader';
+import { OutputComprehender } from './comprehension/OutputComprehender';
 import { ScenarioComprehender } from './comprehension/ScenarioComprehender';
 
 // Re-export types so existing import sites continue to work
@@ -26,7 +27,7 @@ export type {
 } from './comprehension/types';
 
 // Re-export DocumentationLoader for backward compatibility with tests
-export { DocumentationLoader } from './comprehension/OutputComprehender';
+export { DocumentationLoader } from './comprehension/DocumentationLoader';
 
 /**
  * ComprehensionAgent - Main agent class for feature comprehension and test generation
@@ -45,7 +46,8 @@ export class ComprehensionAgent implements IAgent {
     this.docLoader = new DocumentationLoader(
       config.docsDir,
       config.includePatterns,
-      config.excludePatterns
+      config.excludePatterns,
+      config.cliCommandPatterns
     );
     this.outputComprehender = new OutputComprehender(config);
     this.scenarioComprehender = new ScenarioComprehender();
@@ -166,7 +168,8 @@ export function createComprehensionAgent(config: Partial<ComprehensionAgentConfi
     docsDir: 'docs',
     includePatterns: ['**/*.md'],
     excludePatterns: ['**/node_modules/**'],
-    maxContextLength: 8000
+    maxContextLength: 8000,
+    cliCommandPatterns: []
   };
 
   // Override with Azure configuration if environment variables are present
@@ -204,5 +207,6 @@ export const defaultComprehensionAgentConfig: ComprehensionAgentConfig = {
   docsDir: 'docs',
   includePatterns: ['**/*.md'],
   excludePatterns: ['**/node_modules/**'],
-  maxContextLength: 8000
+  maxContextLength: 8000,
+  cliCommandPatterns: []
 };

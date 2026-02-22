@@ -105,4 +105,10 @@ export interface ComprehensionAgentConfig {
   excludePatterns: string[];
   /** Maximum context length for LLM */
   maxContextLength: number;
+  /**
+   * Custom CLI command patterns used by DocumentationLoader.extractFeatures().
+   * Each pattern must capture the command name in its first capture group.
+   * Defaults to [] (no CLI patterns matched) when not provided.
+   */
+  cliCommandPatterns?: RegExp[];
 }
