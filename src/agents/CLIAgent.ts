@@ -559,7 +559,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
 
   private async executeWithRetry(context: ExecutionContext, attempt: number): Promise<CommandResult> {
     const fullCommand = `${context.command} ${context.args.join(' ')}`.trim();
-    const processId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const processId = `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
