@@ -21,7 +21,7 @@ import {
   ElectronWebSocketMonitor
 } from './electron';
 
-export { ElectronUIAgentConfig, WebSocketEvent, PerformanceSample } from './electron';
+export type { ElectronUIAgentConfig, WebSocketEvent, PerformanceSample } from './electron';
 
 /** Comprehensive Electron UI testing agent — facade over focused sub-modules. */
 export class ElectronUIAgent extends EventEmitter implements IAgent {

@@ -4,6 +4,7 @@
 
 export * from './types';
 export { ElectronLauncher } from './ElectronLauncher';
-export { ElectronPageInteractor, StepLifecycleCallbacks, StateCaptureProviders } from './ElectronPageInteractor';
+export { ElectronPageInteractor } from './ElectronPageInteractor';
+export type { StepLifecycleCallbacks, StateCaptureProviders } from './ElectronPageInteractor';
 export { ElectronPerformanceMonitor } from './ElectronPerformanceMonitor';
 export { ElectronWebSocketMonitor } from './ElectronWebSocketMonitor';
