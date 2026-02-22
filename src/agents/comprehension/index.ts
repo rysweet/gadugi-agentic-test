@@ -3,5 +3,6 @@
  */
 
 export * from './types';
-export { DocumentationLoader, OutputComprehender } from './OutputComprehender';
+export { DocumentationLoader } from './DocumentationLoader';
+export { OutputComprehender } from './OutputComprehender';
 export { ScenarioComprehender } from './ScenarioComprehender';
