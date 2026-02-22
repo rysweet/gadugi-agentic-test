@@ -186,6 +186,26 @@ export class PtyTerminal extends EventEmitter {
   }
 
   /**
+   * Send a control sequence (e.g., Ctrl+C = sendControl('C')).
+   * @param char - A single ASCII letter A-Z (case-insensitive). Any other
+   *               value is rejected to prevent injection of arbitrary control
+   *               codes through crafted input.
+   */
+  public sendControl(char: string): void {
+    if (!/^[A-Za-z]$/.test(char)) {
+      throw new Error(`sendControl requires a single letter A-Z, got: ${JSON.stringify(char)}`);
+    }
+
+    if (!this.ptyProcess || this.isDestroyed) {
+      throw new Error('PtyTerminal is not started or is destroyed');
+    }
+
+    // Ctrl+A = \x01, Ctrl+B = \x02, … Ctrl+Z = \x1a
+    const code = char.toUpperCase().charCodeAt(0) - 64;
+    this.ptyProcess.write(String.fromCharCode(code));
+  }
+
+  /**
    * Execute a command and wait for completion using AdaptiveWaiter
    */
   public async executeCommand(

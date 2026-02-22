@@ -118,9 +118,29 @@ export function mergeConfigs<T extends Record<string, any>>(target: T, source: P
 }
 
 /**
+ * Keys that must never appear in a dotted config path.
+ * Allowing them would enable prototype pollution attacks.
+ */
+const FORBIDDEN_PATH_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/**
+ * Validate that no segment in a dotted path is a forbidden key.
+ * Throws an error when a dangerous segment is detected.
+ */
+function validatePathSegments(dotPath: string): void {
+  const segments = dotPath.split('.');
+  for (const key of segments) {
+    if (FORBIDDEN_PATH_KEYS.has(key)) {
+      throw new Error(`Invalid config path segment: ${key}`);
+    }
+  }
+}
+
+/**
  * Get nested value from object using dot notation
  */
 export function getNestedValue(obj: any, dotPath: string): any {
+  validatePathSegments(dotPath);
   return dotPath.split('.').reduce((current, key) => current?.[key], obj);
 }
 
@@ -128,6 +148,8 @@ export function getNestedValue(obj: any, dotPath: string): any {
  * Set nested value in object using dot notation
  */
 export function setNestedValue(obj: any, dotPath: string, value: any): void {
+  validatePathSegments(dotPath);
+
   const keys = dotPath.split('.');
   const lastKey = keys.pop()!;
 
@@ -157,7 +179,17 @@ function parseEnvValue(value: string): any {
   if ((value.startsWith('{') && value.endsWith('}')) ||
       (value.startsWith('[') && value.endsWith(']'))) {
     try {
-      return JSON.parse(value);
+      const parsed = JSON.parse(value);
+      // Guard against prototype pollution payloads embedded in JSON.
+      // If the parsed object contains any forbidden top-level key, return
+      // the raw string rather than an exploitable object.
+      if (typeof parsed === 'object' && parsed !== null) {
+        const FORBIDDEN = ['__proto__', 'constructor', 'prototype'];
+        if (FORBIDDEN.some(k => k in parsed)) {
+          return value; // Return original string if parsed object has dangerous keys
+        }
+      }
+      return parsed;
     } catch {
       // If JSON parsing fails, return as string
     }
