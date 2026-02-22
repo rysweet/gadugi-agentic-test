@@ -26,7 +26,10 @@ import * as path from 'path';
 // undefined and throws immediately when the module is imported. (#37)
 jest.mock('child_process', () => ({
   spawn: jest.fn(),
-  exec: jest.fn()
+  exec: jest.fn((_cmd: string, cb: (err: Error | null, stdout: string, stderr: string) => void) => {
+    cb(null, '', '');
+    return {} as any;
+  }),
 }));
 
 describe('TUIAgent', () => {
