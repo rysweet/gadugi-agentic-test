@@ -19,10 +19,29 @@ describe('scenarioAdapter', () => {
   });
 
   describe('adaptScenarioToComplex', () => {
-    it('should produce a ComplexScenario with a UUID id', () => {
+    it('should produce a deterministic id from the scenario name', () => {
       const result = adaptScenarioToComplex(makeScenario());
 
+      expect(result.id).toBe('scenario-test-scenario');
+    });
+
+    it('should produce the same id on repeated calls with the same name', () => {
+      const a = adaptScenarioToComplex(makeScenario({ name: 'My Scenario' }));
+      const b = adaptScenarioToComplex(makeScenario({ name: 'My Scenario' }));
+
+      expect(a.id).toBe(b.id);
+    });
+
+    it('should fall back to a UUID when no name is provided', () => {
+      const result = adaptScenarioToComplex(makeScenario({ name: undefined }));
+
       expect(result.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+    });
+
+    it('should slugify special characters in names', () => {
+      const result = adaptScenarioToComplex(makeScenario({ name: 'My Test: Scenario #1!' }));
+
+      expect(result.id).toBe('scenario-my-test-scenario-1');
     });
 
     it('should carry over name and description', () => {
