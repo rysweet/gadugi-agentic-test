@@ -10,15 +10,19 @@
  *
  * Public API is identical to the original monolithic TUIAgent — all
  * existing imports and tests continue to work without modification.
+ *
+ * Extends BaseAgent (issue #117) to eliminate the duplicated execute() loop.
+ * Uses shared validateDirectory() (issue #118) instead of a private copy.
+ * Uses shared sanitizeConfigWithEnv() (issue #118) instead of a private copy.
  */
 
-import { EventEmitter } from 'events';
-import * as fs from 'fs/promises';
 import pidusage from 'pidusage';
 import { SpawnOptions } from 'child_process';
-import { IAgent, AgentType } from './index';
-import { TestStep, TestStatus, StepResult } from '../models/TestModels';
+import { AgentType } from './index';
+import { OrchestratorScenario, TestStep, TestStatus, StepResult } from '../models/TestModels';
 import { TestLogger, createLogger } from '../utils/logger';
+import { validateDirectory } from '../utils/fileUtils';
+import { sanitizeConfigWithEnv } from '../utils/agentUtils';
 import {
   TUISessionManager, TUIInputSimulator, TUIMenuNavigator,
   dispatchStep, getLatestOutput, performOutputValidation, arraysEqual,
@@ -27,6 +31,7 @@ import {
   TUIAgentConfig, TerminalOutput, ColorInfo, InputSimulation,
   MenuNavigation, PerformanceMetrics, DEFAULT_CONFIG,
 } from './tui/types';
+import { BaseAgent, ExecutionContext } from './BaseAgent';
 
 // Re-export all public types so existing imports from './TUIAgent' still work
 export type {
@@ -35,13 +40,12 @@ export type {
 } from './tui/types';
 
 /** Comprehensive TUI testing agent (thin facade) */
-export class TUIAgent extends EventEmitter implements IAgent {
+export class TUIAgent extends BaseAgent {
   public readonly name = 'TUIAgent';
   public readonly type = AgentType.TUI;
 
   private config: Required<TUIAgentConfig>;
   private logger: TestLogger;
-  private isInitialized = false;
   private currentScenarioId?: string;
   private performanceMonitor?: NodeJS.Timeout;
   private performanceMetricsHistory: PerformanceMetrics[] = [];
@@ -62,7 +66,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
   async initialize(): Promise<void> {
     this.logger.info('Initializing TUIAgent', { config: this.sanitizeConfig() });
     try {
-      await this.validateWorkingDirectory();
+      await validateDirectory(this.config.workingDirectory);
       this.setupPlatformConfig();
       if (this.config.performance.enabled) this.startPerformanceMonitoring();
       this.isInitialized = true;
@@ -74,39 +78,37 @@ export class TUIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  async execute(scenario: any): Promise<any> {
-    if (!this.isInitialized) throw new Error('Agent not initialized. Call initialize() first.');
+  // -- BaseAgent template-method hooks --
+
+  protected applyEnvironment(scenario: OrchestratorScenario): void {
     this.currentScenarioId = scenario.id;
     this.logger.setContext({ scenarioId: scenario.id, component: 'TUIAgent' });
     this.logger.scenarioStart(scenario.id, scenario.name);
-    const startTime = Date.now();
-    let status = TestStatus.PASSED;
-    let error: string | undefined;
-    try {
-      if (scenario.environment) this.setEnvironmentVariables(scenario.environment);
-      const stepResults: StepResult[] = [];
-      for (let i = 0; i < scenario.steps.length; i++) {
-        const stepResult = await this.executeStep(scenario.steps[i], i);
-        stepResults.push(stepResult);
-        if (stepResult.status === TestStatus.FAILED || stepResult.status === TestStatus.ERROR) {
-          status = stepResult.status; error = stepResult.error; break;
-        }
+    if (scenario.environment) {
+      for (const [name, value] of Object.entries(scenario.environment)) {
+        // Update local config only — do NOT mutate process.env as it contaminates
+        // all subsequent tests and other agents running in the same process.
+        this.config.environment[name] = value;
       }
-      return {
-        scenarioId: scenario.id, status, duration: Date.now() - startTime,
-        startTime: new Date(startTime), endTime: new Date(), error, stepResults,
-        logs: this.getScenarioLogs(), sessions: this.sessionManager.getSessionInfo(),
-        performanceMetrics: this.getPerformanceMetrics()
-      };
-    } catch (executeError: any) {
-      this.logger.error('Scenario execution failed', { error: executeError?.message });
-      status = TestStatus.ERROR; error = executeError?.message; throw executeError;
-    } finally {
-      await this.sessionManager.cleanupSessions();
-      this.logger.scenarioEnd(scenario.id, status, Date.now() - startTime);
-      this.currentScenarioId = undefined;
     }
   }
+
+  protected buildResult(ctx: ExecutionContext): unknown {
+    return {
+      ...ctx,
+      logs: this.getScenarioLogs(),
+      sessions: this.sessionManager.getSessionInfo(),
+      performanceMetrics: this.getPerformanceMetrics(),
+    };
+  }
+
+  protected async onAfterExecute(scenario: OrchestratorScenario, status: TestStatus): Promise<void> {
+    await this.sessionManager.cleanupSessions();
+    this.logger.scenarioEnd(scenario.id, status, 0 /* duration tracked inside BaseAgent */);
+    this.currentScenarioId = undefined;
+  }
+
+  // -- Public TUI-specific API --
 
   async spawnTUI(command: string, args: string[] = [], options: Partial<SpawnOptions> = {}): Promise<string> {
     return this.sessionManager.createSession(command, args, options);
@@ -220,17 +222,6 @@ export class TUIAgent extends EventEmitter implements IAgent {
 
   // -- Private helpers --
 
-  private async validateWorkingDirectory(): Promise<void> {
-    try {
-      await fs.access(this.config.workingDirectory);
-      const stats = await fs.stat(this.config.workingDirectory);
-      if (!stats.isDirectory()) throw new Error(`Working directory is not a directory: ${this.config.workingDirectory}`);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') throw new Error(`Working directory does not exist: ${this.config.workingDirectory}`);
-      throw error;
-    }
-  }
-
   private setupPlatformConfig(): void {
     const platform = process.platform;
     this.config.environment.TERM = platform === 'win32' ? 'cmd' : this.config.terminalType;
@@ -280,17 +271,8 @@ export class TUIAgent extends EventEmitter implements IAgent {
     return logs.filter(log => log.length > 0);
   }
 
-  private setEnvironmentVariables(variables: Record<string, string>): void {
-    for (const [name, value] of Object.entries(variables)) {
-      // Update local config only — do NOT mutate process.env as it contaminates
-      // all subsequent tests and other agents running in the same process.
-      this.config.environment[name] = value;
-    }
-  }
-
   private sanitizeConfig(): Record<string, any> {
-    const { environment, ...safeConfig } = this.config;
-    return { ...safeConfig, environment: environment ? Object.keys(environment) : undefined };
+    return sanitizeConfigWithEnv(this.config, 'environment');
   }
 
   private async waitForOutputStabilization(sessionId: string): Promise<void> {

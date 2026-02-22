@@ -8,6 +8,7 @@
 import { io, Socket } from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { TestLogger } from '../../utils/logger';
+import { generateId } from '../../utils/ids';
 import {
   ConnectionState,
   ConnectionInfo,
@@ -284,6 +285,6 @@ export class WebSocketConnection extends EventEmitter {
   }
 
   private generateConnectionId(): string {
-    return `conn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return generateId('conn');
   }
 }

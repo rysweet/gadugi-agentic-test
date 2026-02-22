@@ -3,29 +3,32 @@
  *
  * Delegates command execution to CLICommandRunner and output parsing to
  * CLIOutputParser. Preserves the full public API of the original implementation.
+ *
+ * Extends BaseAgent (issue #117) to eliminate the duplicated execute() loop.
+ * Uses shared validateDirectory() (issue #118) instead of a private copy.
  */
 
-import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { IAgent, AgentType } from './index';
-import { TestStep, TestStatus, StepResult, CommandResult } from '../models/TestModels';
+import { AgentType } from './index';
+import { OrchestratorScenario, TestStep, TestStatus, StepResult, CommandResult } from '../models/TestModels';
 import { createLogger } from '../utils/logger';
 import { delay } from '../utils/async';
+import { validateDirectory } from '../utils/fileUtils';
 import { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData, DEFAULT_CLI_CONFIG } from './cli/types';
 import { CLICommandRunner } from './cli/CLICommandRunner';
 import { CLIOutputParser } from './cli/CLIOutputParser';
+import { BaseAgent, ExecutionContext as AgentExecutionContext } from './BaseAgent';
 
 export type { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData };
 
-export class CLIAgent extends EventEmitter implements IAgent {
+export class CLIAgent extends BaseAgent {
   public readonly name = 'CLIAgent';
   public readonly type = AgentType.CLI;
 
   private config: Required<CLIAgentConfig>;
   private runner: CLICommandRunner;
   private parser: CLIOutputParser;
-  private isInitialized = false;
 
   constructor(config: CLIAgentConfig = {}) {
     super();
@@ -38,7 +41,7 @@ export class CLIAgent extends EventEmitter implements IAgent {
 
   async initialize(): Promise<void> {
     try {
-      await this.validateWorkingDirectory();
+      await validateDirectory(this.config.workingDirectory);
       this.runner.setupInteractiveResponses();
       this.isInitialized = true;
       this.emit('initialized');
@@ -47,33 +50,28 @@ export class CLIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  async execute(scenario: any): Promise<any> {
-    if (!this.isInitialized) throw new Error('Agent not initialized. Call initialize() first.');
-    const startTime = Date.now();
-    let status = TestStatus.PASSED;
-    let error: string | undefined;
-    try {
-      if (scenario.environment) this.runner.setEnvironmentVariables(scenario.environment);
-      const stepResults: StepResult[] = [];
-      for (let i = 0; i < scenario.steps.length; i++) {
-        const stepResult = await this.executeStep(scenario.steps[i], i);
-        stepResults.push(stepResult);
-        if (stepResult.status === TestStatus.FAILED || stepResult.status === TestStatus.ERROR) {
-          status = stepResult.status; error = stepResult.error; break;
-        }
-      }
-      return {
-        scenarioId: scenario.id, status, duration: Date.now() - startTime,
-        startTime: new Date(startTime), endTime: new Date(), error, stepResults,
-        logs: this.parser.getScenarioLogs(this.runner.getOutputBuffer()),
-        commandHistory: this.runner.getCommandHistory(), outputBuffer: this.runner.getOutputBuffer()
-      };
-    } catch (executeError: any) {
-      status = TestStatus.ERROR; error = executeError?.message; throw executeError;
-    } finally {
-      await this.runner.killAllProcesses();
+  // -- BaseAgent template-method hooks --
+
+  protected applyEnvironment(scenario: OrchestratorScenario): void {
+    if (scenario.environment) {
+      this.runner.setEnvironmentVariables(scenario.environment);
     }
   }
+
+  protected buildResult(ctx: AgentExecutionContext): unknown {
+    return {
+      ...ctx,
+      logs: this.parser.getScenarioLogs(this.runner.getOutputBuffer()),
+      commandHistory: this.runner.getCommandHistory(),
+      outputBuffer: this.runner.getOutputBuffer(),
+    };
+  }
+
+  protected async onAfterExecute(): Promise<void> {
+    await this.runner.killAllProcesses();
+  }
+
+  // -- Public CLI-specific API --
 
   async executeCommand(command: string, args: string[] = [], options: Partial<ExecutionContext> = {}): Promise<CommandResult> {
     return this.runner.executeCommand(command, args, options);
@@ -166,17 +164,6 @@ export class CLIAgent extends EventEmitter implements IAgent {
   private async directoryExists(dirPath: string): Promise<boolean> {
     try { const s = await fs.stat(path.resolve(this.config.workingDirectory, dirPath)); return s.isDirectory(); }
     catch { return false; }
-  }
-
-  private async validateWorkingDirectory(): Promise<void> {
-    try {
-      await fs.access(this.config.workingDirectory);
-      const stats = await fs.stat(this.config.workingDirectory);
-      if (!stats.isDirectory()) throw new Error(`Working directory is not a directory: ${this.config.workingDirectory}`);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') throw new Error(`Working directory does not exist: ${this.config.workingDirectory}`);
-      throw error;
-    }
   }
 }
 

@@ -10,11 +10,16 @@
  * The FileUtils class (static API) and all types are preserved for backward compatibility.
  * Duplicate standalone convenience functions (ensureDir, readJson, writeJson, exists,
  * remove, copy, findFiles) have been removed - use FileUtils static methods directly.
+ *
+ * Standalone helpers (added for issue #118):
+ *   - validateDirectory(path) - verifies a path exists and is a directory
  */
 
 // Re-export all types
 export type { FileMetadata, CleanupOptions, ArchiveOptions, SyncOptions } from './files/types';
 export { FileOperationError } from './files/types';
+
+import * as fsPromises from 'fs/promises';
 
 // Import sub-modules for FileUtils class composition
 import {
@@ -23,6 +28,29 @@ import {
   CleanupOptions,
   SyncOptions
 } from './files/types';
+
+/**
+ * Verify that `dirPath` exists and is a directory.
+ *
+ * Shared by TUIAgent and CLIAgent (issue #118). Throws a descriptive Error on
+ * failure so callers can wrap it in a single try/catch inside `initialize()`.
+ *
+ * @throws Error when the path does not exist or is not a directory
+ */
+export async function validateDirectory(dirPath: string): Promise<void> {
+  try {
+    await fsPromises.access(dirPath);
+    const stats = await fsPromises.stat(dirPath);
+    if (!stats.isDirectory()) {
+      throw new Error(`Working directory is not a directory: ${dirPath}`);
+    }
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      throw new Error(`Working directory does not exist: ${dirPath}`);
+    }
+    throw error;
+  }
+}
 import { readJsonFile, exists, getMetadata } from './files/FileReader';
 import {
   ensureDirectory,

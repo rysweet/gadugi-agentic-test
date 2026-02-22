@@ -5,6 +5,7 @@
 import { Page, Locator } from 'playwright';
 import { ElectronUIAgentConfig } from './types';
 import { TestLogger } from '../../utils/logger';
+import { generateId } from '../../utils/ids';
 import { TestStep, TestStatus, StepResult } from '../../models/TestModels';
 import { AppState, NetworkState, PerformanceMetrics, StateSnapshot, ProcessInfo } from '../../models/AppState';
 import { ScreenshotManager, ScreenshotMetadata } from '../../utils/screenshot';
@@ -177,7 +178,7 @@ export class ElectronPageInteractor {
     };
 
     this.stateSnapshots.push({
-      id: `${timestamp.getTime()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: generateId(),
       timestamp,
       state,
       scenarioId

@@ -24,6 +24,10 @@ export enum AgentType {
   PRIORITY = 'priority'
 }
 
+// BaseAgent - shared execute() boilerplate (issue #117)
+export { BaseAgent } from './BaseAgent';
+export type { ExecutionContext as AgentExecutionContext } from './BaseAgent';
+
 // Re-export all agent implementations
 export { ElectronUIAgent, createElectronUIAgent } from './ElectronUIAgent';
 export type { ElectronUIAgentConfig, WebSocketEvent, PerformanceSample } from './ElectronUIAgent';

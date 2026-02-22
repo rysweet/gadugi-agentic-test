@@ -4,14 +4,16 @@
  * Delegates HTTP execution to APIRequestExecutor, authentication to
  * APIAuthHandler, and validation to APIResponseValidator. Preserves the full
  * public API of the original 937-LOC implementation.
+ *
+ * Extends BaseAgent (issue #117) to eliminate the duplicated execute() loop.
  */
 
 import { AxiosRequestConfig } from 'axios';
-import { EventEmitter } from 'events';
-import { IAgent, AgentType } from './index';
+import { AgentType } from './index';
 import { TestStep, TestStatus, StepResult, OrchestratorScenario } from '../models/TestModels';
 import { createLogger } from '../utils/logger';
 import { delay } from '../utils/async';
+import { BaseAgent, ExecutionContext } from './BaseAgent';
 import {
   APIAgentConfig, HTTPMethod, AuthConfig, RequestInterceptor, ResponseInterceptor,
   SchemaValidation, PerformanceMeasurement, RetryConfig, APIRequest, APIResponse,
@@ -26,7 +28,7 @@ export type {
   SchemaValidation, PerformanceMeasurement, RetryConfig, APIRequest, APIResponse, RequestPerformance
 };
 
-export class APIAgent extends EventEmitter implements IAgent {
+export class APIAgent extends BaseAgent {
   public readonly name = 'APIAgent';
   public readonly type = AgentType.API;
 
@@ -34,7 +36,6 @@ export class APIAgent extends EventEmitter implements IAgent {
   private executor: APIRequestExecutor;
   private authHandler: APIAuthHandler;
   private validator: APIResponseValidator;
-  private isInitialized = false;
 
   constructor(config: APIAgentConfig = {}) {
     super();
@@ -58,35 +59,25 @@ export class APIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  async execute(scenario: OrchestratorScenario): Promise<any> {
-    if (!this.isInitialized) throw new Error('Agent not initialized. Call initialize() first.');
-    const startTime = Date.now();
-    let status = TestStatus.PASSED;
-    let error: string | undefined;
-    try {
-      if (scenario.environment) this.applyEnvironmentConfig(scenario.environment);
-      const stepResults: StepResult[] = [];
-      for (let i = 0; i < scenario.steps.length; i++) {
-        const stepResult = await this.executeStep(scenario.steps[i], i);
-        stepResults.push(stepResult);
-        if (stepResult.status === TestStatus.FAILED || stepResult.status === TestStatus.ERROR) {
-          status = stepResult.status; error = stepResult.error; break;
-        }
-      }
-      return {
-        scenarioId: scenario.id, status, duration: Date.now() - startTime,
-        startTime: new Date(startTime), endTime: new Date(), error, stepResults,
-        logs: ['No scenario-specific logs available'],
-        requestHistory: this.executor.getRequestHistory(),
-        responseHistory: this.executor.getResponseHistory(),
-        performanceMetrics: this.executor.getPerformanceMetrics()
-      };
-    } catch (executeError: any) {
-      status = TestStatus.ERROR; error = executeError?.message; throw executeError;
-    } finally {
-      /* no running processes to clean up */
+  // -- BaseAgent template-method hooks --
+
+  protected applyEnvironment(scenario: OrchestratorScenario): void {
+    if (scenario.environment) {
+      this.applyEnvironmentConfig(scenario.environment);
     }
   }
+
+  protected buildResult(ctx: ExecutionContext): unknown {
+    return {
+      ...ctx,
+      logs: ['No scenario-specific logs available'],
+      requestHistory: this.executor.getRequestHistory(),
+      responseHistory: this.executor.getResponseHistory(),
+      performanceMetrics: this.executor.getPerformanceMetrics(),
+    };
+  }
+
+  // -- Public API-specific API --
 
   async makeRequest(method: HTTPMethod, url: string, data?: any, headers?: Record<string, string>, options?: Partial<AxiosRequestConfig>): Promise<APIResponse> {
     return this.executor.makeRequest(method, url, data, headers, options);
