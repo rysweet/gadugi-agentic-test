@@ -8,7 +8,6 @@ module.exports = {
   ],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      isolatedModules: true,
       tsconfig: {
         skipLibCheck: true,
         noEmitOnError: false
@@ -32,10 +31,10 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      lines: 15,
-      branches: 10,
-      functions: 15,
-      statements: 15
+      lines: 25,
+      branches: 20,
+      functions: 25,
+      statements: 25
     }
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
