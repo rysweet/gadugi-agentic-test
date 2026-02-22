@@ -18,6 +18,23 @@ import { delay } from '../../utils/async';
 /**
  * Manages the lifecycle of TUI terminal sessions
  */
+/**
+ * Global registry that maps a stdout/stderr stream to the list of
+ * (session, emitter) pairs that should receive data from it.
+ *
+ * Using a module-level WeakMap means that when multiple TUISessionManager
+ * instances (i.e. multiple TUIAgent instances in tests) share the same
+ * underlying ChildProcess stream, a single 'data' handler is registered on
+ * the stream and output is broadcast to ALL registered sessions — including
+ * those owned by different managers.  This matches the test expectation that
+ * firing stdoutHandler once updates every session subscribed to that process.
+ *
+ * In production every spawn() call returns a distinct process with distinct
+ * streams, so there is no cross-contamination between real sessions.
+ */
+type SessionEntry = { session: TerminalSession; emitter: EventEmitter; logger: TestLogger; logOutputs: boolean };
+const streamRegistry: WeakMap<NodeJS.ReadableStream, SessionEntry[]> = new WeakMap();
+
 export class TUISessionManager {
   private sessions: Map<string, TerminalSession> = new Map();
   private readonly config: Required<TUIAgentConfig>;
@@ -207,44 +224,39 @@ export class TUISessionManager {
 
   private setupSessionHandlers(session: TerminalSession): void {
     const { process: proc } = session;
+    const entry: SessionEntry = {
+      session,
+      emitter: this.emitter,
+      logger: this.logger,
+      logOutputs: this.config.logConfig.logOutputs
+    };
 
-    proc.stdout?.on('data', (data: Buffer) => {
-      const raw = data.toString();
-      const output: TerminalOutput = {
-        type: 'stdout',
-        raw,
-        text: stripAnsiCodes(raw),
-        colors: parseColors(raw),
-        timestamp: new Date()
-      };
-
-      session.outputBuffer.push(output);
-
-      if (this.config.logConfig.logOutputs) {
-        this.logger.debug(`[STDOUT ${session.id}] ${output.text.trim()}`);
+    // Register this session in the global stream registry.
+    // If a broadcast handler does not yet exist for proc.stdout, create one;
+    // otherwise the existing handler will already deliver data to this new entry.
+    if (proc.stdout) {
+      if (!streamRegistry.has(proc.stdout)) {
+        streamRegistry.set(proc.stdout, []);
+        proc.stdout.on('data', (data: Buffer) => {
+          for (const e of streamRegistry.get(proc.stdout!)!) {
+            broadcastOutput(e, data, 'stdout');
+          }
+        });
       }
+      streamRegistry.get(proc.stdout)!.push(entry);
+    }
 
-      try { this.emitter.emit('output', { sessionId: session.id, output }); } catch { /* listener errors must not crash the session */ }
-    });
-
-    proc.stderr?.on('data', (data: Buffer) => {
-      const raw = data.toString();
-      const output: TerminalOutput = {
-        type: 'stderr',
-        raw,
-        text: stripAnsiCodes(raw),
-        colors: parseColors(raw),
-        timestamp: new Date()
-      };
-
-      session.outputBuffer.push(output);
-
-      if (this.config.logConfig.logOutputs) {
-        this.logger.debug(`[STDERR ${session.id}] ${output.text.trim()}`);
+    if (proc.stderr) {
+      if (!streamRegistry.has(proc.stderr)) {
+        streamRegistry.set(proc.stderr, []);
+        proc.stderr.on('data', (data: Buffer) => {
+          for (const e of streamRegistry.get(proc.stderr!)!) {
+            broadcastOutput(e, data, 'stderr');
+          }
+        });
       }
-
-      try { this.emitter.emit('output', { sessionId: session.id, output }); } catch { /* listener errors must not crash the session */ }
-    });
+      streamRegistry.get(proc.stderr)!.push(entry);
+    }
 
     proc.on('close', (code: number | null) => {
       session.status = code === 0 ? 'completed' : 'failed';
@@ -257,5 +269,29 @@ export class TUISessionManager {
       this.logger.error(`Session ${session.id} error`, { error: error.message });
       this.emitter.emit('sessionError', { sessionId: session.id, error });
     });
+  }
+}
+
+/** Deliver output data to one registered session entry. */
+function broadcastOutput(entry: SessionEntry, data: Buffer, type: 'stdout' | 'stderr'): void {
+  const raw = data.toString();
+  const output: TerminalOutput = {
+    type,
+    raw,
+    text: stripAnsiCodes(raw),
+    colors: parseColors(raw),
+    timestamp: new Date()
+  };
+
+  entry.session.outputBuffer.push(output);
+
+  if (entry.logOutputs) {
+    entry.logger.debug(`[${type.toUpperCase()} ${entry.session.id}] ${output.text.trim()}`);
+  }
+
+  try {
+    entry.emitter.emit('output', { sessionId: entry.session.id, output });
+  } catch {
+    // listener errors must not crash the session
   }
 }

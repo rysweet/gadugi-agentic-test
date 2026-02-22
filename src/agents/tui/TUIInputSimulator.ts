@@ -65,16 +65,16 @@ export class TUIInputSimulator {
       timeout = input.timeout ?? this.config.defaultTimeout;
     }
 
-    const processedInput = this.processSpecialKeys(inputData);
+    const tokens = this.tokenizeInput(inputData);
 
     this.logger.debug(`Sending input to session ${sessionId}`, {
-      input: this.config.logConfig.logInputs ? processedInput : '[HIDDEN]',
+      input: this.config.logConfig.logInputs ? tokens.join('') : '[HIDDEN]',
       timing
     });
 
     try {
-      for (const char of processedInput) {
-        stdin.write(char);
+      for (const token of tokens) {
+        stdin.write(token);
         if (timing > 0) {
           await delay(timing);
         }
@@ -139,21 +139,60 @@ export class TUIInputSimulator {
 
   /**
    * Replace named key tokens like {Enter} with their escape sequences
+   * (kept for backward-compat; use tokenizeInput for send operations)
    */
   private processSpecialKeys(input: string): string {
+    return this.tokenizeInput(input).join('');
+  }
+
+  /**
+   * Split input into an ordered list of tokens, where each token is written
+   * as a single stdin.write() call.
+   *
+   * Rules:
+   * - {Key} tokens that map to an ANSI escape sequence (starting with ESC /
+   *   '\u001b') are emitted as one atomic token so the full sequence reaches
+   *   the application intact.
+   * - All other mapped values and plain characters are split into individual
+   *   chars.  This matches platform expectations: e.g. Windows {Enter} maps
+   *   to '\r\n' which is sent as two separate write() calls.
+   */
+  private tokenizeInput(input: string): string[] {
     const platform = process.platform;
     const keyMappings = this.config.crossPlatform.keyMappings?.[platform] ||
                        this.config.crossPlatform.keyMappings?.['linux'] ||
                        {};
 
-    let processed = input;
+    const tokens: string[] = [];
+    let i = 0;
 
-    for (const [key, code] of Object.entries(keyMappings)) {
-      const regex = new RegExp(`\\{${key}\\}`, 'g');
-      processed = processed.replace(regex, code);
+    while (i < input.length) {
+      if (input[i] === '{') {
+        const end = input.indexOf('}', i + 1);
+        if (end !== -1) {
+          const keyName = input.slice(i + 1, end);
+          if (keyName in keyMappings) {
+            const mapped = keyMappings[keyName];
+            if (mapped.startsWith('\u001b')) {
+              // ANSI escape sequence — write as one atomic unit
+              tokens.push(mapped);
+            } else {
+              // Non-escape mapping (e.g. '\r\n', '\t') — split char by char
+              for (const ch of mapped) {
+                tokens.push(ch);
+              }
+            }
+            i = end + 1;
+            continue;
+          }
+        }
+      }
+      // Plain character — emit as-is
+      tokens.push(input[i]);
+      i++;
     }
 
-    return processed;
+    return tokens;
   }
 
   /**

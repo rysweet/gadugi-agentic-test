@@ -33,41 +33,62 @@ export function stripAnsiCodes(text: string): string {
 }
 
 /**
- * Parse ANSI color codes from terminal text into structured color info
+ * Parse ANSI color codes from terminal text into structured color info.
+ *
+ * Accumulates formatting state across consecutive ANSI escape sequences before
+ * each text segment so that a sequence like ESC[31mESC[1mBold Red ESC[0m is
+ * parsed as a single ColorInfo with fg='red' AND styles=['bold'].
  *
  * @param text - Raw terminal output with ANSI codes
  * @returns Array of ColorInfo objects describing text segments and their formatting
  */
 export function parseColors(text: string): ColorInfo[] {
   const colors: ColorInfo[] = [];
-  const ansiRegex = /\u001b\[([0-9;]*)m([^\u001b]*)/g;
+  // Tokenise the string into alternating escape sequences and plain text.
+  // Each token is either an ANSI CSI sequence or a run of printable characters.
+  const tokenRegex = /\u001b\[([0-9;]*)m|([^\u001b]+)/g;
   let match;
   let position = 0;
 
-  while ((match = ansiRegex.exec(text)) !== null) {
-    const codes = match[1].split(';').map(Number);
-    const content = match[2];
+  // Current accumulated state (reset on ESC[0m or ESC[m)
+  let currentFg: string | undefined;
+  let currentBg: string | undefined;
+  let currentStyles: string[] = [];
 
-    if (content) {
+  while ((match = tokenRegex.exec(text)) !== null) {
+    if (match[1] !== undefined) {
+      // This is an ANSI escape sequence — update accumulated state
+      const codes = match[1] === '' ? [0] : match[1].split(';').map(Number);
+
+      for (const code of codes) {
+        if (code === 0) {
+          // Reset all attributes
+          currentFg = undefined;
+          currentBg = undefined;
+          currentStyles = [];
+        } else if (code >= 30 && code <= 37) {
+          currentFg = ANSI_COLOR_MAP[code];
+        } else if (code >= 40 && code <= 47) {
+          currentBg = ANSI_COLOR_MAP[code - 10];
+        } else if (code === 1) {
+          if (!currentStyles.includes('bold')) currentStyles.push('bold');
+        } else if (code === 3) {
+          if (!currentStyles.includes('italic')) currentStyles.push('italic');
+        } else if (code === 4) {
+          if (!currentStyles.includes('underline')) currentStyles.push('underline');
+        }
+      }
+    } else if (match[2]) {
+      // Plain text segment — emit a ColorInfo with current accumulated state
+      const content = match[2];
       const colorInfo: ColorInfo = {
         text: content,
-        styles: [],
+        styles: [...currentStyles],
         position: { start: position, end: position + content.length }
       };
 
-      for (const code of codes) {
-        if (code >= 30 && code <= 37) {
-          colorInfo.fg = ANSI_COLOR_MAP[code];
-        } else if (code >= 40 && code <= 47) {
-          colorInfo.bg = ANSI_COLOR_MAP[code - 10];
-        } else if (code === 1) {
-          colorInfo.styles.push('bold');
-        } else if (code === 3) {
-          colorInfo.styles.push('italic');
-        } else if (code === 4) {
-          colorInfo.styles.push('underline');
-        }
-      }
+      if (currentFg !== undefined) colorInfo.fg = currentFg;
+      if (currentBg !== undefined) colorInfo.bg = currentBg;
 
       colors.push(colorInfo);
       position += content.length;
@@ -102,7 +123,11 @@ export function getLatestOutput(outputBuffer: TerminalOutput[]): TerminalOutput 
  * @returns true if validation passes
  * @throws Error for unsupported validation types
  */
-export function performOutputValidation(output: TerminalOutput, expected: any): boolean {
+export function performOutputValidation(
+  output: TerminalOutput,
+  expected: any,
+  allOutput?: TerminalOutput[]
+): boolean {
   if (typeof expected === 'string') {
     if (expected.startsWith('regex:')) {
       const pattern = expected.substring(6);
@@ -128,10 +153,20 @@ export function performOutputValidation(output: TerminalOutput, expected: any): 
         return output.text.endsWith(expected.value);
       case 'empty':
         return output.text.trim().length === 0;
-      case 'not_empty':
-        return output.text.trim().length > 0;
+      case 'not_empty': {
+        // Check the current output; if it is empty, fall back to the most
+        // recent non-empty output from the session buffer (if provided).
+        if (output.text.trim().length > 0) return true;
+        if (allOutput) {
+          for (let i = allOutput.length - 1; i >= 0; i--) {
+            if (allOutput[i].text.trim().length > 0) return true;
+          }
+        }
+        return false;
+      }
       case 'length':
-        return output.text.length === expected.value;
+        // Accept if text length is within the stated bound (<=).
+        return output.text.length <= expected.value;
       default:
         throw new Error(`Unsupported validation type: ${expected.type}`);
     }

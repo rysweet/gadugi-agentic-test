@@ -31,6 +31,16 @@ export class PriorityQueue {
     this.config = config;
   }
 
+  // ─── Public history recording ─────────────────────────────────────────────────
+
+  /**
+   * Record an assignment into the analysis history (used when analysis is
+   * performed outside of rankFailures, e.g. by PriorityAgent.analyzePriority).
+   */
+  recordAssignment(assignment: PriorityAssignment): void {
+    this.analyzer.storeAssignment(this.analysisHistory, assignment);
+  }
+
   // ─── Ranking ──────────────────────────────────────────────────────────────────
 
   /**

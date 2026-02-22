@@ -2,7 +2,6 @@
  * IssueSubmitter - GitHub API submission: issues, comments, PRs, screenshots
  */
 
-import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Octokit } from '@octokit/rest';
 import { TestLogger } from '../../utils/logger';
@@ -133,29 +132,22 @@ export class IssueSubmitter {
   }
 
   /**
-   * Upload a screenshot to a Gist and attach a link comment to the issue
+   * Attach a screenshot reference to an issue.
+   *
+   * Security fix (issue #98): screenshots must NOT be uploaded to GitHub Gists
+   * because even "secret" gists have publicly accessible URLs, which could
+   * expose sensitive data (credentials, PII, internal state) captured in
+   * screenshots.  Instead we add a comment referencing the local file path
+   * and return that path to the caller.
    */
   async attachScreenshot(issueNumber: number, screenshotPath: string): Promise<string> {
-    const screenshotData = await fs.readFile(screenshotPath);
     const filename = path.basename(screenshotPath);
 
-    const gistResponse = await this.octokit.rest.gists.create({
-      description: `Screenshot for issue #${issueNumber}`,
-      public: false,
-      files: {
-        [filename]: {
-          content: screenshotData.toString('base64')
-        }
-      }
-    });
-
-    const screenshotUrl = `${gistResponse.data.html_url}#file-${filename.replace(/\./g, '-')}`;
-
     await this.addComment(issueNumber,
-      `## Screenshot Added\n\n![${filename}](${screenshotUrl})\n\n*Screenshot uploaded at ${new Date().toISOString()}*`
+      `## Screenshot\n\nScreenshot captured: \`${filename}\`\n\nLocal path: \`${screenshotPath}\`\n\n*Screenshot recorded at ${new Date().toISOString()}*`
     );
 
-    return screenshotUrl;
+    return screenshotPath;
   }
 
   /**

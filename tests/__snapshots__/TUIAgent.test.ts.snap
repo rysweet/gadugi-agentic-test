@@ -3,6 +3,7 @@
 exports[`TUIAgent Snapshot Testing should capture colored output snapshots 1`] = `
 [
   {
+    "fg": "red",
     "position": {
       "end": 6,
       "start": 0,
@@ -34,7 +35,23 @@ exports[`TUIAgent Snapshot Testing should capture colored output snapshots 1`] =
 
 exports[`TUIAgent Snapshot Testing should capture output snapshots for comparison 1`] = `
 {
-  "colors": [],
+  "colors": [
+    {
+      "position": {
+        "end": 335,
+        "start": 0,
+      },
+      "styles": [],
+      "text": "╔═══════════════════════════════════════╗
+║                 MENU                  ║
+╠═══════════════════════════════════════╣
+║ 1. File Operations                    ║
+║ 2. Edit Settings                      ║
+║ 3. View Reports                       ║
+║ 4. Exit                               ║
+╚═══════════════════════════════════════╝",
+    },
+  ],
   "raw": "╔═══════════════════════════════════════╗
 ║                 MENU                  ║
 ╠═══════════════════════════════════════╣

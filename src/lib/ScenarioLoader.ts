@@ -8,7 +8,7 @@ import * as path from 'path';
 import { pathExists } from 'fs-extra';
 import { OrchestratorScenario } from '../models/TestModels';
 import { logger } from '../utils/logger';
-import { parseYamlScenarios } from '../utils/yamlParser';
+import { parseScenariosFromString } from '../utils/yamlParser';
 
 // Backward-compatible alias
 type TestScenario = OrchestratorScenario;
@@ -64,7 +64,7 @@ export async function loadTestScenarios(
     for (const file of scenarioFiles) {
       try {
         const content = await fs.readFile(file, 'utf-8');
-        const fileScenarios = await parseYamlScenarios(content);
+        const fileScenarios = await parseScenariosFromString(content);
         scenarios.push(...fileScenarios);
         logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
       } catch (error) {
@@ -80,7 +80,7 @@ export async function loadTestScenarios(
         for (const file of yamlFiles) {
           const filePath = path.join(scenarioDir, file);
           const content = await fs.readFile(filePath, 'utf-8');
-          const fileScenarios = await parseYamlScenarios(content);
+          const fileScenarios = await parseScenariosFromString(content);
           scenarios.push(...fileScenarios);
           logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
         }

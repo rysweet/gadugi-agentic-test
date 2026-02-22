@@ -198,7 +198,8 @@ export const defaultComprehensionAgentConfig: ComprehensionAgentConfig = {
     apiKey: process.env.OPENAI_API_KEY || '',
     model: 'gpt-4',
     temperature: 0.1,
-    maxTokens: 4000
+    maxTokens: 4000,
+    apiVersion: '2024-02-01'
   },
   docsDir: 'docs',
   includePatterns: ['**/*.md'],

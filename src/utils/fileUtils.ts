@@ -33,7 +33,7 @@ import {
   createTempFile,
   createTempDirectory
 } from './files/FileWriter';
-import { findFiles, calculateHash } from './files/FileSearch';
+import { findFiles, calculateHash, filterByPatterns } from './files/FileSearch';
 import { copy, backup, cleanup, sync } from './files/FileArchiver';
 
 /**
@@ -139,5 +139,14 @@ export class FileUtils {
 
   static async createTempDirectory(prefix: string = 'temp'): Promise<string> {
     return createTempDirectory(prefix);
+  }
+
+  /**
+   * Filter a list of file paths by glob patterns.
+   * When exclude=true, returns files that do NOT match any pattern.
+   * When exclude=false, returns files that match at least one pattern.
+   */
+  static filterByPatterns(files: string[], patterns: string[], exclude: boolean): string[] {
+    return filterByPatterns(files, patterns, exclude);
   }
 }

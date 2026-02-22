@@ -156,7 +156,7 @@ export class TUIAgent extends EventEmitter implements IAgent {
     const session = this.sessionManager.getSession(sessionId);
     if (!session) return false;
     const output = getLatestOutput(session.outputBuffer);
-    return output ? performOutputValidation(output, expected) : false;
+    return output ? performOutputValidation(output, expected, session.outputBuffer) : false;
   }
 
   async validateFormatting(sessionId: string, expectedColors: ColorInfo[]): Promise<boolean> {

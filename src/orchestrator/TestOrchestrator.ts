@@ -60,6 +60,8 @@ export class TestOrchestrator extends EventEmitter {
   private aggregator: ResultAggregator;
   private router: ScenarioRouter;
   private abortController: AbortController;
+  private issueReporter: IssueReporter;
+  private failures: TestFailure[] = [];
 
   constructor(config: TestConfig) {
     super();
@@ -72,7 +74,7 @@ export class TestOrchestrator extends EventEmitter {
       ? new ElectronUIAgent(adaptUIConfig(config.ui))
       : null;
 
-    const issueReporter = new IssueReporter(config.github || {
+    this.issueReporter = new IssueReporter(config.github || {
       token: '', owner: '', repository: '', baseBranch: 'main',
       createIssuesOnFailure: false, issueLabels: [],
       issueTitleTemplate: '', issueBodyTemplate: '',
@@ -85,7 +87,7 @@ export class TestOrchestrator extends EventEmitter {
 
     this.aggregator = new ResultAggregator({
       priorityAgent,
-      issueReporter,
+      issueReporter: this.issueReporter,
       createIssues: config.github?.createIssuesOnFailure ?? false
     });
 
@@ -208,6 +210,43 @@ export class TestOrchestrator extends EventEmitter {
   }
 
   // ---- Private helpers ----
+
+  /**
+   * Report failures to GitHub via IssueReporter.
+   *
+   * Best-effort: individual createIssue failures are logged but do not abort
+   * subsequent reports. Cleanup is always called.
+   */
+  private async reportFailures(): Promise<void> {
+    if (this.failures.length === 0) {
+      return;
+    }
+
+    const createIssues = this.config.github?.createIssuesOnFailure ?? false;
+    if (!createIssues) {
+      return;
+    }
+
+    try {
+      await this.issueReporter.initialize();
+    } catch (error) {
+      logger.error('IssueReporter.initialize failed; aborting issue creation:', error);
+      try { await this.issueReporter.cleanup(); } catch { /* best-effort */ }
+      return;
+    }
+
+    try {
+      for (const failure of this.failures) {
+        try {
+          await this.issueReporter.createIssue(failure);
+        } catch (error) {
+          logger.error(`Failed to create issue for failure ${failure.scenarioId}:`, error);
+        }
+      }
+    } finally {
+      await this.issueReporter.cleanup();
+    }
+  }
 
   private async loadScenarios(scenarioFiles?: string[]): Promise<OrchestratorScenario[]> {
     const scenarios: OrchestratorScenario[] = [];

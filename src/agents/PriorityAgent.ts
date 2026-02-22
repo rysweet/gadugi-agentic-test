@@ -142,6 +142,8 @@ export class PriorityAgent extends EventEmitter implements IAgent {
       estimatedFixEffort,
     };
 
+    this.queue.recordAssignment(assignment);
+
     return assignment;
   }
 

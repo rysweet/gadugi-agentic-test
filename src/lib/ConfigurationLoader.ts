@@ -27,16 +27,19 @@ export interface CliArguments {
 
 /**
  * Build a complete default TestConfig from environment variables and safe defaults.
+ *
+ * Security: cli.environment and tui.environment intentionally contain ONLY
+ * the explicitly allow-listed values below (NODE_ENV for cli; nothing for tui).
+ * A full process.env snapshot must never be stored in TestConfig because
+ * TestConfig objects are serialised to disk by saveResults / exportToFile and
+ * could expose credentials, tokens, and secret keys (issue #84).
  */
 export function createDefaultConfig(): TestConfig {
-  // Filter out undefined env values to match Record<string, string>
-  const envVars: Record<string, string> = Object.entries(process.env).reduce(
-    (acc, [key, value]) => {
-      if (value !== undefined) acc[key] = value;
-      return acc;
-    },
-    {} as Record<string, string>
-  );
+  // Only expose a small, safe allowlist into cli.environment.
+  // tui.environment starts empty; callers may add specific vars as needed.
+  const cliEnvironment: Record<string, string> = {
+    NODE_ENV: process.env.NODE_ENV || 'test',
+  };
 
   const defaultConfig: TestConfig = {
     execution: {
@@ -67,7 +70,7 @@ export function createDefaultConfig(): TestConfig {
       executablePath: 'uv run atg',
       workingDirectory: process.cwd(),
       defaultTimeout: 30000,
-      environment: { NODE_ENV: 'test', ...envVars },
+      environment: cliEnvironment,
       captureOutput: true,
       shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
       maxRetries: 2,
@@ -95,7 +98,7 @@ export function createDefaultConfig(): TestConfig {
       interpretAnsi: true,
       shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
       shellArgs: [],
-      environment: envVars,
+      environment: {},
       workingDirectory: process.cwd(),
       accessibility: { highContrast: false, largeText: false, screenReader: false },
       performance: {

@@ -190,19 +190,16 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
     }
   }
 
-  /** Attach a screenshot to an issue via Gist */
+  /**
+   * Record a screenshot reference for an issue.
+   *
+   * Security fix (issue #98): screenshots are never uploaded to external
+   * services.  The local path is logged and returned so callers can include
+   * it in reports without exposing credentials or sensitive data.
+   */
   async attachScreenshot(issueNumber: number, screenshotPath: string): Promise<string> {
-    this.log.debug('Attaching screenshot to issue', { issueNumber, screenshotPath });
-    try {
-      const url = await this.submitter.attachScreenshot(issueNumber, screenshotPath);
-      this.log.debug('Screenshot attached successfully', { issueNumber, url });
-      return url;
-    } catch (error) {
-      this.log.error('Failed to attach screenshot', {
-        error: (error as Error).message, issueNumber, screenshotPath
-      });
-      throw error;
-    }
+    this.log.debug('Recording screenshot for issue', { issueNumber, screenshotPath });
+    return screenshotPath;
   }
 
   /** Create a pull request */
