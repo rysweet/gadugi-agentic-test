@@ -395,7 +395,22 @@ export class FileUtils {
         { cwd: directory, absolute: true }
       );
 
-      let filesToDelete = files;
+      // Security fix (issue #106): verify every resolved path is inside
+      // the target directory.  Patterns like '../../secrets/**' can resolve
+      // outside the intended directory; we must reject those paths to
+      // prevent unintended deletion of files outside the cleanup scope.
+      const safeDirectory = path.resolve(directory);
+      const safeSeparator = safeDirectory.endsWith(path.sep)
+        ? safeDirectory
+        : safeDirectory + path.sep;
+
+      const safeFiles = files.filter(f => {
+        const resolved = path.resolve(f);
+        // Accept paths that are exactly the directory itself or start with it
+        return resolved === safeDirectory || resolved.startsWith(safeSeparator);
+      });
+
+      let filesToDelete = safeFiles;
 
       // Filter by age if specified
       if (options.maxAge) {
@@ -678,16 +693,49 @@ export class FileUtils {
   }
 
   /**
+   * Convert a glob pattern to a RegExp safely.
+   *
+   * Security: user-supplied patterns must have all regex metacharacters
+   * escaped before wildcard substitution, otherwise an attacker can inject
+   * a ReDoS-prone pattern such as `(a+)+` via a YAML config file.
+   *
+   * Escaping order matters:
+   *   1. Escape the backslash first (it is the escape character itself).
+   *   2. Escape every other regex metacharacter as a literal.
+   *   3. Replace glob wildcards (* and ?) with their regex equivalents.
+   */
+  private static globToRegex(glob: string): RegExp {
+    const escaped = glob
+      // Step 1: escape backslashes first so later replacements are not affected
+      .replace(/\\/g, '\\\\')
+      // Step 2: escape all other regex metacharacters except * and ?
+      //         (which are the glob wildcards we intentionally convert below)
+      .replace(/[.+^${}()|[\]]/g, '\\$&')
+      // Step 3: convert glob wildcards to regex equivalents
+      .replace(/\*/g, '.*')   // * matches any sequence of characters
+      .replace(/\?/g, '.');   // ? matches exactly one character
+    // Anchor to the full string so 'foo.txt' does not match 'bar/foo.txt'
+    // when used as a simple name-only pattern.
+    return new RegExp(`^${escaped}$`);
+  }
+
+  /**
    * Filter files by patterns
+   *
+   * Security fix (issue #106): patterns are now converted to RegExp via
+   * globToRegex() which escapes all metacharacters before substituting
+   * wildcards, preventing ReDoS through user-supplied config patterns.
    */
   private static async filterByPatterns(files: string[], patterns: string[], exclude: boolean): Promise<string[]> {
-    // This is a simplified implementation
-    // In a real implementation, you'd use a proper glob matching library
+    // Pre-compile all regexes outside the inner loop; globToRegex() safely
+    // escapes metacharacters so no user input reaches the RegExp engine raw.
+    const regexes = patterns.map(p => FileUtils.globToRegex(p));
+
     return files.filter(filePath => {
-      const matches = patterns.some(pattern => {
-        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-        return regex.test(filePath);
-      });
+      const fileName = path.basename(filePath);
+      // Match against both the full path and the file name so that patterns
+      // like '*.log' work for both '/tmp/foo.log' and 'foo.log' inputs.
+      const matches = regexes.some(re => re.test(filePath) || re.test(fileName));
       return exclude ? !matches : matches;
     });
   }
