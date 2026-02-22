@@ -138,15 +138,13 @@ async function fullScenarioTest(): Promise<void> {
 
   try {
     await agent.initialize();
-    const result = await agent.execute(scenario);
-    
+    const result = await agent.execute(scenario) as Record<string, any>;
+
     console.log('Scenario execution result:');
     console.log('- Status:', result.status);
     console.log('- Duration:', result.duration, 'ms');
     console.log('- Screenshots:', result.screenshots?.length || 0);
     console.log('- Performance samples:', result.performanceSamples?.length || 0);
-    
-    return result;
     
   } catch (error: any) {
     console.error('Scenario execution failed:', error?.message);

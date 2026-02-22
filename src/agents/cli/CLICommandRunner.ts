@@ -9,6 +9,7 @@ import { spawn, exec, ChildProcess, SpawnOptions, ExecOptions } from 'child_proc
 import { CommandResult } from '../../models/TestModels';
 import { TestLogger } from '../../utils/logger';
 import { delay } from '../../utils/async';
+import { generateId } from '../../utils/ids';
 import { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData, DEFAULT_CLI_CONFIG } from './types';
 
 export class CLICommandRunner {
@@ -119,7 +120,7 @@ export class CLICommandRunner {
 
   private async spawnProcess(context: ExecutionContext): Promise<CommandResult> {
     const fullCommand = `${context.command} ${context.args.join(' ')}`.trim();
-    const processId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const processId = generateId();
 
     return new Promise((resolve, reject) => {
       const startTime = Date.now();

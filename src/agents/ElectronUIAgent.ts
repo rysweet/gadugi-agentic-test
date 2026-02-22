@@ -3,14 +3,18 @@
  *
  * Coordinates ElectronLauncher, ElectronPageInteractor,
  * ElectronPerformanceMonitor, and ElectronWebSocketMonitor.
+ *
+ * Extends BaseAgent (issue #117) to eliminate the duplicated execute() loop.
+ * Uses shared sanitizeConfigWithEnv() (issue #118) instead of a private copy.
  */
 
-import { EventEmitter } from 'events';
-import { IAgent, AgentType } from './index';
-import { TestStep, TestStatus, StepResult } from '../models/TestModels';
+import { AgentType } from './index';
+import { OrchestratorScenario, TestStep, TestStatus, StepResult } from '../models/TestModels';
 import { AppState } from '../models/AppState';
 import { ScreenshotMetadata, createScreenshotManager } from '../utils/screenshot';
 import { createLogger, LogLevel, TestLogger } from '../utils/logger';
+import { sanitizeConfigWithEnv } from '../utils/agentUtils';
+import { BaseAgent, ExecutionContext } from './BaseAgent';
 import {
   ElectronUIAgentConfig,
   DEFAULT_CONFIG,
@@ -24,7 +28,7 @@ import {
 export type { ElectronUIAgentConfig, WebSocketEvent, PerformanceSample } from './electron';
 
 /** Comprehensive Electron UI testing agent — facade over focused sub-modules. */
-export class ElectronUIAgent extends EventEmitter implements IAgent {
+export class ElectronUIAgent extends BaseAgent {
   public readonly name = 'ElectronUIAgent';
   public readonly type = AgentType.UI;
 
@@ -34,7 +38,6 @@ export class ElectronUIAgent extends EventEmitter implements IAgent {
   private perfMonitor: ElectronPerformanceMonitor;
   private wsMonitor: ElectronWebSocketMonitor;
   private logger: TestLogger;
-  private isInitialized = false;
   private currentScenarioId?: string;
 
   constructor(config: ElectronUIAgentConfig) {
@@ -70,44 +73,28 @@ export class ElectronUIAgent extends EventEmitter implements IAgent {
     }
   }
 
-  async execute(scenario: any): Promise<any> {
-    if (!this.isInitialized) throw new Error('Agent not initialized. Call initialize() first.');
+  // -- BaseAgent template-method hooks --
+
+  protected onBeforeExecute(scenario: OrchestratorScenario): void {
     this.currentScenarioId = scenario.id;
     this.logger.setContext({ scenarioId: scenario.id, component: 'ElectronUIAgent' });
     this.logger.scenarioStart(scenario.id, scenario.name);
-    const startTime = Date.now();
-    let status = TestStatus.PASSED;
-    let error: string | undefined;
-    try {
-      const stepResults: StepResult[] = [];
-      for (let i = 0; i < scenario.steps.length; i++) {
-        const stepResult = await this.executeStep(scenario.steps[i], i);
-        stepResults.push(stepResult);
-        if (stepResult.status === TestStatus.FAILED || stepResult.status === TestStatus.ERROR) {
-          status = stepResult.status; error = stepResult.error; break;
-        }
-      }
-      return {
-        scenarioId: scenario.id, status,
-        duration: Date.now() - startTime, startTime: new Date(startTime), endTime: new Date(),
-        error, stepResults,
-        screenshots: this.interactor.getScenarioScreenshots(this.currentScenarioId),
-        logs: this.getScenarioLogs(),
-        performanceSamples: [...this.perfMonitor.samples],
-        websocketEvents: [...this.wsMonitor.events],
-        stateSnapshots: [...this.interactor.stateSnapshots]
-      };
-    } catch (execError: any) {
-      this.logger.error('Scenario execution failed', { error: execError?.message });
-      status = TestStatus.ERROR; error = execError?.message;
-      if (this.launcher.page) {
-        await this.interactor.captureFailureScreenshot(this.launcher.page, undefined, this.currentScenarioId);
-      }
-      throw execError;
-    } finally {
-      this.logger.scenarioEnd(scenario.id, status, Date.now() - startTime);
-      this.currentScenarioId = undefined;
-    }
+  }
+
+  protected buildResult(ctx: ExecutionContext): unknown {
+    return {
+      ...ctx,
+      screenshots: this.interactor.getScenarioScreenshots(this.currentScenarioId),
+      logs: this.getScenarioLogs(),
+      performanceSamples: [...this.perfMonitor.samples],
+      websocketEvents: [...this.wsMonitor.events],
+      stateSnapshots: [...this.interactor.stateSnapshots],
+    };
+  }
+
+  protected async onAfterExecute(scenario: OrchestratorScenario, status: TestStatus): Promise<void> {
+    this.logger.scenarioEnd(scenario.id, status, 0 /* duration tracked inside BaseAgent */);
+    this.currentScenarioId = undefined;
   }
 
   async launch(): Promise<void> {
@@ -198,8 +185,7 @@ export class ElectronUIAgent extends EventEmitter implements IAgent {
   }
 
   private sanitizeConfig(): Record<string, any> {
-    const { env, ...safeConfig } = this.config;
-    return { ...safeConfig, env: env ? Object.keys(env) : undefined };
+    return sanitizeConfigWithEnv(this.config as Record<string, any>, 'env');
   }
 
   private getScenarioLogs(): string[] {

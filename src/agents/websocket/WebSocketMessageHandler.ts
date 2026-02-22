@@ -213,6 +213,7 @@ export class WebSocketMessageHandler {
   }
 
   private generateMessageId(): string {
+    // Uses a counter suffix (not random) to guarantee per-session ordering.
     return `msg_${Date.now()}_${(++this.messageCounter).toString(36)}`;
   }
 }

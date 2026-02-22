@@ -141,8 +141,8 @@ export class ScenarioRouter {
 
     while (attempt <= this.retryCount) {
       try {
-        const result = await agent.execute(scenario);
-        return { ...result, scenarioId: scenario.id, duration: Date.now() - startTime };
+        const result = await agent.execute(scenario) as Record<string, unknown>;
+        return { ...result, scenarioId: scenario.id, duration: Date.now() - startTime } as TestResult;
       } catch (error) {
         logger.error(`Scenario ${scenario.id} failed (attempt ${attempt + 1}):`, error);
         if (attempt < this.retryCount) {

@@ -13,6 +13,7 @@ import { EventEmitter } from 'events';
 import { TerminalSession, TerminalOutput, TUIAgentConfig } from './types';
 import { stripAnsiCodes, parseColors } from './TUIOutputParser';
 import { TestLogger } from '../../utils/logger';
+import { generateId } from '../../utils/ids';
 import { delay } from '../../utils/async';
 
 /**
@@ -219,7 +220,7 @@ export class TUISessionManager {
   // -- Private helpers --
 
   private generateSessionId(): string {
-    return `tui_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return generateId('tui');
   }
 
   private setupSessionHandlers(session: TerminalSession): void {

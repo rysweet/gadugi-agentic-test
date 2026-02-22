@@ -11,6 +11,8 @@ export * from './screenshot';
 export * from './fileUtils';
 export * from './async';
 export * from './comparison';
+export * from './ids';
+export * from './agentUtils';
 
 // Legacy exports for backward compatibility
 import winston from 'winston';

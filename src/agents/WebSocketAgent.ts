@@ -8,12 +8,14 @@
  *   - WebSocketStepExecutor    (TestStep action dispatch)
  *
  * Public API is fully backward-compatible with the original monolith.
+ *
+ * Extends BaseAgent (issue #117) to eliminate the duplicated execute() loop.
  */
 
-import { EventEmitter } from 'events';
-import { IAgent, AgentType } from './index';
+import { AgentType } from './index';
 import { TestStep, TestStatus, StepResult, OrchestratorScenario } from '../models/TestModels';
 import { createLogger } from '../utils/logger';
+import { BaseAgent, ExecutionContext } from './BaseAgent';
 
 import {
   ConnectionState,
@@ -43,7 +45,7 @@ export type {
 } from './websocket/types';
 
 /** Comprehensive WebSocket testing agent (thin facade) */
-export class WebSocketAgent extends EventEmitter implements IAgent {
+export class WebSocketAgent extends BaseAgent {
   public readonly name = 'WebSocketAgent';
   public readonly type = AgentType.WEBSOCKET;
 
@@ -52,7 +54,6 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
   private readonly messageHandler: WebSocketMessageHandler;
   private readonly eventRecorder: WebSocketEventRecorder;
   private readonly stepExecutor: WebSocketStepExecutor;
-  private isInitialized = false;
 
   constructor(config: WebSocketAgentConfig = {}) {
     super();
@@ -84,35 +85,26 @@ export class WebSocketAgent extends EventEmitter implements IAgent {
     this.emit('initialized');
   }
 
-  async execute(scenario: OrchestratorScenario): Promise<any> {
-    if (!this.isInitialized) throw new Error('Agent not initialized. Call initialize() first.');
-    const startTime = Date.now();
-    let status = TestStatus.PASSED;
-    let error: string | undefined;
+  // -- BaseAgent template-method hooks --
 
-    try {
-      if (scenario.environment) {
-        this.eventRecorder.applyEnvironmentConfig(scenario.environment,
-          (t, v) => this.eventRecorder.setAuthentication(t, v));
-      }
-      const stepResults: StepResult[] = [];
-      for (let i = 0; i < scenario.steps.length; i++) {
-        const sr = await this.executeStep(scenario.steps[i], i);
-        stepResults.push(sr);
-        if (sr.status === TestStatus.FAILED || sr.status === TestStatus.ERROR) {
-          status = sr.status; error = sr.error; break;
-        }
-      }
-      return {
-        scenarioId: scenario.id, status, duration: Date.now() - startTime,
-        startTime: new Date(startTime), endTime: new Date(), error, stepResults,
-        logs: ['No scenario-specific logs available'],
-        messageHistory: this.messageHandler.getMessageHistory(),
-        connectionInfo: this.connection.getConnectionInfo(),
-        latencyMetrics: this.messageHandler.getLatencyHistory(),
-        connectionMetrics: this.connection.getConnectionMetrics()
-      };
-    } catch (err: any) { status = TestStatus.ERROR; error = err?.message; throw err; }
+  protected applyEnvironment(scenario: OrchestratorScenario): void {
+    if (scenario.environment) {
+      this.eventRecorder.applyEnvironmentConfig(
+        scenario.environment,
+        (t, v) => this.eventRecorder.setAuthentication(t, v)
+      );
+    }
+  }
+
+  protected buildResult(ctx: ExecutionContext): unknown {
+    return {
+      ...ctx,
+      logs: ['No scenario-specific logs available'],
+      messageHistory: this.messageHandler.getMessageHistory(),
+      connectionInfo: this.connection.getConnectionInfo(),
+      latencyMetrics: this.messageHandler.getLatencyHistory(),
+      connectionMetrics: this.connection.getConnectionMetrics(),
+    };
   }
 
   async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {

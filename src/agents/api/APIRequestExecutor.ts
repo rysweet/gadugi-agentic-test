@@ -8,6 +8,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TestLogger } from '../../utils/logger';
 import { delay } from '../../utils/async';
+import { generateId } from '../../utils/ids';
 import { APIAgentConfig, APIRequest, APIResponse, RequestPerformance, HTTPMethod, RequestInterceptor, ResponseInterceptor } from './types';
 
 export class APIRequestExecutor {
@@ -289,6 +290,6 @@ export class APIRequestExecutor {
   }
 
   private generateRequestId(): string {
-    return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return generateId();
   }
 }
