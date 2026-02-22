@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TUIAgent Snapshot Testing should capture colored output snapshots 1`] = `
+[
+  {
+    "position": {
+      "end": 6,
+      "start": 0,
+    },
+    "styles": [
+      "bold",
+    ],
+    "text": "ERROR:",
+  },
+  {
+    "position": {
+      "end": 7,
+      "start": 6,
+    },
+    "styles": [],
+    "text": " ",
+  },
+  {
+    "fg": "green",
+    "position": {
+      "end": 39,
+      "start": 7,
+    },
+    "styles": [],
+    "text": "Operation completed successfully",
+  },
+]
+`;
+
+exports[`TUIAgent Snapshot Testing should capture output snapshots for comparison 1`] = `
+{
+  "colors": [],
+  "raw": "╔═══════════════════════════════════════╗
+║                 MENU                  ║
+╠═══════════════════════════════════════╣
+║ 1. File Operations                    ║
+║ 2. Edit Settings                      ║
+║ 3. View Reports                       ║
+║ 4. Exit                               ║
+╚═══════════════════════════════════════╝",
+  "text": "╔═══════════════════════════════════════╗
+║                 MENU                  ║
+╠═══════════════════════════════════════╣
+║ 1. File Operations                    ║
+║ 2. Edit Settings                      ║
+║ 3. View Reports                       ║
+║ 4. Exit                               ║
+╚═══════════════════════════════════════╝",
+  "timestamp": Any<Date>,
+  "type": "stdout",
+}
+`;
