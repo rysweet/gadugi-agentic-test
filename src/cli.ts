@@ -16,6 +16,7 @@ import chalk from 'chalk';
 import * as dotenv from 'dotenv';
 import { SingleBar, Presets } from 'cli-progress';
 import { createDefaultConfig } from './lib';
+import { safeResolvePath, CLIPathError } from './cli-path-utils';
 
 // Load environment variables from .env file if it exists
 try {
@@ -77,9 +78,22 @@ program
   .action(async (options) => {
     try {
       logger.info('Starting Agentic Testing System');
-      
+
       let config = null;
-      
+
+      // Validate and resolve user-supplied paths (prevent path traversal - issue #93)
+      try {
+        options.directory = safeResolvePath(options.directory);
+        if (options.config) {
+          options.config = safeResolvePath(options.config);
+        }
+      } catch (err) {
+        if (err instanceof CLIPathError) {
+          throw new CLIError(err.message, 'PATH_TRAVERSAL');
+        }
+        throw err;
+      }
+
       // Load configuration if provided
       if (options.config) {
         try {
@@ -88,19 +102,20 @@ program
           config = configManager.getConfig();
           logSuccess(`Configuration loaded from: ${options.config}`);
         } catch (error: any) {
+          if (error instanceof CLIError) throw error;
           throw new CLIError(`Failed to load configuration: ${error.message}`, 'CONFIG_ERROR');
         }
       } else {
         // Try loading default config files
         const defaultConfigs = [
           'agentic-test.config.yaml',
-          'agentic-test.config.yml', 
+          'agentic-test.config.yml',
           'agentic-test.config.json',
           '.agentic-testrc.yaml',
           '.agentic-testrc.yml',
           '.agentic-testrc.json'
         ];
-        
+
         for (const configFile of defaultConfigs) {
           try {
             await fs.access(configFile);
@@ -114,22 +129,25 @@ program
           }
         }
       }
-      
+
       // Validate scenario directory exists
       try {
         await fs.access(options.directory);
       } catch {
         throw new CLIError(`Scenarios directory not found: ${options.directory}`, 'DIRECTORY_NOT_FOUND');
       }
-      
+
       let scenarios;
       const progressBar = createProgressBar(1, 'Loading scenarios');
       progressBar.start(1, 0);
-      
+
       try {
         if (options.scenario) {
-          // Load specific scenario
-          const scenarioPath = path.join(options.directory, `${options.scenario}.yaml`);
+          // Build scenario path and validate it stays within the resolved directory.
+          // options.scenario is a name (e.g. "my-test"), not a path, but we still
+          // guard against names containing traversal sequences like "../../etc/passwd".
+          const rawScenarioPath = path.join(options.directory, `${options.scenario}.yaml`);
+          const scenarioPath = safeResolvePath(rawScenarioPath, options.directory);
           logInfo(`Loading scenario: ${scenarioPath}`);
           scenarios = [await ScenarioLoader.loadFromFile(scenarioPath)];
         } else {
@@ -215,18 +233,31 @@ program
   .option('-c, --config <file>', 'Configuration file')
   .action(async (options) => {
     try {
+      // Validate and resolve user-supplied paths (prevent path traversal - issue #93)
+      try {
+        options.directory = safeResolvePath(options.directory);
+        if (options.config) {
+          options.config = safeResolvePath(options.config);
+        }
+      } catch (err) {
+        if (err instanceof CLIPathError) {
+          throw new CLIError(err.message, 'PATH_TRAVERSAL');
+        }
+        throw err;
+      }
+
       logInfo('Starting watch mode...');
       logInfo(`Watching directory: ${chalk.cyan(options.directory)}`);
-      
+
       // Validate directory exists
       try {
         await fs.access(options.directory);
       } catch {
         throw new CLIError(`Watch directory not found: ${options.directory}`, 'DIRECTORY_NOT_FOUND');
       }
-      
+
       let config = null;
-      
+
       // Load configuration if provided
       if (options.config) {
         try {
@@ -235,6 +266,7 @@ program
           config = configManager.getConfig();
           logSuccess(`Configuration loaded from: ${options.config}`);
         } catch (error: any) {
+          if (error instanceof CLIError) throw error;
           throw new CLIError(`Failed to load configuration: ${error.message}`, 'CONFIG_ERROR');
         }
       }
@@ -355,14 +387,28 @@ program
   .option('--strict', 'Enable strict validation mode')
   .action(async (options) => {
     try {
+      // Validate and resolve user-supplied paths (prevent path traversal - issue #93)
+      try {
+        if (options.file) {
+          options.file = safeResolvePath(options.file);
+        } else {
+          options.directory = safeResolvePath(options.directory);
+        }
+      } catch (err) {
+        if (err instanceof CLIPathError) {
+          throw new CLIError(err.message, 'PATH_TRAVERSAL');
+        }
+        throw err;
+      }
+
       logInfo('Validating scenarios...');
-      
+
       const parser = createYamlParser({
         strictValidation: options.strict || false
       });
-      
+
       let validationResults: Array<{file: string; valid: boolean; errors: string[]}> = [];
-      
+
       if (options.file) {
         try {
           await fs.access(options.file);
@@ -372,12 +418,13 @@ program
             valid: result.valid,
             errors: result.errors
           });
-          
+
           if (result.valid) {
             const scenario = await ScenarioLoader.loadFromFile(options.file);
             logSuccess(`Scenario "${scenario.name}" is valid`);
           }
         } catch (error: any) {
+          if (error instanceof CLIError) throw error;
           validationResults.push({
             file: options.file,
             valid: false,
@@ -474,13 +521,23 @@ program
   .option('--filter <tag>', 'Filter by tag')
   .action(async (options) => {
     try {
+      // Validate and resolve user-supplied paths (prevent path traversal - issue #93)
+      try {
+        options.directory = safeResolvePath(options.directory);
+      } catch (err) {
+        if (err instanceof CLIPathError) {
+          throw new CLIError(err.message, 'PATH_TRAVERSAL');
+        }
+        throw err;
+      }
+
       // Validate directory exists
       try {
         await fs.access(options.directory);
       } catch {
         throw new CLIError(`Directory not found: ${options.directory}`, 'DIRECTORY_NOT_FOUND');
       }
-      
+
       const scenarios = await ScenarioLoader.loadFromDirectory(options.directory);
       
       if (scenarios.length === 0) {
@@ -563,8 +620,18 @@ program
   .option('--template <type>', 'Project template (basic, advanced, electron)', 'basic')
   .action(async (options) => {
     try {
+      // Validate and resolve user-supplied paths (prevent path traversal - issue #93)
+      try {
+        options.directory = safeResolvePath(options.directory);
+      } catch (err) {
+        if (err instanceof CLIPathError) {
+          throw new CLIError(err.message, 'PATH_TRAVERSAL');
+        }
+        throw err;
+      }
+
       logInfo(`Initializing new testing project in: ${chalk.cyan(options.directory)}`);
-      
+
       // Check if directory exists
       let directoryExists = false;
       try {
@@ -679,10 +746,16 @@ program
     // Load additional .env file if specified
     if (opts.env && opts.env !== '.env') {
       try {
-        dotenv.config({ path: opts.env });
-        logInfo(`Loaded environment from: ${opts.env}`);
+        // Validate the env file path to prevent traversal (issue #93)
+        const safeEnvPath = safeResolvePath(opts.env);
+        dotenv.config({ path: safeEnvPath });
+        logInfo(`Loaded environment from: ${safeEnvPath}`);
       } catch (error) {
-        logWarning(`Failed to load environment file: ${opts.env}`);
+        if (error instanceof CLIPathError) {
+          logWarning(`Rejected environment file path (path traversal attempt): ${opts.env}`);
+        } else {
+          logWarning(`Failed to load environment file: ${opts.env}`);
+        }
       }
     }
     
