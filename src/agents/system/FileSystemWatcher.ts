@@ -53,6 +53,24 @@ export class FileSystemWatcher {
         });
 
         watcher
+          .on('error', (err: unknown) => {
+            const error = err instanceof Error ? err : new Error(String(err));
+            const errno = error as NodeJS.ErrnoException;
+            // Chokidar may wrap EACCES inside an ERR_UNHANDLED_ERROR; check
+            // both the top-level code and the message text for permission errors.
+            const isEacces =
+              errno.code === 'EACCES' ||
+              error.message.includes('EACCES') ||
+              error.message.includes('permission denied');
+            if (isEacces) {
+              this.logger.warn(
+                `FileSystemWatcher: permission denied, skipping ${error.message}`
+              );
+              return; // Don't propagate permission errors
+            }
+            // Propagate other errors
+            this.emitter.emit('error', error);
+          })
           .on('add', (filePath: string, stats: any) => {
             this.fileSystemChanges.push({
               path: filePath,
