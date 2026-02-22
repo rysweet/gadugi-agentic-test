@@ -1,501 +1,359 @@
-# ElectronUIAgent
+# Agents
 
-A comprehensive Electron UI testing agent built on Playwright's Electron support for the TypeScript Agentic Testing System.
+The `src/agents/` directory contains all test-execution agents. Each agent is responsible for one interaction surface (Electron UI, CLI, WebSocket, etc.). Every agent extends `BaseAgent` and delegates to focused sub-modules.
 
-## Overview
+## Contents
 
-The `ElectronUIAgent` provides complete automation capabilities for testing Electron applications, including:
+- [Architecture](#architecture)
+- [BaseAgent](#baseagent)
+- [Available Agents](#available-agents)
+  - [ElectronUIAgent](#electronuiagent)
+  - [CLIAgent](#cliagent)
+  - [TUIAgent](#tuiagent)
+  - [WebSocketAgent](#websocketagent)
+  - [APIAgent](#apiagent)
+  - [ComprehensionAgent](#comprehensionagent)
+  - [PriorityAgent](#priorityagent)
+  - [IssueReporter](#issuereporter)
+  - [SystemAgent](#systemagent)
+- [Creating Custom Agents](#creating-custom-agents)
 
-- **Playwright Electron Integration**: Native support for launching and controlling Electron apps
-- **Socket.IO Event Monitoring**: Real-time monitoring of application events
-- **Performance Metrics Collection**: CPU, memory, and response time tracking
-- **Automatic Screenshot Capture**: On failures, state changes, and on-demand
-- **Multi-window Support**: Handle multiple windows and contexts
-- **IPC Communication**: Monitor Electron main/renderer process communication
-- **Console Log Capture**: Collect and categorize console messages
-- **Comprehensive Error Handling**: With automatic recovery and retry mechanisms
+---
 
-## Quick Start
+## Architecture
+
+Each agent follows the same decomposed structure:
+
+```
+src/agents/
+├── BaseAgent.ts          # Abstract base — template-method pattern
+├── index.ts              # IAgent interface, AgentType enum, all exports
+├── <AgentName>.ts        # Thin facade that extends BaseAgent
+└── <agentname>/          # Sub-module directory
+    ├── types.ts          # Config interfaces and enums
+    ├── <SubModule>.ts    # One class per file, one responsibility per class
+    └── index.ts          # Re-exports from sub-modules
+```
+
+The facade delegates all logic to sub-modules. The sub-modules each do exactly one thing. No sub-module exceeds 300 lines.
+
+---
+
+## BaseAgent
+
+`BaseAgent` is an abstract class that implements the shared execution loop so that individual agents only need to implement their step dispatch and result assembly.
 
 ```typescript
-import { ElectronUIAgent } from './ElectronUIAgent';
+import { BaseAgent, ExecutionContext } from '@gadugi/agentic-test';
+import { OrchestratorScenario, StepResult } from '@gadugi/agentic-test';
 
-// Create agent instance
-const agent = new ElectronUIAgent({
-  executablePath: '/path/to/your/electron/app',
-  args: ['--no-sandbox', '--disable-dev-shm-usage'],
-  defaultTimeout: 10000,
-  screenshotConfig: {
-    mode: 'only-on-failure',
-    directory: './screenshots',
-    fullPage: true
+export class MyAgent extends BaseAgent {
+  readonly name = 'MyAgent';
+  readonly type = AgentType.CUSTOM;
+
+  async initialize(): Promise<void> { /* setup */ }
+  async cleanup(): Promise<void>    { /* teardown */ }
+
+  async executeStep(step: any, index: number): Promise<StepResult> {
+    // dispatch to sub-modules
   }
+
+  buildResult(scenario: OrchestratorScenario, ctx: ExecutionContext) {
+    return { scenarioId: scenario.id, ...ctx };
+  }
+}
+```
+
+`BaseAgent` provides:
+
+| Method | Purpose |
+|--------|---------|
+| `execute(scenario)` | Shared loop — runs all steps, collects results |
+| `executeStep(step, index)` | Abstract — subclass dispatches per action |
+| `buildResult(scenario, ctx)` | Abstract — subclass assembles final result shape |
+| `applyEnvironment()` | Optional hook — per-agent env setup before loop |
+| `onBeforeExecute()` | Optional lifecycle hook |
+| `onAfterExecute()` | Optional lifecycle hook |
+
+---
+
+## Available Agents
+
+### ElectronUIAgent
+
+Tests Electron desktop applications using Playwright's Electron support.
+
+**Sub-modules** (`src/agents/electron/`):
+
+| File | Responsibility |
+|------|---------------|
+| `ElectronLauncher.ts` | Launch and close the Electron process |
+| `ElectronPageInteractor.ts` | Click, fill, wait-for-element operations |
+| `ElectronPerformanceMonitor.ts` | CPU/memory sampling |
+| `ElectronWebSocketMonitor.ts` | Socket.IO event capture |
+
+```typescript
+import { ElectronUIAgent } from '@gadugi/agentic-test';
+
+const agent = new ElectronUIAgent({
+  executablePath: '/path/to/my-app',
+  screenshotConfig: { mode: 'only-on-failure', directory: './screenshots', fullPage: true }
 });
 
-// Initialize and use
 await agent.initialize();
-await agent.launch();
-
-// Perform UI actions
 await agent.clickTab('Build');
-await agent.fillInput('[data-testid="tenant-id"]', 'my-tenant-id');
+await agent.fillInput('[data-testid="tenant-id"]', 'acme-corp');
 await agent.clickButton('[data-testid="start-build"]');
-
-// Wait for elements
 await agent.waitForElement('[data-testid="build-complete"]');
-
-// Capture state
-const state = await agent.captureState();
-
-// Clean up
-await agent.close();
 await agent.cleanup();
 ```
 
-## Configuration
+---
 
-### ElectronUIAgentConfig
+### CLIAgent
 
-```typescript
-interface ElectronUIAgentConfig {
-  // Application settings
-  executablePath: string;           // Path to Electron executable (required)
-  args?: string[];                  // Command line arguments
-  cwd?: string;                     // Working directory
-  env?: Record<string, string>;     // Environment variables
-  
-  // Timing settings
-  launchTimeout?: number;           // Launch timeout (default: 30000ms)
-  defaultTimeout?: number;          // Default operation timeout (default: 10000ms)
-  slowMo?: number;                  // Slow motion delay
-  
-  // Display settings
-  headless?: boolean;               // Run in headless mode (default: false)
-  
-  // Recording settings
-  recordVideo?: boolean;            // Record video of test execution
-  videoDir?: string;                // Video output directory
-  
-  // Screenshot settings
-  screenshotConfig?: {
-    mode: 'off' | 'on' | 'only-on-failure';  // When to capture screenshots
-    directory: string;                        // Screenshot directory
-    fullPage: boolean;                        // Capture full page
-  };
-  
-  // Socket.IO monitoring
-  websocketConfig?: {
-    url: string;                    // Socket.IO server URL
-    events: string[];               // Events to monitor
-    reconnectAttempts: number;      // Reconnection attempts
-    reconnectDelay: number;         // Delay between reconnections
-  };
-  
-  // Performance monitoring
-  performanceConfig?: {
-    enabled: boolean;               // Enable performance monitoring
-    sampleInterval: number;         // Sample collection interval (ms)
-    collectLogs: boolean;           // Collect console logs
-  };
-  
-  // Recovery settings
-  recoveryConfig?: {
-    maxRetries: number;             // Maximum retry attempts
-    retryDelay: number;             // Delay between retries
-    restartOnFailure: boolean;      // Restart app on failure
-  };
-}
-```
+Tests command-line interfaces by running commands and parsing their output.
 
-## Core Methods
+**Sub-modules** (`src/agents/cli/`):
 
-### Application Lifecycle
-
-#### `initialize(): Promise<void>`
-Initialize the agent and validate configuration.
+| File | Responsibility |
+|------|---------------|
+| `CLICommandRunner.ts` | Spawn processes, capture stdout/stderr |
+| `CLIOutputParser.ts` | Pattern matching against command output |
 
 ```typescript
+import { CLIAgent } from '@gadugi/agentic-test';
+
+const agent = new CLIAgent({ cwd: '/path/to/project', shell: '/bin/bash' });
+
 await agent.initialize();
-```
-
-#### `launch(): Promise<void>`
-Launch the Electron application with configured settings.
-
-```typescript
-await agent.launch();
-```
-
-#### `close(): Promise<void>`
-Close the Electron application gracefully.
-
-```typescript
-await agent.close();
-```
-
-#### `cleanup(): Promise<void>`
-Clean up all resources and export final data.
-
-```typescript
+const result = await agent.execute({
+  id: 'cli-smoke',
+  name: 'CLI smoke test',
+  steps: [
+    { action: 'run', target: 'npm --version', expectedOutput: /\d+\.\d+\.\d+/ }
+  ]
+});
 await agent.cleanup();
 ```
 
-### UI Interaction Methods
+---
 
-#### `clickTab(tabName: string): Promise<void>`
-Navigate to a specific tab in the application.
+### TUIAgent
 
-```typescript
-// Try multiple selector strategies automatically
-await agent.clickTab('Build');
-await agent.clickTab('Generate IaC');
-```
+Tests text-based user interfaces (ncurses, Ink, etc.) using a PTY session via `PtyTerminal`.
 
-#### `fillInput(selector: string, value: string): Promise<void>`
-Fill an input field with the specified value.
+**Sub-modules** (`src/agents/tui/`):
 
-```typescript
-await agent.fillInput('[data-testid="tenant-id"]', 'my-tenant-id');
-await agent.fillInput('#email', 'test@example.com');
-```
-
-#### `clickButton(selector: string): Promise<void>`
-Click a button or clickable element.
+| File | Responsibility |
+|------|---------------|
+| `TUISessionManager.ts` | PTY lifecycle — open, close, resize |
+| `TUIInputSimulator.ts` | Keystroke injection |
+| `TUIMenuNavigator.ts` | Arrow-key menu traversal |
+| `TUIOutputParser.ts` | ANSI-stripped output matching |
+| `TUIStepDispatcher.ts` | Maps step actions to the above modules |
 
 ```typescript
-await agent.clickButton('[data-testid="submit-btn"]');
-await agent.clickButton('button:has-text("Start Build")');
-```
+import { TUIAgent } from '@gadugi/agentic-test';
 
-#### `waitForElement(selector: string, options?: WaitOptions): Promise<Locator>`
-Wait for an element to appear with specified state.
+const agent = new TUIAgent({ command: 'npx my-tui-app', cols: 80, rows: 24 });
 
-```typescript
-// Wait for element to be visible (default)
-await agent.waitForElement('[data-testid="result"]');
-
-// Wait with custom timeout and state
-await agent.waitForElement('[data-testid="loading"]', {
-  state: 'hidden',
-  timeout: 30000
-});
-```
-
-#### `getElementText(selector: string): Promise<string>`
-Get the text content of an element.
-
-```typescript
-const message = await agent.getElementText('[data-testid="status-message"]');
-console.log('Status:', message);
-```
-
-### State Management
-
-#### `captureState(): Promise<AppState>`
-Capture the current application state including screenshot, performance metrics, and metadata.
-
-```typescript
-const state = await agent.captureState();
-console.log('Current URL:', state.url);
-console.log('Memory usage:', state.performance?.memoryUsage);
-```
-
-#### `screenshot(name: string): Promise<ScreenshotMetadata>`
-Take a screenshot with the specified name.
-
-```typescript
-const screenshot = await agent.screenshot('after-login');
-console.log('Screenshot saved:', screenshot.filePath);
-```
-
-### Test Step Execution
-
-#### `executeStep(step: TestStep, stepIndex: number): Promise<StepResult>`
-Execute a single test step with comprehensive error handling.
-
-```typescript
-const step: TestStep = {
-  action: 'click',
-  target: '[data-testid="submit-btn"]',
-  description: 'Click submit button'
-};
-
-const result = await agent.executeStep(step, 0);
-console.log('Step result:', result.status);
-```
-
-#### `execute(scenario: TestScenario): Promise<TestResult>`
-Execute a complete test scenario with all steps.
-
-```typescript
-const scenario = {
-  id: 'login-test',
-  name: 'User Login Test',
+await agent.initialize();
+const result = await agent.execute({
+  id: 'tui-navigation',
+  name: 'Navigate main menu',
   steps: [
-    { action: 'launch', target: '' },
-    { action: 'fill', target: '#username', value: 'testuser' },
-    { action: 'fill', target: '#password', value: 'password' },
-    { action: 'click', target: '#login-btn' }
+    { action: 'wait_for_text', target: 'Main Menu' },
+    { action: 'key', target: 'ArrowDown' },
+    { action: 'key', target: 'Enter' },
+    { action: 'wait_for_text', target: 'Sub Menu' }
   ]
-};
-
-const result = await agent.execute(scenario);
+});
+await agent.cleanup();
 ```
 
-## Supported Test Actions
+---
 
-The agent supports various actions through the `executeStep` method:
+### WebSocketAgent
 
-| Action | Description | Parameters |
-|--------|-------------|------------|
-| `launch` / `launch_electron` | Launch the Electron app | - |
-| `close` / `close_app` | Close the application | - |
-| `click_tab` | Navigate to a specific tab | `target`: tab name |
-| `click` / `click_button` | Click an element | `target`: selector |
-| `fill` / `type` | Fill input field | `target`: selector, `value`: text |
-| `wait_for_element` | Wait for element | `target`: selector, `timeout`: ms |
-| `get_text` | Get element text | `target`: selector |
-| `screenshot` | Take screenshot | `target`: name |
-| `wait` | Wait for specified time | `value`: milliseconds |
-| `navigate` | Navigate to URL | `target`: URL |
+Tests WebSocket servers by sending messages and asserting received events.
 
-## Event Monitoring
+**Sub-modules** (`src/agents/websocket/`):
 
-### Socket.IO Events
-
-The agent can monitor Socket.IO connections for real-time events:
+| File | Responsibility |
+|------|---------------|
+| `WebSocketConnection.ts` | Connect, disconnect, reconnect |
+| `WebSocketMessageHandler.ts` | Send/receive message dispatch |
+| `WebSocketEventRecorder.ts` | Record all received events |
+| `WebSocketStepExecutor.ts` | Map step actions to the above modules |
 
 ```typescript
-const agent = new ElectronUIAgent({
-  executablePath: '/path/to/app',
-  websocketConfig: {
-    url: 'http://localhost:3001',
-    events: ['log', 'progress', 'status'],
-    reconnectAttempts: 3,
-    reconnectDelay: 1000
-  }
+import { WebSocketAgent } from '@gadugi/agentic-test';
+
+const agent = new WebSocketAgent({ url: 'ws://localhost:8080' });
+
+await agent.initialize();
+const result = await agent.execute({
+  id: 'ws-echo',
+  name: 'WebSocket echo test',
+  steps: [
+    { action: 'send', target: JSON.stringify({ type: 'ping' }) },
+    { action: 'wait_for_message', target: '{"type":"pong"}' }
+  ]
+});
+await agent.cleanup();
+```
+
+---
+
+### APIAgent
+
+Tests HTTP REST APIs by executing requests and validating responses.
+
+**Sub-modules** (`src/agents/api/`):
+
+| File | Responsibility |
+|------|---------------|
+| `APIAuthHandler.ts` | Bearer token, basic auth, API key injection |
+| `APIRequestExecutor.ts` | HTTP request dispatch |
+| `APIResponseValidator.ts` | Status code, body, header assertions |
+
+```typescript
+import { APIAgent } from '@gadugi/agentic-test';
+
+const agent = new APIAgent({ baseUrl: 'http://localhost:3000', authToken: process.env.API_KEY });
+
+await agent.initialize();
+const result = await agent.execute({
+  id: 'api-health',
+  name: 'Health endpoint check',
+  steps: [
+    { action: 'GET', target: '/health', expectedStatus: 200 },
+    { action: 'GET', target: '/api/users', expectedStatus: 200, expectedBodyContains: '"id"' }
+  ]
+});
+await agent.cleanup();
+```
+
+---
+
+### ComprehensionAgent
+
+Reads documentation and generates test scenarios using an LLM.
+
+See [ComprehensionAgent.README.md](./ComprehensionAgent.README.md) for full documentation.
+
+**Sub-modules** (`src/agents/comprehension/`):
+
+| File | Responsibility |
+|------|---------------|
+| `DocumentationLoader.ts` | Read markdown and source files |
+| `ScenarioComprehender.ts` | Call LLM to generate test scenarios |
+| `OutputComprehender.ts` | Parse and validate LLM responses |
+
+```typescript
+import { ComprehensionAgent } from '@gadugi/agentic-test';
+
+const agent = new ComprehensionAgent({ openAiApiKey: process.env.OPENAI_API_KEY });
+await agent.initialize();
+
+const scenarios = await agent.generateScenarios('./docs/features/auth.md');
+console.log(`Generated ${scenarios.length} test scenarios`);
+
+await agent.cleanup();
+```
+
+---
+
+### PriorityAgent
+
+Classifies and prioritizes test failures and GitHub issues by severity.
+
+See [PriorityAgent.README.md](./PriorityAgent.README.md) for full documentation.
+
+**Sub-modules** (`src/agents/priority/`):
+
+| File | Responsibility |
+|------|---------------|
+| `PriorityAnalyzer.ts` | Score issues by impact and urgency |
+| `PriorityPatternExtractor.ts` | Extract signal from error messages and stack traces |
+| `PriorityQueue.ts` | Order and return sorted issue list |
+
+```typescript
+import { PriorityAgent } from '@gadugi/agentic-test';
+
+const agent = new PriorityAgent({ openAiApiKey: process.env.OPENAI_API_KEY });
+await agent.initialize();
+
+const ranked = await agent.prioritize(failedScenarios);
+ranked.forEach((item, i) => console.log(`${i + 1}. [${item.priority}] ${item.title}`));
+
+await agent.cleanup();
+```
+
+---
+
+### IssueReporter
+
+Creates GitHub issues for test failures with full context attached.
+
+**Sub-modules** (`src/agents/issue/`):
+
+| File | Responsibility |
+|------|---------------|
+| `IssueFormatter.ts` | Build issue title and markdown body |
+| `IssueDeduplicator.ts` | Search for existing issues before creating |
+| `IssueSubmitter.ts` | Call GitHub API to create the issue |
+
+```typescript
+import { IssueReporter } from '@gadugi/agentic-test';
+
+const reporter = new IssueReporter({
+  githubToken: process.env.GITHUB_TOKEN,
+  repo: 'rysweet/my-app'
 });
 
-// Events are automatically captured and stored
-agent.on('websocket_event', (event) => {
-  console.log('Socket.IO event:', event.type, event.data);
-});
+await reporter.initialize();
+await reporter.reportFailure(failedScenario, { screenshots: ['./screenshots/step-5.png'] });
+await reporter.cleanup();
 ```
 
-### Console Monitoring
+---
 
-All console messages are automatically captured and categorized:
+### SystemAgent
+
+Monitors host system resources during test runs. Composed from four focused sub-modules.
+
+See [README.SystemAgent.md](./README.SystemAgent.md) for full documentation.
+
+**Sub-modules** (`src/agents/system/`):
+
+| File | Responsibility |
+|------|---------------|
+| `MetricsCollector.ts` | CPU, memory, disk sampling |
+| `DockerMonitor.ts` | Container health and resource usage |
+| `FileSystemWatcher.ts` | File change events during test run |
+| `SystemAnalyzer.ts` | Aggregate metrics into test-run snapshots |
 
 ```typescript
-// Console messages are stored and can be retrieved
-const logs = agent.getScenarioLogs();
-console.log('Error logs:', logs.filter(log => log.includes('[error]')));
+import { SystemAgent } from '@gadugi/agentic-test';
+
+const agent = new SystemAgent({ sampleIntervalMs: 1000, watchPaths: ['/tmp/test-output'] });
+
+await agent.initialize();
+// ... run your test suite ...
+const report = await agent.getSummary();
+console.log(`Peak memory: ${report.peakMemoryMb} MB`);
+await agent.cleanup();
 ```
 
-## Performance Monitoring
+---
 
-Performance metrics are collected at regular intervals:
+## Creating Custom Agents
 
-```typescript
-const agent = new ElectronUIAgent({
-  executablePath: '/path/to/app',
-  performanceConfig: {
-    enabled: true,
-    sampleInterval: 1000,  // Collect every second
-    collectLogs: true
-  }
-});
+1. Create `src/agents/myagent/` with `types.ts`, your sub-modules, and `index.ts`.
+2. Create `src/agents/MyAgent.ts` extending `BaseAgent`.
+3. Export from `src/agents/index.ts`.
+4. Write tests in `src/agents/__tests__/MyAgent.test.ts`.
 
-// Performance data is automatically collected
-const state = await agent.captureState();
-console.log('CPU usage:', state.performance?.cpuUsage);
-console.log('Memory usage:', state.performance?.memoryUsage);
-```
-
-## Screenshot Management
-
-Screenshots are automatically organized and managed:
-
-```typescript
-const agent = new ElectronUIAgent({
-  executablePath: '/path/to/app',
-  screenshotConfig: {
-    mode: 'only-on-failure',    // 'off', 'on', 'only-on-failure'
-    directory: './screenshots/electron',
-    fullPage: true
-  }
-});
-
-// Screenshots are taken automatically on:
-// - Test failures
-// - State changes
-// - Manual requests via screenshot() method
-```
-
-## Error Handling and Recovery
-
-The agent provides comprehensive error handling:
-
-### Automatic Screenshot on Failures
-- Screenshots are automatically captured when steps fail
-- Failure context is preserved for debugging
-
-### Retry Mechanisms
-```typescript
-const agent = new ElectronUIAgent({
-  executablePath: '/path/to/app',
-  recoveryConfig: {
-    maxRetries: 3,
-    retryDelay: 1000,
-    restartOnFailure: false
-  }
-});
-```
-
-### Custom Error Types
-- `InitializationError`: Agent initialization failures
-- `LaunchError`: Application launch failures
-- `InteractionError`: UI interaction failures
-
-## Data Export
-
-The agent automatically exports collected data:
-
-- **Performance Data**: `performance_[timestamp].json`
-- **WebSocket Events**: `websocket_events_[timestamp].json`
-- **State Snapshots**: `state_snapshots_[timestamp].json`
-- **Screenshot Metadata**: `screenshots_[timestamp].json`
-
-All data is exported to `./logs/electron-agent-exports/` on cleanup.
-
-## Advanced Usage
-
-### Multiple Windows Support
-
-```typescript
-// The agent automatically handles the first window
-// Additional windows can be accessed via Playwright's API
-const windows = await agent.app?.windows();
-if (windows && windows.length > 1) {
-  const secondWindow = windows[1];
-  // Interact with second window
-}
-```
-
-### Custom Selectors
-
-The agent supports various selector strategies:
-
-```typescript
-// Data test IDs (recommended)
-await agent.clickButton('[data-testid="submit-btn"]');
-
-// Text content
-await agent.clickButton('button:has-text("Submit")');
-
-// CSS selectors
-await agent.clickButton('#submit-button');
-
-// XPath (through Playwright)
-await agent.clickButton('xpath=//button[@id="submit"]');
-```
-
-### Conditional Actions
-
-```typescript
-// Wait for specific conditions
-await agent.waitForElement('[data-testid="loading"]', { 
-  state: 'hidden',
-  timeout: 30000 
-});
-
-// Check element text
-const text = await agent.getElementText('[data-testid="status"]');
-if (text.includes('Success')) {
-  await agent.clickButton('[data-testid="continue"]');
-}
-```
-
-## Integration with Test Scenarios
-
-The agent integrates seamlessly with YAML test scenarios:
-
-```yaml
-# electron-test.yaml
-name: "Electron App Test"
-agents:
-  - name: "ui-agent"
-    type: "ui"
-    config:
-      executablePath: "/path/to/app"
-      screenshotConfig:
-        mode: "only-on-failure"
-
-steps:
-  - name: "Launch App"
-    agent: "ui-agent"
-    action: "launch_electron"
-    
-  - name: "Navigate to Build Tab"
-    agent: "ui-agent"
-    action: "click_tab"
-    params:
-      target: "Build"
-```
-
-## Best Practices
-
-1. **Use Data Test IDs**: Use `data-testid` attributes for reliable element selection
-2. **Set Appropriate Timeouts**: Configure timeouts based on your app's performance
-3. **Enable Screenshot on Failures**: Always capture screenshots for debugging
-4. **Monitor Performance**: Enable performance monitoring for long-running tests
-5. **Clean Up Resources**: Always call `cleanup()` in test teardown
-6. **Use Descriptive Names**: Name screenshots and state captures descriptively
-7. **Handle Dialogs**: The agent auto-accepts dialogs, but consider custom handling
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Application Won't Launch**
-   - Verify `executablePath` is correct and executable exists
-   - Check that required dependencies are installed
-   - Ensure proper permissions
-
-2. **Element Not Found**
-   - Use `waitForElement` instead of immediate clicks
-   - Verify selectors in the actual application
-   - Try multiple selector strategies
-
-3. **Socket.IO Connection Fails**
-   - Verify Socket.IO server is running
-   - Check URL and port configuration
-   - Ensure firewall/network allows connections
-
-4. **Performance Monitoring Issues**
-   - Reduce `sampleInterval` if causing performance problems
-   - Disable if not needed for your tests
-   - Check available memory for data storage
-
-### Debug Mode
-
-Enable debug logging for detailed information:
-
-```typescript
-import { LogLevel } from '../utils/logger';
-
-const agent = new ElectronUIAgent({
-  executablePath: '/path/to/app'
-});
-
-// Set debug level logging
-agent.logger.setLevel(LogLevel.DEBUG);
-```
-
-## API Reference
-
-For complete API documentation, see the TypeScript definitions in:
-- `ElectronUIAgent.ts` - Main agent implementation
-- `../models/TestModels.ts` - Test step and result interfaces
-- `../models/AppState.ts` - Application state interfaces
-- `../utils/screenshot.ts` - Screenshot management utilities
-- `../utils/logger.ts` - Logging utilities
+The full step-by-step guide with code templates is in [CONTRIBUTING.md](../../CONTRIBUTING.md#adding-a-new-agent).

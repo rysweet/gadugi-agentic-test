@@ -1,332 +1,311 @@
-# Agentic Testing System - Utilities
+# Utilities
 
-This directory contains comprehensive utility modules for the TypeScript Agentic Testing System. Each utility is designed to handle specific aspects of test automation and management.
+The `src/utils/` directory provides shared infrastructure used across all agents and the orchestrator. Each utility family is decomposed into focused sub-modules following the same pattern as the agents.
 
-## Available Utilities
+## Contents
 
-### 1. Logger (`logger.ts`)
+- [Architecture](#architecture)
+- [Sub-module directories](#sub-module-directories)
+  - [files/](#files)
+  - [config/](#config)
+  - [yaml/](#yaml)
+  - [retry/](#retry)
+  - [logging/](#logging)
+  - [screenshot/](#screenshot)
+- [Standalone utilities](#standalone-utilities)
+  - [ids.ts](#idsts)
+  - [agentUtils.ts](#agentutilsts)
+  - [colors.ts](#colorsts)
+  - [async.ts](#asyncts)
+  - [comparison.ts](#comparisonts)
+- [Integration example](#integration-example)
 
-Winston-based logging system with configurable levels, formats, and outputs.
+---
 
-```typescript
-import { createLogger, LogLevel, defaultLogger } from './logger';
+## Architecture
 
-// Create a custom logger
-const logger = createLogger({
-  level: LogLevel.DEBUG,
-  logDir: './logs',
-  enableConsole: true,
-  enableFile: true
-});
-
-// Use the logger
-logger.info('Test started');
-logger.error('Test failed', { scenarioId: 'test-001' });
-
-// Set logging context
-logger.setContext({ scenarioId: 'test-001', component: 'ui-test' });
-
-// Log test-specific events
-logger.scenarioStart('test-001', 'Login Test');
-logger.stepExecution(0, 'click', '#login-button');
-logger.scenarioEnd('test-001', 'passed', 5000);
+```
+src/utils/
+├── files/          # FileReader, FileWriter, FileSearch, FileArchiver
+├── config/         # ConfigLoader, ConfigValidator, ConfigManager
+├── yaml/           # YamlLoader, YamlValidator, YamlVariableSubstitution
+├── retry/          # RetryExecutor, CircuitBreaker
+├── logging/        # LogFormatter, LogTransport
+├── screenshot/     # ScreenshotCapture, ImageComparator, DiffRenderer, ScreenshotReporter
+├── ids.ts          # generateId()
+├── agentUtils.ts   # sanitizeConfigWithEnv(), validateDirectory()
+├── colors.ts       # ANSI color constants
+├── async.ts        # delay()
+├── comparison.ts   # deepEqual()
+├── index.ts        # Re-exports all of the above
+│
+│   # Legacy entry points (preserved for backward compatibility)
+├── config.ts       # re-exports from config/
+├── fileUtils.ts    # re-exports from files/
+├── logger.ts       # re-exports from logging/
+├── retry.ts        # re-exports from retry/
+└── yamlParser.ts   # re-exports from yaml/
 ```
 
-### 2. YAML Parser (`yamlParser.ts`)
+Import from the sub-module for tree-shaking, or from `index.ts` / the legacy entry points when you need the full family.
 
-Parse and validate YAML test scenarios with variable substitution and includes.
+---
+
+## Sub-module directories
+
+### files/
+
+File system operations for test artifact management.
+
+| Module | Responsibility |
+|--------|---------------|
+| `FileReader.ts` | Read files and directories, stream large files |
+| `FileWriter.ts` | Write and append files, ensure parent dirs exist |
+| `FileSearch.ts` | Glob-based file discovery, recursive search |
+| `FileArchiver.ts` | Compress and extract test artifact bundles |
 
 ```typescript
-import { YamlParser, loadScenariosFromFile } from './yamlParser';
+import { FileReader, FileWriter, FileSearch } from '@gadugi/agentic-test/utils/files';
 
-// Load scenarios from a file
-const scenarios = await loadScenariosFromFile('./scenarios/login.yaml', {
+// Find all screenshots from the last run
+const pngs = await FileSearch.glob('**/*.png', { cwd: './screenshots' });
+
+// Read a test-data fixture
+const fixture = await FileReader.readJson<LoginFixture>('./fixtures/login.json');
+
+// Write the results summary
+await FileWriter.writeJson('./results/run-summary.json', { passed: 12, failed: 1 });
+```
+
+---
+
+### config/
+
+Load, validate, and manage runtime configuration.
+
+| Module | Responsibility |
+|--------|---------------|
+| `ConfigLoader.ts` | Read config from YAML files and environment |
+| `ConfigValidator.ts` | Schema validation with actionable error messages |
+| `ConfigManager.ts` | Merge sources, watch for changes, typed `get()` |
+
+```typescript
+import { ConfigManager, ConfigLoader } from '@gadugi/agentic-test/utils/config';
+
+const raw = await ConfigLoader.fromFile('./test.config.yaml');
+const manager = new ConfigManager(raw);
+manager.mergeEnvironment();
+
+const parallelism = manager.get<number>('execution.maxParallel', 3);
+const logLevel   = manager.get<string>('logging.level', 'info');
+```
+
+---
+
+### yaml/
+
+Parse YAML scenario files with variable substitution.
+
+| Module | Responsibility |
+|--------|---------------|
+| `YamlLoader.ts` | Read YAML files and inline YAML strings |
+| `YamlValidator.ts` | Validate parsed documents against the scenario schema |
+| `YamlVariableSubstitution.ts` | Expand `${env.VAR}` and `${global.KEY}` references |
+
+```typescript
+import { YamlLoader, YamlVariableSubstitution } from '@gadugi/agentic-test/utils/yaml';
+
+const raw = await YamlLoader.fromFile('./scenarios/login.yaml');
+const resolved = YamlVariableSubstitution.apply(raw, {
   env: process.env,
-  global: { baseUrl: 'http://localhost:3000' },
-  scenario: { username: 'testuser' }
+  global: { baseUrl: 'http://localhost:3000' }
 });
-
-// Parse inline YAML
-const parser = new YamlParser();
-const scenario = parser.parseScenario(`
-id: test-001
-name: Login Test
-description: Test user login functionality
-priority: HIGH
-interface: GUI
-steps:
-  - action: navigate
-    target: \${global.baseUrl}/login
-  - action: type
-    target: '#username'
-    value: \${scenario.username}
-`);
+// steps can now use ${global.baseUrl} and ${env.TEST_USER}
 ```
 
-### 3. Configuration (`config.ts`)
+---
 
-Load and manage configuration from environment variables and files.
+### retry/
 
-```typescript
-import { ConfigManager, loadDefaultConfig } from './config';
+Retry failed operations with configurable back-off and circuit breaking.
 
-// Load default configuration
-const config = await loadDefaultConfig();
-
-// Create a custom config manager
-const configManager = new ConfigManager({
-  execution: {
-    maxParallel: 5,
-    defaultTimeout: 60000
-  }
-});
-
-// Load from file
-await configManager.loadFromFile('./test.config.yaml');
-
-// Load from environment
-configManager.loadFromEnvironment();
-
-// Get configuration values
-const maxParallel = configManager.get('execution.maxParallel');
-const logLevel = configManager.get('logging.level', 'info');
-
-// Watch for changes
-const unwatch = configManager.watch((newConfig) => {
-  console.log('Configuration updated:', newConfig);
-});
-```
-
-### 4. Retry Logic (`retry.ts`)
-
-Robust retry mechanisms with exponential backoff and circuit breaker patterns.
+| Module | Responsibility |
+|--------|---------------|
+| `RetryExecutor.ts` | Exponential back-off, per-error retry predicate |
+| `CircuitBreaker.ts` | Open/half-open/closed state machine |
 
 ```typescript
-import { 
-  RetryManager, 
-  CircuitBreaker, 
-  retryWithBackoff,
-  RetryStrategy 
-} from './retry';
+import { RetryExecutor, CircuitBreaker } from '@gadugi/agentic-test/utils/retry';
 
-// Simple retry with exponential backoff
-const result = await retryWithBackoff(async () => {
-  // Your operation that might fail
-  return await fetch('/api/data');
-}, {
-  maxAttempts: 3,
-  initialDelay: 1000,
-  strategy: RetryStrategy.EXPONENTIAL
-});
-
-// Advanced retry manager
-const retry = new RetryManager({
-  maxAttempts: 5,
-  initialDelay: 500,
-  strategy: RetryStrategy.EXPONENTIAL,
-  shouldRetry: (error) => error.message.includes('timeout'),
-  onRetry: (error, attempt, delay) => {
-    console.log(`Retry attempt ${attempt} in ${delay}ms: ${error.message}`);
-  }
-});
-
-const data = await retry.execute(async () => {
-  return await performNetworkRequest();
-});
-
-// Circuit breaker
-const circuitBreaker = new CircuitBreaker({
-  failureThreshold: 5,
-  resetTimeout: 60000,
-  onCircuitOpen: () => console.log('Circuit breaker opened'),
-  onCircuitClose: () => console.log('Circuit breaker closed')
-});
-
-const protectedResult = await circuitBreaker.execute(async () => {
-  return await unreliableService();
-});
-```
-
-### 5. Screenshot Management (`screenshot.ts`)
-
-Capture, organize, and manage screenshots using Playwright.
-
-```typescript
-import { ScreenshotManager, createScreenshotManager } from './screenshot';
-import { Page } from 'playwright';
-
-// Create screenshot manager
-const screenshotManager = createScreenshotManager({
-  baseDir: './screenshots',
-  strategy: 'by-scenario',
-  includeTimestamp: true
-});
-
-// Capture page screenshot
-const metadata = await screenshotManager.capturePageScreenshot(page, {
-  scenarioId: 'test-001',
-  stepIndex: 0,
-  description: 'Login page loaded'
-});
-
-// Capture element screenshot
-const button = page.locator('#submit-button');
-await screenshotManager.captureElementScreenshot(button, {
-  scenarioId: 'test-001',
-  stepIndex: 1,
-  description: 'Submit button highlighted'
-});
-
-// Capture before/after comparison
-const { before, after } = await screenshotManager.captureComparison(
-  page,
-  async () => {
-    await page.click('#toggle-theme');
-  },
-  { description: 'Theme toggle' }
+// Retry a flaky network call up to 4 times with exponential back-off
+const data = await RetryExecutor.run(
+  () => fetch('http://localhost:3000/api/status').then(r => r.json()),
+  { maxAttempts: 4, initialDelayMs: 500, shouldRetry: (e) => e.code === 'ECONNREFUSED' }
 );
 
-// Compare screenshots
-const comparison = await screenshotManager.compareScreenshots(
-  before.filePath,
-  after.filePath,
-  0.1 // 10% difference threshold
-);
-
-console.log(`Screenshots match: ${comparison.matches}`);
-console.log(`Difference: ${comparison.differencePercentage}%`);
+// Protect a downstream service with a circuit breaker
+const breaker = new CircuitBreaker({ failureThreshold: 5, resetTimeoutMs: 30_000 });
+const result  = await breaker.execute(() => callExternalService());
 ```
 
-### 6. File Utilities (`fileUtils.ts`)
+---
 
-Comprehensive file system operations for test artifact management.
+### logging/
+
+Structured logging pipeline used by all agents.
+
+| Module | Responsibility |
+|--------|---------------|
+| `LogFormatter.ts` | Format log entries as JSON or human-readable text |
+| `LogTransport.ts` | Route log entries to console, file, or both |
 
 ```typescript
-import { FileUtils, ensureDir, readJson, writeJson } from './fileUtils';
+import { LogTransport, LogFormatter } from '@gadugi/agentic-test/utils/logging';
+import { createLogger } from '@gadugi/agentic-test';
 
-// Basic operations
-await ensureDir('./test-results');
-await FileUtils.copy('./templates', './test-data', true);
+// Use the high-level factory (recommended)
+const logger = createLogger({ level: 'debug', logDir: './logs', enableFile: true });
 
-const testData = await readJson<TestData>('./config/test-data.json');
-await writeJson('./results/summary.json', testResults);
-
-// Advanced file operations
-const files = await FileUtils.findFiles(['**/*.log', '**/*.json'], {
-  cwd: './test-results',
-  ignore: ['**/node_modules/**']
-});
-
-// Cleanup old files
-const cleanup = await FileUtils.cleanup('./screenshots', {
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  includePatterns: ['**/*.png', '**/*.jpg'],
-  excludePatterns: ['**/baseline/**'],
-  removeEmptyDirs: true
-});
-
-console.log(`Deleted ${cleanup.deletedFiles.length} files`);
-
-// Sync directories
-const sync = await FileUtils.sync('./source', './destination', {
-  deleteExtra: true,
-  useChecksum: true,
-  exclude: ['**/*.tmp']
-});
-
-// Get directory size
-const size = await FileUtils.getDirectorySize('./test-results');
-console.log(`Directory size: ${Math.round(size / 1024 / 1024)} MB`);
+logger.info('Scenario started', { scenarioId: 'login-001' });
+logger.error('Step failed',     { step: 3, reason: 'element not found' });
 ```
 
-## Integration Example
+---
 
-Here's how to use multiple utilities together in a test scenario:
+### screenshot/
+
+Capture, compare, and report on screenshots. `ScreenshotManager` (the facade used by agents) delegates to these four sub-modules.
+
+| Module | Responsibility |
+|--------|---------------|
+| `ScreenshotCapture.ts` | Capture full-page and element screenshots via Playwright |
+| `ImageComparator.ts` | Pixel-level diff between two PNG files |
+| `DiffRenderer.ts` | Render a highlighted diff image for failure reports |
+| `ScreenshotReporter.ts` | Aggregate metadata and write the screenshot index |
 
 ```typescript
-import { 
-  createLogger, 
-  YamlParser, 
-  ScreenshotManager, 
-  RetryManager,
-  FileUtils 
-} from './utils';
+import { ScreenshotCapture, ImageComparator } from '@gadugi/agentic-test/utils/screenshot';
+import type { Page } from 'playwright';
 
-// Set up utilities
-const logger = createLogger({ level: 'debug' });
-const yamlParser = new YamlParser();
-const screenshotManager = new ScreenshotManager();
-const retry = new RetryManager({ maxAttempts: 3 });
+// Capture during a test step
+const meta = await ScreenshotCapture.capturePage(page, {
+  outputDir: './screenshots',
+  scenarioId: 'build-flow',
+  stepIndex: 4,
+  label: 'after-submit'
+});
+// Saved to: ./screenshots/build-flow/step-004-after-submit.png
 
-export async function runTestScenario(scenarioFile: string) {
-  // Load test scenario
-  const scenarios = await yamlParser.loadScenarios(scenarioFile);
-  
-  for (const scenario of scenarios) {
-    logger.scenarioStart(scenario.id, scenario.name);
-    
-    try {
-      // Execute with retry logic
-      await retry.execute(async () => {
-        for (const [index, step] of scenario.steps.entries()) {
-          logger.stepExecution(index, step.action, step.target);
-          
-          // Capture screenshot before action
-          await screenshotManager.capturePageScreenshot(page, {
-            scenarioId: scenario.id,
-            stepIndex: index,
-            description: `Before: ${step.description}`
-          });
-          
-          // Execute step
-          await executeStep(step);
-          
-          // Capture screenshot after action
-          await screenshotManager.capturePageScreenshot(page, {
-            scenarioId: scenario.id,
-            stepIndex: index,
-            description: `After: ${step.description}`
-          });
-          
-          logger.stepComplete(index, 'passed', 1000);
-        }
-      });
-      
-      logger.scenarioEnd(scenario.id, 'passed', Date.now() - startTime);
-    } catch (error) {
-      logger.error(`Scenario failed: ${error.message}`, { 
-        scenarioId: scenario.id,
-        error: error.stack 
-      });
-      logger.scenarioEnd(scenario.id, 'failed', Date.now() - startTime);
-    }
-  }
-  
-  // Export results
-  const results = screenshotManager.getRunStatistics();
-  await FileUtils.writeJsonFile('./results/test-run.json', results);
+// Compare baseline to current
+const diff = await ImageComparator.compare('./baseline/step-004.png', meta.filePath);
+if (!diff.matches) {
+  console.log(`Visual regression: ${diff.differencePercentage.toFixed(2)}% changed`);
 }
 ```
 
-## Error Handling
+See [docs/screenshot-diff-guide.md](../../docs/screenshot-diff-guide.md) for the visual-regression workflow.
 
-All utilities include comprehensive error handling with custom error types:
+---
 
-- `YamlParseError` - YAML parsing issues
-- `ValidationError` - Data validation failures
-- `ConfigError` - Configuration loading problems
-- `FileOperationError` - File system operation failures
+## Standalone utilities
 
-Each error includes context information to help with debugging and provides actionable error messages.
+### ids.ts
 
-## Type Safety
+Generates unique IDs for scenarios, steps, and runs.
 
-All utilities are fully typed with TypeScript interfaces and enums for better IDE support and compile-time error checking. The utilities integrate seamlessly with the main test models defined in `../models/`.
+```typescript
+import { generateId } from '@gadugi/agentic-test/utils/ids';
 
-## Performance Considerations
+const scenarioRunId = generateId('run');
+// e.g. "run-1708612345678-a3f2"
+```
 
-- The logger uses async file operations and buffering
-- Screenshot operations include deduplication based on file hashes
-- File utilities use streaming for large file operations
-- Retry mechanisms include jitter to prevent thundering herd problems
-- Configuration loading is cached and supports hot reloading
+---
+
+### agentUtils.ts
+
+Shared helpers used by BaseAgent and sub-modules.
+
+```typescript
+import { sanitizeConfigWithEnv, validateDirectory } from '@gadugi/agentic-test/utils/agentUtils';
+
+// Replace ${env.SECRET} tokens in config objects without leaking values to logs
+const safeConfig = sanitizeConfigWithEnv(rawConfig);
+
+// Assert a directory exists and is writable before a test run starts
+await validateDirectory('./screenshots');
+```
+
+---
+
+### colors.ts
+
+Shared ANSI color constants used by CLI output and log formatters. Import from here instead of repeating escape codes.
+
+```typescript
+import { colors } from '@gadugi/agentic-test/utils/colors';
+
+console.log(`${colors.green}PASS${colors.reset} login-001`);
+console.log(`${colors.red}FAIL${colors.reset} build-flow`);
+```
+
+---
+
+### async.ts
+
+Provides `delay()` — the single approved way to sleep in this codebase. Do not use `setTimeout` directly.
+
+```typescript
+import { delay } from '@gadugi/agentic-test/utils/async';
+
+await delay(500); // wait 500 ms before retrying
+```
+
+---
+
+### comparison.ts
+
+Provides `deepEqual()` for structural equality checks in step assertions.
+
+```typescript
+import { deepEqual } from '@gadugi/agentic-test/utils/comparison';
+
+const expected = { status: 'ok', count: 3 };
+const actual   = JSON.parse(responseBody);
+
+if (!deepEqual(expected, actual)) {
+  throw new Error(`Response mismatch: ${JSON.stringify(actual)}`);
+}
+```
+
+---
+
+## Integration example
+
+A typical agent initialization uses several utilities together:
+
+```typescript
+import { createLogger }         from '@gadugi/agentic-test';
+import { ConfigManager }        from '@gadugi/agentic-test/utils/config';
+import { YamlLoader }           from '@gadugi/agentic-test/utils/yaml';
+import { RetryExecutor }        from '@gadugi/agentic-test/utils/retry';
+import { ScreenshotCapture }    from '@gadugi/agentic-test/utils/screenshot';
+import { validateDirectory }    from '@gadugi/agentic-test/utils/agentUtils';
+
+const logger  = createLogger({ level: 'info', logDir: './logs' });
+const config  = new ConfigManager(await ConfigLoader.fromFile('./test.config.yaml'));
+const outDir  = config.get<string>('screenshots.dir', './screenshots');
+
+await validateDirectory(outDir);
+
+const scenarios = await YamlLoader.fromFile('./scenarios/smoke.yaml');
+
+for (const scenario of scenarios) {
+  logger.info('Running scenario', { id: scenario.id });
+
+  await RetryExecutor.run(async () => {
+    // ... execute steps ...
+    await ScreenshotCapture.capturePage(page, { outputDir: outDir, scenarioId: scenario.id, stepIndex: 0, label: 'done' });
+  }, { maxAttempts: 3 });
+}
+```
