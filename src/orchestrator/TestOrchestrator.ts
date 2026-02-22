@@ -713,31 +713,47 @@ export class TestOrchestrator extends EventEmitter {
   }
 
   /**
-   * Report failures to GitHub
+   * Report failures to GitHub by creating one issue per TestFailure.
+   *
+   * Behaviour:
+   * - Skips entirely when there are no failures or createIssuesOnFailure is false.
+   * - Initialises the IssueReporter once, then calls createIssue for every failure.
+   * - Per-failure errors are caught and logged so a single bad API call does not
+   *   prevent subsequent failures from being reported (best-effort semantics).
+   * - Errors from initialize() are caught and logged; cleanup() always runs.
    */
   private async reportFailures(): Promise<void> {
     if (this.failures.length === 0) {
       logger.info('No failures to report');
       return;
     }
-    
-    // Check if issue creation is enabled - use createIssuesOnFailure property
+
     if (!this.config.github?.createIssuesOnFailure) {
       logger.info('Issue creation disabled');
       return;
     }
-    
+
     logger.info(`Reporting ${this.failures.length} failures to GitHub`);
-    
-    // Initialize issue reporter
-    await this.issueReporter.initialize();
-    
+
     try {
-      // Report failures
-      // Note: IssueReporter.reportFailure may not exist - this is an architectural issue
-      // For now, we'll log this and skip actual reporting to fix compilation
-      logger.warn('Issue reporting functionality needs implementation');
-      
+      await this.issueReporter.initialize();
+    } catch (initError) {
+      logger.error('IssueReporter failed to initialize, skipping GitHub reporting:', initError);
+      await this.issueReporter.cleanup().catch((cleanupErr) => {
+        logger.error('IssueReporter cleanup also failed:', cleanupErr);
+      });
+      return;
+    }
+
+    try {
+      for (const failure of this.failures) {
+        try {
+          const result = await this.issueReporter.createIssue(failure);
+          logger.info(`GitHub issue created for failure '${failure.scenarioId}': #${result.issueNumber} — ${result.url}`);
+        } catch (err) {
+          logger.error(`Failed to create GitHub issue for failure '${failure.scenarioId}':`, err);
+        }
+      }
     } finally {
       await this.issueReporter.cleanup();
     }
