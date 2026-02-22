@@ -13,7 +13,6 @@
 // Re-export the programmatic library API so existing consumers
 // that import from './main' continue to work.
 export {
-  CliArguments,
   TEST_SUITES,
   createDefaultConfig,
   loadConfiguration,
@@ -23,14 +22,17 @@ export {
   displayResults,
   performDryRun,
   setupGracefulShutdown,
-  ProgrammaticTestOptions,
   runTests,
   TestOrchestrator,
+  createTestOrchestrator
+} from './lib';
+export type {
+  CliArguments,
+  ProgrammaticTestOptions,
   TestConfig,
   TestSession,
   TestResult,
-  OrchestratorScenario,
-  createTestOrchestrator
+  OrchestratorScenario
 } from './lib';
 
 // Re-export TestStatus for backwards compatibility

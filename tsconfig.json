@@ -27,6 +27,7 @@
     "noUnusedParameters": false,
     "exactOptionalPropertyTypes": false,
     "downlevelIteration": true,
+    "isolatedModules": true,
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],

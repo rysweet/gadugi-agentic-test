@@ -576,13 +576,13 @@ export async function runTests(options: ProgrammaticTestOptions = {}): Promise<T
 export {
   TestOrchestrator,
   createTestOrchestrator,
-  TestConfig,
-  TestSession,
   TestStatus,
   TestInterface,
   LogLevel,
   setupLogger
 };
+export type { TestConfig } from './models/Config';
+export type { TestSession } from './models/TestModels';
 
 export type { TestResult, TestSuite, OrchestratorScenario } from './models/TestModels';
 /** @deprecated Use OrchestratorScenario */

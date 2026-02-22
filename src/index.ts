@@ -136,5 +136,5 @@ export type {
 
 // Orchestrator exports (TestOrchestrator & createTestOrchestrator already
 // re-exported via ./lib above)
-export { OrchestratorEvents } from './orchestrator';
-export { TestSuite as OrchestratorTestSuite } from './orchestrator';
+export type { OrchestratorEvents } from './orchestrator';
+export type { TestSuite as OrchestratorTestSuite } from './orchestrator';

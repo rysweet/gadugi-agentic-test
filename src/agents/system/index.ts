@@ -11,7 +11,7 @@ export { FileSystemWatcher } from './FileSystemWatcher';
 export { SystemAnalyzer } from './SystemAnalyzer';
 
 // Re-export all shared types and the default config
-export {
+export type {
   SystemAgentConfig,
   SystemMetrics,
   DiskUsage,
@@ -25,5 +25,5 @@ export {
   PerformanceIssue,
   FileSystemChange,
   PerformanceBaseline,
-  defaultSystemAgentConfig,
 } from './types';
+export { defaultSystemAgentConfig } from './types';
