@@ -112,8 +112,6 @@ export interface IssueReporterConfig extends GitHubConfig {
   enableDeduplication?: boolean;
   /** Days to look back for duplicate issues */
   deduplicationLookbackDays?: number;
-  /** Whether to create issues on test failure */
-  createIssuesOnFailure?: boolean;
 }
 
 /**
