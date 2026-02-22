@@ -29,8 +29,15 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     ? simple.cleanup.map(adaptStepToOrchestrator)
     : undefined;
 
+  // Build a deterministic ID from the scenario name so that repeated calls
+  // with the same scenario produce the same ID (stable across test runs and
+  // diffing). Fall back to a random UUID only when no name is provided.
+  const id = simple.name
+    ? `scenario-${simple.name.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`
+    : uuidv4();
+
   return {
-    id: uuidv4(),
+    id,
     name: simple.name || 'Unnamed scenario',
     description: simple.description || `Test scenario: ${simple.name || 'unnamed'}`,
     priority: mapPriority(simple.metadata?.priority),

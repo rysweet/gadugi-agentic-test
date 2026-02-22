@@ -1,7 +1,7 @@
 /**
  * ScreenshotReporter - Reporting and persistence
  *
- * generateComparisonReport, archiveRun, exportMetadata
+ * generateComparisonReport, exportManifest, exportMetadata
  */
 
 import * as fs from 'fs/promises';
@@ -63,18 +63,22 @@ export class ScreenshotReporter {
   }
 
   /**
-   * Archive screenshots for a completed run
+   * Export a JSON manifest of all screenshots captured in this run.
+   *
+   * Previously misnamed `archiveRun`, which implied a .tar.gz archive that was
+   * never created. The method has always written a JSON file; this rename and
+   * the corrected default path make the behaviour explicit.
    */
-  async archiveRun(archivePath?: string): Promise<string> {
-    const finalArchivePath =
-      archivePath ||
+  async exportManifest(manifestPath?: string): Promise<string> {
+    const finalManifestPath =
+      manifestPath ||
       path.join(
         this.organizationOptions.baseDir,
-        'archives',
-        `${this.runId}.tar.gz`
+        'manifests',
+        `${this.runId}.json`
       );
 
-    await this.ensureDirectoryExists(path.dirname(finalArchivePath));
+    await this.ensureDirectoryExists(path.dirname(finalManifestPath));
 
     const runScreenshots = Array.from(this.metadata.values());
     const manifest = {
@@ -84,12 +88,9 @@ export class ScreenshotReporter {
       totalCount: runScreenshots.length,
     };
 
-    await fs.writeFile(
-      finalArchivePath.replace('.tar.gz', '.json'),
-      JSON.stringify(manifest, null, 2)
-    );
+    await fs.writeFile(finalManifestPath, JSON.stringify(manifest, null, 2));
 
-    return finalArchivePath;
+    return finalManifestPath;
   }
 
   /**

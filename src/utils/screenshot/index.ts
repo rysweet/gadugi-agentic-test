@@ -70,7 +70,9 @@ export class ScreenshotManager {
 
   // -- Reporting delegation --
   generateComparisonReport(results: Array<ComparisonResult & { name: string }>, outputPath?: string): Promise<string> { return this.reporter.generateComparisonReport(results, outputPath); }
-  archiveRun(archivePath?: string): Promise<string> { return this.reporter.archiveRun(archivePath); }
+  exportManifest(manifestPath?: string): Promise<string> { return this.reporter.exportManifest(manifestPath); }
+  /** @deprecated Use exportManifest instead */
+  archiveRun(manifestPath?: string): Promise<string> { return this.reporter.exportManifest(manifestPath); }
   exportMetadata(filePath?: string): Promise<string> { return this.reporter.exportMetadata(filePath); }
 
   // -- Query methods --
