@@ -392,3 +392,74 @@ logging:
     });
   });
 });
+
+// -----------------------------------------------------------------------
+// Security tests: ConfigManager credential exposure prevention (issue #84)
+// -----------------------------------------------------------------------
+describe('Security: ConfigManager credential exposure prevention', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('metadata.environment is always an empty object on construction', () => {
+    process.env.GITHUB_TOKEN = 'ghp_supersecrettoken';
+    process.env.AWS_SECRET_ACCESS_KEY = 'aws-super-secret';
+
+    const mgr = new ConfigManager();
+    const meta = mgr.getMetadata();
+
+    expect(Object.keys(meta.environment)).toHaveLength(0);
+  });
+
+  it('metadata.environment is always an empty object after loadFromFile', async () => {
+    process.env.GITHUB_TOKEN = 'ghp_supersecrettoken';
+
+    const mockFs = jest.mocked(fs);
+    mockFs.readFile.mockResolvedValueOnce('logging:\n  level: debug\n');
+
+    const mgr = new ConfigManager();
+    await mgr.loadFromFile('/path/to/config.yaml');
+    const meta = mgr.getMetadata();
+
+    expect(Object.keys(meta.environment)).toHaveLength(0);
+  });
+
+  it('GITHUB_TOKEN is not present in metadata after construction', () => {
+    process.env.GITHUB_TOKEN = 'ghp_supersecrettoken';
+
+    const mgr = new ConfigManager();
+    const meta = mgr.getMetadata();
+
+    expect('GITHUB_TOKEN' in meta.environment).toBe(false);
+  });
+
+  it('AWS_SECRET_ACCESS_KEY is not present in metadata after construction', () => {
+    process.env.AWS_SECRET_ACCESS_KEY = 'aws-super-secret';
+
+    const mgr = new ConfigManager();
+    const meta = mgr.getMetadata();
+
+    expect('AWS_SECRET_ACCESS_KEY' in meta.environment).toBe(false);
+  });
+
+  it('exported config file does not contain process.env secrets', async () => {
+    process.env.MY_DB_PASSWORD = 'hunter2';
+
+    const mockFs = jest.mocked(fs);
+    mockFs.writeFile.mockResolvedValue(undefined);
+
+    const mgr = new ConfigManager();
+    await mgr.exportToFile('/path/to/output.yaml');
+
+    const [, content] = mockFs.writeFile.mock.calls[0] as [string, string, string];
+    expect(content).not.toContain('hunter2');
+    expect(content).not.toContain('MY_DB_PASSWORD');
+  });
+});

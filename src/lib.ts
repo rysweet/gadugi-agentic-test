@@ -76,16 +76,13 @@ export const TEST_SUITES: Record<string, SuiteConfig> = {
 
 /**
  * Default configuration factory
+ *
+ * Security: Only specific, known-safe environment variables are copied
+ * into the config. Never snapshot the entire process.env - it may contain
+ * credentials (GITHUB_TOKEN, AWS_*, AZURE_*, *_SECRET, *_KEY, *_PASSWORD)
+ * that would then be serialised to disk via saveResults / exportToFile.
  */
 export function createDefaultConfig(): TestConfig {
-  // Filter out undefined values from process.env to match Record<string, string> type
-  const envVars: Record<string, string> = Object.entries(process.env).reduce((acc, [key, value]) => {
-    if (value !== undefined) {
-      acc[key] = value;
-    }
-    return acc;
-  }, {} as Record<string, string>);
-
   const defaultConfig: TestConfig = {
     execution: {
       maxParallel: 3,
@@ -115,9 +112,10 @@ export function createDefaultConfig(): TestConfig {
       executablePath: 'uv run atg',
       workingDirectory: process.cwd(),
       defaultTimeout: 30000,
+      // Only copy safe, non-secret variables needed to run child processes.
+      // Do NOT spread process.env here - secrets get written to disk.
       environment: {
-        NODE_ENV: 'test',
-        ...envVars
+        NODE_ENV: process.env.NODE_ENV || 'test'
       },
       captureOutput: true,
       shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
@@ -152,7 +150,8 @@ export function createDefaultConfig(): TestConfig {
       interpretAnsi: true,
       shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/bash',
       shellArgs: [],
-      environment: envVars,
+      // Empty by default - do NOT copy process.env to prevent credential exposure.
+      environment: {},
       workingDirectory: process.cwd(),
       accessibility: {
         highContrast: false,

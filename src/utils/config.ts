@@ -38,12 +38,18 @@ export interface ValidationResult {
 
 /**
  * Configuration metadata
+ *
+ * NOTE: The `environment` field is intentionally kept empty.
+ * Snapshotting process.env would expose secrets (API keys, tokens,
+ * passwords) through any serialisation path. Use loadFromEnvironment()
+ * to read specific, named env vars into the TestConfig instead.
  */
 export interface ConfigMetadata {
   source: ConfigSource;
   loadedAt: Date;
   filePath?: string;
-  environment: Record<string, string>;
+  /** Always an empty object - never populated with process.env to prevent credential exposure. */
+  environment: Record<string, never>;
 }
 
 /**
@@ -201,7 +207,7 @@ export class ConfigManager {
     this.metadata = {
       source: ConfigSource.DEFAULT,
       loadedAt: new Date(),
-      environment: { ...process.env } as Record<string, string>
+      environment: {} // Don't snapshot env vars - they may contain secrets
     };
   }
 
@@ -236,7 +242,7 @@ export class ConfigManager {
         source: ConfigSource.FILE,
         loadedAt: new Date(),
         filePath: absolutePath,
-        environment: { ...process.env } as Record<string, string>
+        environment: {} // Don't snapshot env vars - they may contain secrets
       };
 
       // Notify watchers
