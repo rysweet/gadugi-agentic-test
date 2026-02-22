@@ -17,6 +17,22 @@ export class DockerMonitor {
   constructor(private readonly logger: TestLogger) {}
 
   /**
+   * Validate a Docker container ID before using it in a shell command.
+   *
+   * Docker container IDs are lowercase hexadecimal strings: 12 characters
+   * (short form) or 64 characters (full SHA-256 digest). Any value that does
+   * not match this pattern is rejected to prevent shell injection via
+   * maliciously named containers.
+   *
+   * Security: Issue #98 (M-11) - shell injection via unvalidated container IDs.
+   */
+  validateContainerId(id: string): void {
+    if (!/^[a-f0-9]{12,64}$/.test(id)) {
+      throw new Error(`Invalid Docker container ID: ${id}`);
+    }
+  }
+
+  /**
    * Whether Docker is currently available on the system
    */
   get isAvailable(): boolean {
@@ -57,6 +73,11 @@ export class DockerMonitor {
         const [id, name, image, state, status, ports] = line.split('\t');
 
         try {
+          // Validate container ID before interpolating into shell command.
+          // Rejects any value that is not a 12-64 char lowercase hex string,
+          // preventing shell injection via maliciously named containers (issue #98).
+          this.validateContainerId(id);
+
           // Get container stats
           const { stdout: statsOutput } = await execAsync(
             `docker stats ${id} --no-stream --format "{{.CPUPerc}},{{.MemPerc}},{{.NetIO}},{{.BlockIO}}"`
