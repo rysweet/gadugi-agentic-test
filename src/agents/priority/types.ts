@@ -7,11 +7,13 @@
  */
 
 import { LogLevel } from '../../utils/logger';
-import { OrchestratorScenario, TestFailure, TestResult } from '../../models/TestModels';
+import { OrchestratorScenario, TestFailure, TestResult, Priority } from '../../models/TestModels';
 
 // ─── Re-export model types used across sub-modules ───────────────────────────
 
 export type { TestFailure, TestResult, OrchestratorScenario };
+// Re-export Priority so sub-modules can import it from this single location
+export { Priority };
 
 // ─── Priority scoring factors ────────────────────────────────────────────────
 
@@ -99,7 +101,7 @@ export interface PriorityAssignment {
   /** ID of the analysed test scenario */
   scenarioId: string;
   /** Assigned priority level */
-  priority: import('../../models/TestModels').Priority;
+  priority: Priority;
   /** Calculated impact score in the range [0, 100] */
   impactScore: number;
   /** Confidence in the assignment in the range [0, 1] */
