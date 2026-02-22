@@ -12,6 +12,11 @@ export type {
   OrchestratorEvents
 } from './TestOrchestrator';
 
+// Sub-module exports
+export { ScenarioRouter } from './ScenarioRouter';
+export { SessionManager } from './SessionManager';
+export { ResultAggregator } from './ResultAggregator';
+
 // Re-export test models for convenience
 export type {
   TestSession,
