@@ -134,10 +134,17 @@ The agent automatically discovers features from documentation using pattern matc
 
 ### CLI Commands
 
-Recognizes patterns like:
-- `atg build`
-- `azure-tenant-grapher generate-iac`
-- `uv run atg doctor`
+CLI command patterns are **configurable** via `ComprehensionAgentConfig.cliCommandPatterns`.
+No patterns are enabled by default — provide your own for your project's CLI tool:
+
+```typescript
+const agent = createComprehensionAgent({
+  cliCommandPatterns: [
+    /`my-tool\s+([a-z-]+)`/gi,   // matches `my-tool build`, `my-tool deploy`, etc.
+    /`npx my-tool\s+([a-z-]+)`/gi
+  ]
+});
+```
 
 ### UI Elements
 
