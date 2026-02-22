@@ -1,168 +1,105 @@
 /**
  * YAML parsing utilities for test scenarios
  * Handles loading, parsing, validation, and variable substitution
+ *
+ * This file re-exports types from yaml/ sub-modules and provides the main
+ * YamlParser class that orchestrates loading, includes, substitution, and validation.
  */
 
 import * as yaml from 'js-yaml';
-import fs from 'fs/promises';
 import path from 'path';
-import { OrchestratorScenario, TestStep, VerificationStep, Priority, TestInterface } from '../models/TestModels';
+import { OrchestratorScenario } from '../models/TestModels';
+import {
+  YamlParseError,
+  ValidationError,
+  VariableContext,
+  YamlParserConfig,
+  DEFAULT_YAML_CONFIG,
+  RawScenario
+} from './yaml/types';
+import { YamlLoader } from './yaml/YamlLoader';
+import { YamlVariableSubstitution } from './yaml/YamlVariableSubstitution';
+import { YamlValidator } from './yaml/YamlValidator';
+
+// Re-export all types so existing imports from './yamlParser' continue to work
+export { YamlParseError, ValidationError };
+export type { VariableContext, YamlParserConfig, RawScenario };
 
 /**
- * YAML parsing error class
- */
-export class YamlParseError extends Error {
-  constructor(message: string, public fileName?: string, public lineNumber?: number) {
-    super(message);
-    this.name = 'YamlParseError';
-  }
-}
-
-/**
- * Validation error class
- */
-export class ValidationError extends Error {
-  constructor(message: string, public field?: string, public value?: unknown) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
-
-/**
- * Variable substitution context
- */
-export interface VariableContext {
-  /** Environment variables */
-  env: Record<string, string>;
-  /** Global variables */
-  global: Record<string, unknown>;
-  /** Scenario-specific variables */
-  scenario: Record<string, unknown>;
-}
-
-/**
- * YAML include directive
- */
-interface IncludeDirective {
-  include: string;
-  variables?: Record<string, any>;
-}
-
-/**
- * Raw YAML scenario structure (before validation)
- */
-interface RawScenario {
-  id?: string;
-  name?: string;
-  description?: string;
-  priority?: string;
-  interface?: string;
-  prerequisites?: string[];
-  steps?: unknown[];
-  verifications?: unknown[];
-  expectedOutcome?: string;
-  estimatedDuration?: number;
-  tags?: string[];
-  enabled?: boolean;
-  environment?: Record<string, string>;
-  cleanup?: unknown[];
-  variables?: Record<string, unknown>;
-  includes?: string[];
-}
-
-/**
- * YAML parser configuration
- */
-export interface YamlParserConfig {
-  /** Base directory for resolving includes */
-  baseDir: string;
-  /** Maximum recursion depth for includes */
-  maxIncludeDepth: number;
-  /** Whether to validate schemas strictly */
-  strictValidation: boolean;
-  /** Custom variable resolvers */
-  variableResolvers: Record<string, (value: unknown) => unknown>;
-  /** Default environment variables */
-  defaultEnvironment: Record<string, string>;
-}
-
-/**
- * Default parser configuration
- */
-const DEFAULT_CONFIG: YamlParserConfig = {
-  baseDir: process.cwd(),
-  maxIncludeDepth: 5,
-  strictValidation: true,
-  variableResolvers: {},
-  defaultEnvironment: {}
-};
-
-/**
- * YAML parser for test scenarios
+ * YAML parser for test scenarios. Orchestrates file loading, include processing,
+ * variable substitution, and schema validation.
  */
 export class YamlParser {
   private config: YamlParserConfig;
-  private processedFiles: Set<string> = new Set();
+  private loader: YamlLoader;
+  private substitution: YamlVariableSubstitution;
+  private validator: YamlValidator;
 
   constructor(config: Partial<YamlParserConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = { ...DEFAULT_YAML_CONFIG, ...config };
+    this.loader = new YamlLoader(this.config);
+    this.substitution = new YamlVariableSubstitution(this.config);
+    this.validator = new YamlValidator(this.config);
   }
 
   /**
-   * Load and parse a YAML file containing test scenarios
+   * Load and parse a YAML file containing test scenarios.
    */
-  async loadScenarios(filePath: string, variables: VariableContext = this.createDefaultVariableContext()): Promise<OrchestratorScenario[]> {
+  async loadScenarios(
+    filePath: string,
+    variables: VariableContext = this.substitution.createDefaultContext()
+  ): Promise<OrchestratorScenario[]> {
     try {
       const absolutePath = path.resolve(this.config.baseDir, filePath);
-      const content = await fs.readFile(absolutePath, 'utf-8');
-      
-      // Parse YAML content (use JSON_SCHEMA to prevent !!js/function code execution)
-      const parsed = yaml.load(content, { schema: yaml.JSON_SCHEMA }) as any;
-      if (!parsed) {
-        throw new YamlParseError('Empty or invalid YAML file', filePath);
-      }
+      const parsed = await this.loader.readFile(absolutePath);
 
-      // Handle includes
-      const processedContent = await this.processIncludes(parsed, path.dirname(absolutePath), 0);
-      
-      // Substitute variables
-      const substitutedContent = this.substituteVariables(processedContent, variables);
-      
-      // Convert to scenarios
+      const processedContent = await this.loader.processIncludes(parsed, path.dirname(absolutePath), 0);
+      const substitutedContent = this.substitution.substitute(processedContent, variables);
+
       if (Array.isArray(substitutedContent)) {
-        return substitutedContent.map((scenario, index) => this.validateAndConvertScenario(scenario, `${filePath}[${index}]`));
+        return substitutedContent.map((scenario, index) =>
+          this.validator.validateAndConvert(scenario, `${filePath}[${index}]`)
+        );
       } else if (substitutedContent.scenarios) {
-        return substitutedContent.scenarios.map((scenario: any, index: number) => 
-          this.validateAndConvertScenario(scenario, `${filePath}[scenarios][${index}]`)
+        return substitutedContent.scenarios.map((scenario: any, index: number) =>
+          this.validator.validateAndConvert(scenario, `${filePath}[scenarios][${index}]`)
         );
       } else {
-        return [this.validateAndConvertScenario(substitutedContent, filePath)];
+        return [this.validator.validateAndConvert(substitutedContent, filePath)];
       }
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
         throw error;
       }
-      throw new YamlParseError(`Failed to load YAML file: ${error instanceof Error ? error.message : String(error)}`, filePath);
+      throw new YamlParseError(
+        `Failed to load YAML file: ${error instanceof Error ? error.message : String(error)}`,
+        filePath
+      );
     }
   }
 
   /**
-   * Load a single scenario from YAML string
+   * Parse a single scenario from a YAML string.
    */
-  parseScenario(yamlContent: string, variables: VariableContext = this.createDefaultVariableContext()): OrchestratorScenario {
+  parseScenario(
+    yamlContent: string,
+    variables: VariableContext = this.substitution.createDefaultContext()
+  ): OrchestratorScenario {
     try {
       const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as unknown as RawScenario;
       if (!parsed) {
         throw new YamlParseError('Empty or invalid YAML content');
       }
 
-      const substituted = this.substituteVariables(parsed, variables);
-      return this.validateAndConvertScenario(substituted, 'inline');
+      const substituted = this.substitution.substitute(parsed, variables);
+      return this.validator.validateAndConvert(substituted, 'inline');
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
         throw error;
       }
-      throw new YamlParseError(`Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`);
+      throw new YamlParseError(
+        `Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -175,27 +112,26 @@ export class YamlParser {
    */
   async parseScenariosFromString(
     yamlContent: string,
-    variables: VariableContext = this.createDefaultVariableContext()
+    variables: VariableContext = this.substitution.createDefaultContext()
   ): Promise<OrchestratorScenario[]> {
     try {
-      // Use JSON_SCHEMA to prevent !!js/function code execution
       const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as any;
       if (!parsed) {
         throw new YamlParseError('Empty or invalid YAML content');
       }
 
-      const substituted = this.substituteVariables(parsed, variables);
+      const substituted = this.substitution.substitute(parsed, variables);
 
       if (Array.isArray(substituted)) {
         return substituted.map((scenario, index) =>
-          this.validateAndConvertScenario(scenario, `inline[${index}]`)
+          this.validator.validateAndConvert(scenario, `inline[${index}]`)
         );
       } else if (substituted.scenarios) {
         return substituted.scenarios.map((scenario: any, index: number) =>
-          this.validateAndConvertScenario(scenario, `inline[scenarios][${index}]`)
+          this.validator.validateAndConvert(scenario, `inline[scenarios][${index}]`)
         );
       } else {
-        return [this.validateAndConvertScenario(substituted, 'inline')];
+        return [this.validator.validateAndConvert(substituted, 'inline')];
       }
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
@@ -208,311 +144,24 @@ export class YamlParser {
   }
 
   /**
-   * Process include directives in YAML content
-   */
-  private async processIncludes(content: any, baseDir: string, depth: number): Promise<any> {
-    if (depth > this.config.maxIncludeDepth) {
-      throw new YamlParseError(`Maximum include depth of ${this.config.maxIncludeDepth} exceeded`);
-    }
-
-    if (typeof content !== 'object' || content === null) {
-      return content;
-    }
-
-    if (Array.isArray(content)) {
-      return Promise.all(content.map(item => this.processIncludes(item, baseDir, depth)));
-    }
-
-    // Handle include directive
-    if (content.include && typeof content.include === 'string') {
-      const includePath = path.resolve(baseDir, content.include);
-
-      // Prevent path traversal: include must stay within the configured base directory
-      const allowedBase = path.resolve(this.config.baseDir);
-      if (!includePath.startsWith(allowedBase + path.sep) && includePath !== allowedBase) {
-        throw new YamlParseError(`Include path escapes base directory: ${content.include}`);
-      }
-
-      // Prevent circular includes
-      if (this.processedFiles.has(includePath)) {
-        throw new YamlParseError(`Circular include detected: ${includePath}`);
-      }
-
-      this.processedFiles.add(includePath);
-      
-      try {
-        const includeContent = await fs.readFile(includePath, 'utf-8');
-        const parsed = yaml.load(includeContent, { schema: yaml.JSON_SCHEMA });
-        
-        // Merge variables if provided
-        let result = parsed;
-        if (content.variables && typeof parsed === 'object') {
-          result = this.mergeVariables(parsed, content.variables);
-        }
-
-        return this.processIncludes(result, path.dirname(includePath), depth + 1);
-      } finally {
-        this.processedFiles.delete(includePath);
-      }
-    }
-
-    // Process includes in object properties
-    const result: any = {};
-    for (const [key, value] of Object.entries(content)) {
-      result[key] = await this.processIncludes(value, baseDir, depth);
-    }
-
-    return result;
-  }
-
-  /**
-   * Substitute variables in content
-   */
-  private substituteVariables(content: any, variables: VariableContext): any {
-    if (typeof content === 'string') {
-      return this.substituteStringVariables(content, variables);
-    }
-
-    if (typeof content !== 'object' || content === null) {
-      return content;
-    }
-
-    if (Array.isArray(content)) {
-      return content.map(item => this.substituteVariables(item, variables));
-    }
-
-    const result: any = {};
-    for (const [key, value] of Object.entries(content)) {
-      result[key] = this.substituteVariables(value, variables);
-    }
-
-    return result;
-  }
-
-  /**
-   * Substitute variables in a string
-   */
-  private substituteStringVariables(str: string, variables: VariableContext): string {
-    return str.replace(/\$\{([^}]+)\}/g, (match, expression) => {
-      try {
-        // Handle nested property access (e.g., ${env.HOME})
-        const parts = expression.split('.');
-        let value: any = variables;
-
-        for (const part of parts) {
-          if (value && typeof value === 'object' && part in value) {
-            value = value[part];
-          } else {
-            return match; // Keep original if not found
-          }
-        }
-
-        // Apply custom resolvers if available
-        if (parts.length >= 2 && this.config.variableResolvers[parts[0]]) {
-          value = this.config.variableResolvers[parts[0]](value);
-        }
-
-        return String(value);
-      } catch {
-        return match; // Keep original on error
-      }
-    });
-  }
-
-  /**
-   * Merge variables into content
-   */
-  private mergeVariables(content: any, variables: Record<string, any>): any {
-    if (typeof content !== 'object' || content === null) {
-      return content;
-    }
-
-    if (Array.isArray(content)) {
-      return content;
-    }
-
-    return { ...content, variables: { ...content.variables, ...variables } };
-  }
-
-  /**
-   * Validate and convert raw scenario to OrchestratorScenario
-   */
-  private validateAndConvertScenario(raw: RawScenario, context: string): OrchestratorScenario {
-    const errors: string[] = [];
-
-    // Required fields
-    if (!raw.id) errors.push('id is required');
-    if (!raw.name) errors.push('name is required');
-    if (!raw.description) errors.push('description is required');
-    
-    // Validate priority
-    const priority = this.validatePriority(raw.priority);
-    if (!priority && this.config.strictValidation) {
-      errors.push(`invalid priority: ${raw.priority}`);
-    }
-
-    // Validate interface
-    const testInterface = this.validateInterface(raw.interface);
-    if (!testInterface && this.config.strictValidation) {
-      errors.push(`invalid interface: ${raw.interface}`);
-    }
-
-    // Validate steps
-    const steps = this.validateSteps(raw.steps || []);
-    const verifications = this.validateVerifications(raw.verifications || []);
-
-    if (errors.length > 0) {
-      throw new ValidationError(`Validation errors in ${context}: ${errors.join(', ')}`);
-    }
-
-    return {
-      id: raw.id!,
-      name: raw.name!,
-      description: raw.description!,
-      priority: priority || Priority.MEDIUM,
-      interface: testInterface || TestInterface.CLI,
-      prerequisites: raw.prerequisites || [],
-      steps,
-      verifications,
-      expectedOutcome: raw.expectedOutcome || '',
-      estimatedDuration: raw.estimatedDuration || 60,
-      tags: raw.tags || [],
-      enabled: raw.enabled !== false,
-      environment: raw.environment,
-      cleanup: raw.cleanup ? this.validateSteps(raw.cleanup) : undefined
-    };
-  }
-
-  /**
-   * Validate priority string
-   */
-  private validatePriority(priority?: string): Priority | null {
-    if (!priority) return null;
-    const upperPriority = priority.toUpperCase();
-    return Object.values(Priority).includes(upperPriority as Priority) ? upperPriority as Priority : null;
-  }
-
-  /**
-   * Validate interface string
-   */
-  private validateInterface(iface?: string): TestInterface | null {
-    if (!iface) return null;
-    const upperInterface = iface.toUpperCase();
-    return Object.values(TestInterface).includes(upperInterface as TestInterface) ? upperInterface as TestInterface : null;
-  }
-
-  /**
-   * Validate test steps
-   */
-  private validateSteps(rawSteps: any[]): TestStep[] {
-    return rawSteps.map((step, index) => {
-      if (typeof step !== 'object' || !step.action || !step.target) {
-        throw new ValidationError(`Invalid step at index ${index}: action and target are required`);
-      }
-
-      return {
-        action: step.action,
-        target: step.target,
-        value: step.value,
-        waitFor: step.waitFor,
-        timeout: step.timeout,
-        description: step.description,
-        expected: step.expected
-      };
-    });
-  }
-
-  /**
-   * Validate verification steps
-   */
-  private validateVerifications(rawVerifications: any[]): VerificationStep[] {
-    return rawVerifications.map((verification, index) => {
-      if (typeof verification !== 'object' || !verification.type || !verification.target || !verification.expected || !verification.operator) {
-        throw new ValidationError(`Invalid verification at index ${index}: type, target, expected, and operator are required`);
-      }
-
-      return {
-        type: verification.type,
-        target: verification.target,
-        expected: verification.expected,
-        operator: verification.operator,
-        description: verification.description
-      };
-    });
-  }
-
-  /**
-   * Create default variable context
-   */
-  private createDefaultVariableContext(): VariableContext {
-    return {
-      env: { ...process.env, ...this.config.defaultEnvironment } as Record<string, string>,
-      global: {},
-      scenario: {}
-    };
-  }
-
-  /**
-   * Validate YAML file structure without full parsing
+   * Validate YAML file structure without full parsing.
    */
   async validateYamlFile(filePath: string): Promise<{ valid: boolean; errors: string[] }> {
-    const errors: string[] = [];
-
-    try {
-      const content = await fs.readFile(filePath, 'utf-8');
-      const parsed = yaml.load(content, { schema: yaml.JSON_SCHEMA });
-
-      if (!parsed) {
-        errors.push('Empty or invalid YAML file');
-        return { valid: false, errors };
-      }
-
-      // Basic structure validation
-      if (typeof parsed !== 'object') {
-        errors.push('YAML must contain an object or array');
-      }
-
-      return { valid: errors.length === 0, errors };
-    } catch (error: unknown) {
-      errors.push(`Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`);
-      return { valid: false, errors };
-    }
+    return this.validator.validateFile(filePath);
   }
 
   /**
-   * Extract variables from YAML content
+   * Extract variables from YAML content.
    */
-  extractVariables(content: unknown): Record<string, unknown> {
-    const variables: Record<string, unknown> = {};
-
-    const extract = (obj: unknown, path: string = '') => {
-      if (typeof obj !== 'object' || obj === null) return;
-
-      if (Array.isArray(obj)) {
-        obj.forEach((item, index) => extract(item, `${path}[${index}]`));
-        return;
-      }
-
-      for (const [key, value] of Object.entries(obj)) {
-        const currentPath = path ? `${path}.${key}` : key;
-        
-        if (key === 'variables' && typeof value === 'object') {
-          Object.assign(variables, value);
-        } else {
-          extract(value, currentPath);
-        }
-      }
-    };
-
-    extract(content);
-    return variables;
+  extractVariables(content: any): Record<string, any> {
+    return this.substitution.extractVariables(content);
   }
 
   /**
-   * Convert OrchestratorScenario back to YAML string
+   * Convert OrchestratorScenario back to YAML string.
    */
   scenarioToYaml(scenario: OrchestratorScenario): string {
-    const yamlObject = {
+    const yamlObject: Record<string, any> = {
       id: scenario.id,
       name: scenario.name,
       description: scenario.description,
@@ -529,10 +178,9 @@ export class YamlParser {
       cleanup: scenario.cleanup
     };
 
-    // Remove undefined fields
     Object.keys(yamlObject).forEach(key => {
-      if (yamlObject[key as keyof typeof yamlObject] === undefined) {
-        delete yamlObject[key as keyof typeof yamlObject];
+      if (yamlObject[key] === undefined) {
+        delete yamlObject[key];
       }
     });
 
@@ -555,7 +203,10 @@ export function createYamlParser(config?: Partial<YamlParserConfig>): YamlParser
 /**
  * Convenience function to load scenarios from a file
  */
-export async function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<OrchestratorScenario[]> {
+export async function loadScenariosFromFile(
+  filePath: string,
+  variables?: VariableContext
+): Promise<OrchestratorScenario[]> {
   const parser = createYamlParser();
   return parser.loadScenarios(filePath, variables);
 }
@@ -563,7 +214,10 @@ export async function loadScenariosFromFile(filePath: string, variables?: Variab
 /**
  * Convenience function to parse a scenario from YAML string
  */
-export function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): OrchestratorScenario {
+export function parseScenarioFromYaml(
+  yamlContent: string,
+  variables?: VariableContext
+): OrchestratorScenario {
   const parser = createYamlParser();
   return parser.parseScenario(yamlContent, variables);
 }
