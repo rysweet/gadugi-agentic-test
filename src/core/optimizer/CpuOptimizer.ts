@@ -28,7 +28,7 @@ export class CpuOptimizer extends EventEmitter {
     if (!this.config.rotationInterval) return;
     this.rotationInterval = setInterval(() => {
       this.rotateBuffers(false);
-    }, this.config.rotationInterval);
+    }, this.config.rotationInterval).unref();
   }
 
   /**

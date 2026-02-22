@@ -189,6 +189,28 @@ export class ResourceOptimizer extends EventEmitter {
 }
 
 /**
- * Singleton instance for global resource management
+ * Singleton instance for global resource management.
+ * Lazily initialised via a Proxy so that importing this module does not
+ * immediately start background monitoring timers.
  */
-export const resourceOptimizer = new ResourceOptimizer();
+let _globalResourceOptimizer: ResourceOptimizer | null = null;
+
+export function getResourceOptimizer(): ResourceOptimizer {
+  if (!_globalResourceOptimizer) {
+    _globalResourceOptimizer = new ResourceOptimizer();
+  }
+  return _globalResourceOptimizer;
+}
+
+export const resourceOptimizer: ResourceOptimizer = new Proxy(
+  {} as ResourceOptimizer,
+  {
+    get(_target, prop) {
+      return (getResourceOptimizer() as any)[prop];
+    },
+    set(_target, prop, value) {
+      (getResourceOptimizer() as any)[prop] = value;
+      return true;
+    }
+  }
+);
