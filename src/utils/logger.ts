@@ -227,9 +227,6 @@ export function createLogger(config?: Partial<LoggerConfig>): TestLogger {
  */
 let _activeLogger: TestLogger = new TestLogger();
 
-/** @deprecated Use the `logger` convenience object instead */
-export const defaultLogger = _activeLogger;
-
 /**
  * Convenience methods that always delegate to the current active logger.
  */

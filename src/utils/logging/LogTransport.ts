@@ -78,6 +78,11 @@ export const DEFAULT_LOGGER_CONFIG: LoggerConfig = {
 /**
  * Build Winston transports from configuration.
  *
+ * Log directory creation is performed asynchronously without blocking the
+ * constructor (or module import).  The directory is created before the first
+ * log entry would realistically arrive; Winston's File transport also handles
+ * the case where the directory already exists gracefully.
+ *
  * @param config Logger configuration
  * @param getContext Callback returning the current log context (for console format)
  */
@@ -87,8 +92,11 @@ export function buildTransports(
 ): winston.transport[] {
   const transports: winston.transport[] = [];
 
-  if (config.enableFile && !fs.existsSync(config.logDir)) {
-    fs.mkdirSync(config.logDir, { recursive: true });
+  // Kick off async directory creation without blocking the constructor.
+  // Errors are intentionally swallowed; if the directory cannot be created
+  // the File transports will surface the error on their first write.
+  if (config.enableFile) {
+    fs.promises.mkdir(config.logDir, { recursive: true }).catch(() => undefined);
   }
 
   if (config.enableConsole) {

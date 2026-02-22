@@ -31,9 +31,28 @@ export { ConfigManager } from './config/ConfigManager';
 import { ConfigManager } from './config/ConfigManager';
 
 /**
- * Global configuration manager instance
+ * Lazily-initialized global configuration manager.
+ * Created on first access to avoid side effects at import time.
  */
-export const globalConfigManager = new ConfigManager();
+let _globalConfigManager: ConfigManager | null = null;
+
+export function getGlobalConfigManager(): ConfigManager {
+  return (_globalConfigManager ??= new ConfigManager());
+}
+
+/**
+ * Global configuration manager instance (backward-compatible proxy).
+ * Delegates all property access to the lazily-created ConfigManager so that
+ * no ConfigManager is instantiated at module-import time.
+ */
+export const globalConfigManager = new Proxy({} as ConfigManager, {
+  get(_target, prop: string | symbol) {
+    return Reflect.get(getGlobalConfigManager(), prop);
+  },
+  set(_target, prop: string | symbol, value: unknown) {
+    return Reflect.set(getGlobalConfigManager(), prop, value);
+  }
+});
 
 /**
  * Load configuration from default locations

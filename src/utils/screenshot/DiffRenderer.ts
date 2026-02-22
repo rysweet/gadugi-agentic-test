@@ -54,7 +54,7 @@ export async function createPixelDiff(
     );
   }
 
-  return diffImage as any;
+  return diffImage as unknown as JimpImage;
 }
 
 /**
@@ -90,7 +90,7 @@ export async function createPerceptualDiff(
       diffImage.setPixelColor(rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]), x, y);
     }
   }
-  return diffImage as any;
+  return diffImage as unknown as JimpImage;
 }
 
 /**
@@ -125,7 +125,7 @@ export async function createStructuralDiff(
       diffImage.setPixelColor(rgbaToInt(finalColor[0], finalColor[1], finalColor[2], finalColor[3]), x, y);
     }
   }
-  return diffImage as any;
+  return diffImage as unknown as JimpImage;
 }
 
 /**
