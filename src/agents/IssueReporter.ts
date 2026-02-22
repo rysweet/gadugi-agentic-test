@@ -462,50 +462,27 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
   }
 
   /**
-   * Attach screenshots to an issue
+   * Attach screenshots to an issue.
+   *
+   * Security: Issue #98 (H-5) - GitHub 'secret' Gists have publicly accessible
+   * URLs despite the public:false flag, meaning any screenshot data uploaded
+   * there (which may contain credentials, PII, or internal application state)
+   * is effectively public to anyone who discovers the URL.
+   *
+   * Screenshots are local CI artifacts and must not be uploaded to Gists or any
+   * other external service. The local file path is returned so callers can
+   * reference the artifact in CI storage (e.g. GitHub Actions upload-artifact).
    */
   async attachScreenshot(issueNumber: number, screenshotPath: string): Promise<string> {
-    this.logger.debug('Attaching screenshot to issue', {
-      issueNumber,
-      screenshotPath
-    });
+    this.logger.warn(
+      'attachScreenshot: Gist upload is disabled for security reasons (issue #98). ' +
+      'Screenshots are sensitive local artifacts. ' +
+      'Upload via CI artifact storage (e.g. actions/upload-artifact) instead.',
+      { issueNumber, screenshotPath }
+    );
 
-    try {
-      const screenshotData = await fs.readFile(screenshotPath);
-      const filename = path.basename(screenshotPath);
-
-      // Create a gist to host the screenshot (GitHub API doesn't support file uploads to issues)
-      const gistResponse = await this.octokit.rest.gists.create({
-        description: `Screenshot for issue #${issueNumber}`,
-        public: false,
-        files: {
-          [filename]: {
-            content: screenshotData.toString('base64')
-          }
-        }
-      });
-
-      const screenshotUrl = `${gistResponse.data.html_url}#file-${filename.replace(/\./g, '-')}`;
-
-      // Add comment with screenshot link
-      await this.addComment(issueNumber, 
-        `## Screenshot Added\n\n![${filename}](${screenshotUrl})\n\n*Screenshot uploaded at ${new Date().toISOString()}*`
-      );
-
-      this.logger.debug('Screenshot attached successfully', {
-        issueNumber,
-        url: screenshotUrl
-      });
-
-      return screenshotUrl;
-    } catch (error) {
-      this.logger.error('Failed to attach screenshot', {
-        error: (error as Error).message,
-        issueNumber,
-        screenshotPath
-      });
-      throw error;
-    }
+    // Return the local path so callers can use it with CI artifact storage.
+    return screenshotPath;
   }
 
   /**
