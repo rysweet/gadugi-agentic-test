@@ -135,7 +135,7 @@ export class FileUtils {
   /**
    * Read a JSON file and parse it
    */
-  static async readJsonFile<T = any>(filePath: string): Promise<T> {
+  static async readJsonFile<T = unknown>(filePath: string): Promise<T> {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       return JSON.parse(content) as T;
@@ -151,7 +151,7 @@ export class FileUtils {
   /**
    * Write an object to a JSON file
    */
-  static async writeJsonFile(filePath: string, data: any, pretty: boolean = true): Promise<void> {
+  static async writeJsonFile(filePath: string, data: unknown, pretty: boolean = true): Promise<void> {
     try {
       await this.ensureDirectory(path.dirname(filePath));
       const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
@@ -781,14 +781,14 @@ export async function ensureDir(dirPath: string): Promise<void> {
 /**
  * Read JSON file
  */
-export async function readJson<T = any>(filePath: string): Promise<T> {
+export async function readJson<T = unknown>(filePath: string): Promise<T> {
   return FileUtils.readJsonFile<T>(filePath);
 }
 
 /**
  * Write JSON file
  */
-export async function writeJson(filePath: string, data: any, pretty: boolean = true): Promise<void> {
+export async function writeJson(filePath: string, data: unknown, pretty: boolean = true): Promise<void> {
   return FileUtils.writeJsonFile(filePath, data, pretty);
 }
 

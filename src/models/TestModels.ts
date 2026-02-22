@@ -278,7 +278,7 @@ export interface TestSession {
     skipped: number;
   };
   /** Configuration used */
-  config?: any;
+  config?: unknown;
   /** Number of scenarios executed */
   scenariosExecuted?: number;
   /** Number of issues created from failures */
@@ -320,8 +320,8 @@ export enum AssertionType {
 
 export interface TestAssertion {
   type: AssertionType;
-  value: any;
-  expected?: any;
+  value: unknown;
+  expected?: unknown;
   operator?: 'equals' | 'contains' | 'exists' | 'gt' | 'lt' | 'gte' | 'lte';
 }
 

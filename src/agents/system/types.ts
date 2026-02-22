@@ -184,7 +184,7 @@ export interface SystemIssue {
   type: 'cpu' | 'memory' | 'disk' | 'process' | 'network' | 'docker';
   severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
-  details: any;
+  details: unknown;
   timestamp: Date;
 }
 
@@ -207,7 +207,7 @@ export interface PerformanceIssue {
   component: string;
   impact: 'low' | 'medium' | 'high';
   duration: number;
-  details: any;
+  details: unknown;
 }
 
 /**

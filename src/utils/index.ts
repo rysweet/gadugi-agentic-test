@@ -40,14 +40,14 @@ export const legacyLogger = createLegacyLogger(process.env.LOG_LEVEL || 'info');
 
 // Legacy configuration utilities (kept for backward compatibility)
 export class LegacyConfigManager {
-  private static config: Record<string, any> = {};
-  
-  static set(key: string, value: any): void {
+  private static config: Record<string, unknown> = {};
+
+  static set(key: string, value: unknown): void {
     this.config[key] = value;
   }
-  
-  static get<T = any>(key: string, defaultValue?: T): T {
-    return this.config[key] ?? defaultValue;
+
+  static get<T = unknown>(key: string, defaultValue?: T): T {
+    return (this.config[key] ?? defaultValue) as T;
   }
   
   static has(key: string): boolean {

@@ -22,7 +22,7 @@ export class YamlParseError extends Error {
  * Validation error class
  */
 export class ValidationError extends Error {
-  constructor(message: string, public field?: string, public value?: any) {
+  constructor(message: string, public field?: string, public value?: unknown) {
     super(message);
     this.name = 'ValidationError';
   }
@@ -35,9 +35,9 @@ export interface VariableContext {
   /** Environment variables */
   env: Record<string, string>;
   /** Global variables */
-  global: Record<string, any>;
+  global: Record<string, unknown>;
   /** Scenario-specific variables */
-  scenario: Record<string, any>;
+  scenario: Record<string, unknown>;
 }
 
 /**
@@ -58,15 +58,15 @@ interface RawScenario {
   priority?: string;
   interface?: string;
   prerequisites?: string[];
-  steps?: any[];
-  verifications?: any[];
+  steps?: unknown[];
+  verifications?: unknown[];
   expectedOutcome?: string;
   estimatedDuration?: number;
   tags?: string[];
   enabled?: boolean;
   environment?: Record<string, string>;
-  cleanup?: any[];
-  variables?: Record<string, any>;
+  cleanup?: unknown[];
+  variables?: Record<string, unknown>;
   includes?: string[];
 }
 
@@ -81,7 +81,7 @@ export interface YamlParserConfig {
   /** Whether to validate schemas strictly */
   strictValidation: boolean;
   /** Custom variable resolvers */
-  variableResolvers: Record<string, (value: any) => any>;
+  variableResolvers: Record<string, (value: unknown) => unknown>;
   /** Default environment variables */
   defaultEnvironment: Record<string, string>;
 }
@@ -441,10 +441,10 @@ export class YamlParser {
   /**
    * Extract variables from YAML content
    */
-  extractVariables(content: any): Record<string, any> {
-    const variables: Record<string, any> = {};
+  extractVariables(content: unknown): Record<string, unknown> {
+    const variables: Record<string, unknown> = {};
 
-    const extract = (obj: any, path: string = '') => {
+    const extract = (obj: unknown, path: string = '') => {
       if (typeof obj !== 'object' || obj === null) return;
 
       if (Array.isArray(obj)) {

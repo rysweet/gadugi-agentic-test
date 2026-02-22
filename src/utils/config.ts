@@ -220,8 +220,8 @@ export class ConfigManager {
       const fileContent = await fs.readFile(absolutePath, 'utf-8');
       const extension = path.extname(absolutePath).toLowerCase();
 
-      let fileConfig: any;
-      
+      let fileConfig: unknown;
+
       if (extension === '.json') {
         fileConfig = JSON.parse(fileContent);
       } else if (extension === '.yaml' || extension === '.yml') {
@@ -231,13 +231,13 @@ export class ConfigManager {
       }
 
       // Validate the loaded configuration
-      const validation = this.validateConfig(fileConfig);
+      const validation = this.validateConfig(fileConfig as Partial<TestConfig>);
       if (!validation.valid) {
         throw new ConfigError(`Configuration validation failed: ${validation.errors.join(', ')}`, filePath);
       }
 
       // Merge with existing config
-      this.config = this.mergeConfigs(this.config, fileConfig);
+      this.config = this.mergeConfigs(this.config, fileConfig as Partial<TestConfig>);
       this.metadata = {
         source: ConfigSource.FILE,
         loadedAt: new Date(),
@@ -260,7 +260,7 @@ export class ConfigManager {
    * Load configuration from environment variables
    */
   loadFromEnvironment(): void {
-    const envConfig: any = {};
+    const envConfig: Record<string, unknown> = {};
 
     Object.entries(ENV_MAPPINGS).forEach(([envVar, configPath]) => {
       const envValue = process.env[envVar];
@@ -322,13 +322,13 @@ export class ConfigManager {
    * Get a specific configuration value by path
    */
   get<T = any>(path: string, defaultValue?: T): T {
-    return this.getNestedValue(this.config, path) ?? defaultValue;
+    return (this.getNestedValue(this.config, path) ?? defaultValue) as T;
   }
 
   /**
    * Set a specific configuration value by path
    */
-  set(path: string, value: any): void {
+  set(path: string, value: unknown): void {
     const updates = {};
     this.setNestedValue(updates, path, value);
     this.updateConfig(updates);
@@ -352,7 +352,7 @@ export class ConfigManager {
   /**
    * Validate configuration object
    */
-  validateConfig(config: any): ValidationResult {
+  validateConfig(config: Partial<TestConfig>): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -519,14 +519,14 @@ export class ConfigManager {
   /**
    * Get nested value from object using dot notation
    */
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(obj: Record<string, any>, path: string): unknown {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
   /**
    * Set nested value in object using dot notation
    */
-  private setNestedValue(obj: any, path: string, value: any): void {
+  private setNestedValue(obj: Record<string, any>, path: string, value: unknown): void {
     const keys = path.split('.');
     const lastKey = keys.pop()!;
     
@@ -543,7 +543,7 @@ export class ConfigManager {
   /**
    * Parse environment variable value to appropriate type
    */
-  private parseEnvValue(value: string): any {
+  private parseEnvValue(value: string): unknown {
     // Boolean values
     if (value.toLowerCase() === 'true') return true;
     if (value.toLowerCase() === 'false') return false;
