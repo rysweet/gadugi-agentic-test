@@ -231,6 +231,8 @@ This document summarizes the comprehensive test suite created for the TUI (Termi
 
 ## Test Statistics
 
+**Total: 765 tests passing across 35 suites.**
+
 ### Unit Tests (`TUIAgent.test.ts`)
 - **Total Test Cases**: 50+ individual test cases
 - **Test Categories**: 12 major categories
@@ -243,6 +245,19 @@ This document summarizes the comprehensive test suite created for the TUI (Termi
 - **Real Application Tests**: 9 categories of real terminal interaction
 - **Platform Coverage**: Windows, macOS, Linux support
 - **CI Compatibility**: Conditional execution for CI environments
+
+### Additional Test Coverage (added post-audit, PR #35)
+- **AdaptiveWaiter** — backoff and jitter behavior
+- **ProcessLifecycleManager** — spawn, monitor, cleanup lifecycle
+- **ResourceOptimizer** — concurrency limiting and queue management
+- **PtyTerminal** — PTY session creation and I/O routing
+- **SystemAgent** — composed metrics, docker, filesystem, and analysis
+- **ComprehensionAgent** — scenario generation from documentation
+- **yamlParser** — safe schema enforcement and include path validation
+- **config** — environment variable loading and `exportToFile` safety
+- **scenarioLoader** — YAML parsing and schema validation
+- **scenarioAdapter** — defensive field handling and priority mapping
+- **retry** — exponential backoff and max-attempt behavior
 
 ### YAML Scenarios (`tui-test.yaml`)
 - **Total Scenarios**: 9 complete test scenarios

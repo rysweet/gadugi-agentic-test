@@ -38,12 +38,47 @@ The framework combines the power of **multi-agent orchestration**, **intelligent
 - **Performance Metrics**: Detailed execution analytics
 - **GitHub Integration**: Automated issue reporting with full context
 
+## Architecture
+
+The framework uses a **modular brick architecture** where each concern is isolated:
+
+### Agent Layer (`src/agents/`)
+Each agent is a thin facade over focused sub-modules:
+- `TUIAgent` → `src/agents/tui/` (session, input, output, menu, step dispatch)
+- `ElectronUIAgent` → `src/agents/electron/` (launcher, interactor, performance, websocket)
+- `WebSocketAgent` → `src/agents/websocket/` (connection, message handler, event recorder)
+- `CLIAgent` → `src/agents/cli/` (command runner, output parser)
+- `APIAgent` → `src/agents/api/` (request executor, response validator, auth handler)
+- `IssueReporter` → `src/agents/issue/` (formatter, submitter, deduplicator)
+- `ComprehensionAgent` → `src/agents/comprehension/` (documentation loader, output comprehender, scenario comprehender)
+- `PriorityAgent` → `src/agents/priority/` (analyzer, queue, pattern extractor)
+- `SystemAgent` → `src/agents/system/` (metrics, docker, filesystem, analyzer)
+
+### Core Layer (`src/core/`)
+- `PtyTerminal` - PTY process management
+- `AdaptiveWaiter` - Intelligent wait/retry
+- `ProcessLifecycleManager` - Process tracking and cleanup
+- `ResourceOptimizer` → `src/core/optimizer/` (memory, CPU, concurrency)
+
+### Utilities (`src/utils/`)
+- `src/utils/files/` - File operations
+- `src/utils/config/` - Configuration management
+- `src/utils/yaml/` - YAML parsing
+- `src/utils/retry/` - Retry + circuit breaker
+- `src/utils/logging/` - Log formatting and transport
+- `src/utils/screenshot/` - Screenshot capture and comparison
+
+### Programmatic API
+Side-effect-free API for embedding in other tools. Import from `@gadugi/agentic-test` via `src/lib.ts`. See [API Reference](./API_REFERENCE.md).
+
+> Full architecture details: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
 ## 🚀 Installation
 
 ### Prerequisites
 
 **Runtime Requirements:**
-- Node.js 18+ 
+- Node.js 20+
 - Playwright browsers (`npx playwright install`)
 - Git CLI (for issue reporting)
 - OpenAI API key (for AI-powered features)
@@ -106,7 +141,7 @@ npm test
 ### 1. Basic Electron App Testing
 
 ```typescript
-import { ElectronUIAgent, quickStart } from '@azure-tenant-grapher/agentic-testing';
+import { ElectronUIAgent } from '@gadugi/agentic-test';
 
 // Quick one-liner for running a test scenario
 await quickStart('./scenarios/my-app-test.yaml');
@@ -1156,8 +1191,8 @@ We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTIN
 
 ```bash
 # Clone repository
-git clone https://github.com/Azure/azure-tenant-grapher.git
-cd azure-tenant-grapher/spa/agentic-testing
+git clone https://github.com/rysweet/gadugi-agentic-test.git
+cd gadugi-agentic-test
 
 # Install dependencies
 npm install
@@ -1204,23 +1239,26 @@ SOFTWARE.
 
 ---
 
-## 📋 Project Documentation
+## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [GETTING_STARTED.md](GETTING_STARTED.md) | Quick-start guide |
-| [API_REFERENCE.md](API_REFERENCE.md) | Full API reference |
-| [docs/quality-audit-2026-02.md](docs/quality-audit-2026-02.md) | February 2026 quality audit — 10 bugs fixed, open issues tracked |
-| [docs/ResourceOptimizer.md](docs/ResourceOptimizer.md) | ResourceOptimizer architecture |
-| [docs/screenshot-diff-guide.md](docs/screenshot-diff-guide.md) | Visual regression guide |
+| [Getting Started](./GETTING_STARTED.md) | Installation and first test |
+| [API Reference](./API_REFERENCE.md) | Complete API documentation |
+| [Architecture](./docs/ARCHITECTURE.md) | System design and module structure |
+| [Contributing](./CONTRIBUTING.md) | Development setup and contribution guide |
+| [Changelog](./CHANGELOG.md) | Version history |
+| [Troubleshooting](./TROUBLESHOOTING.md) | Common issues and solutions |
+| [Screenshot Diffing](./docs/screenshot-diff-guide.md) | Visual regression guide |
+| [Scenarios](./scenarios/README.md) | Writing test scenarios |
 
 ## 🙏 Acknowledgments
 
 - **Cherokee Nation** - For inspiration behind the "Gadugi" name representing cooperative spirit
 - **Playwright Team** - For excellent browser automation capabilities
 - **AutoGen/Magentic-One** - For multi-agent orchestration patterns
-- **Azure Tenant Grapher Team** - For the original use case and testing requirements
+- **Open Source Community** - For the original use case and testing requirements
 
 ---
 
-*Built with ❤️ by the Azure Tenant Grapher team. Ready to revolutionize your testing workflow with intelligent agents working in harmony.*
+*Built with the Gadugi cooperative spirit. Ready to revolutionize your testing workflow with intelligent agents working in harmony.*

@@ -1,5 +1,8 @@
 # Quality Audit Report — February 2026
 
+> **Note:** This is a historical audit report from 2026-02-22. All issues identified have been resolved.
+> See the [CHANGELOG](../CHANGELOG.md) for details on each fix and the PRs that addressed them.
+
 **Date:** 2026-02-21
 **Scope:** Full codebase (21,923 LOC, ~55 TypeScript source files)
 **Method:** 4 parallel review agents + direct analysis

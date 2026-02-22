@@ -12,6 +12,7 @@ Complete API documentation for the Gadugi Agentic Test framework. This reference
 6. [Integration APIs](#integration-apis)
 7. [Event System](#event-system)
 8. [Error Handling](#error-handling)
+9. [Base Classes](#base-classes)
 
 ---
 
@@ -117,6 +118,8 @@ Get all test results from the current session.
 Get all test failures from the current session.
 
 **Returns:** `TestFailure[]` - Array of test failures
+
+> **Note:** `reportFailures()` is a fully-implemented private method called internally during `run()`. It iterates over all failures, invokes `IssueReporter.execute()` for each, and collects the created issue numbers onto the session. You do not call it directly.
 
 #### Events
 
@@ -397,6 +400,8 @@ interface ElectronUIAgentConfig {
     sampleInterval: number;
     collectLogs: boolean;
   };
+  // Note: cpuUsage in performance samples is measured via the `pidusage` library,
+  // which provides real per-process CPU percentages. It is not always 0.
 
   recoveryConfig?: {
     maxRetries: number;
@@ -482,13 +487,27 @@ await session.close();
 
 ### IssueReporter
 
-Automated GitHub issue creation and management agent.
+Automated GitHub issue creation and management agent. `IssueReporter` fully implements the `IAgent` interface, including a concrete `execute()` method that processes a scenario and reports any failures as GitHub issues.
 
 ```typescript
 class IssueReporter implements IAgent
 ```
 
 #### Methods
+
+##### `execute(scenario: OrchestratorScenario): Promise<{ issueNumber: number; url: string } | null>`
+
+Execute the reporter against a scenario. Creates a GitHub issue for the failure described in the scenario and returns the issue number and URL, or `null` if issue creation was skipped (e.g., duplicate detected).
+
+**Example:**
+```typescript
+const reporter = new IssueReporter({ repository: 'owner/repo', createIssues: true });
+await reporter.initialize();
+const result = await reporter.execute(scenario);
+if (result) {
+  console.log(`Issue #${result.issueNumber}: ${result.url}`);
+}
+```
 
 ##### `reportFailure(failure: TestFailure): Promise<number | null>`
 
@@ -1193,6 +1212,102 @@ class ReportingPlugin implements GadugiPlugin {
 // Use plugin
 const plugin = new ReportingPlugin();
 await plugin.install(orchestrator);
+```
+
+---
+
+## Base Classes
+
+### BaseAgent
+
+Abstract base class that all test-executing agents extend. Implements the `IAgent` interface using the template-method pattern, providing a shared `execute()` loop and requiring subclasses to implement `executeStep()` and `buildResult()`.
+
+```typescript
+import { EventEmitter } from 'events';
+import { IAgent, AgentType } from '@gadugi/agentic-test';
+
+abstract class BaseAgent extends EventEmitter implements IAgent {
+  abstract readonly name: string;
+  abstract readonly type: AgentType;
+
+  abstract initialize(): Promise<void>;
+  abstract cleanup(): Promise<void>;
+  abstract executeStep(step: any, index: number): Promise<StepResult>;
+  protected abstract buildResult(ctx: ExecutionContext): unknown;
+
+  // Shared concrete implementation - runs all steps in order
+  async execute(scenario: OrchestratorScenario): Promise<unknown>;
+
+  // Optional lifecycle hooks
+  protected applyEnvironment(scenario: OrchestratorScenario): void;
+  protected onBeforeExecute(scenario: OrchestratorScenario): void;
+  protected async onAfterExecute(scenario: OrchestratorScenario, status: TestStatus): Promise<void>;
+}
+```
+
+**Example - creating a custom agent:**
+```typescript
+import { BaseAgent, AgentType, ExecutionContext, StepResult, OrchestratorScenario } from '@gadugi/agentic-test';
+
+class CustomAgent extends BaseAgent {
+  readonly name = 'CustomAgent';
+  readonly type = AgentType.CLI;
+
+  async initialize(): Promise<void> {
+    this.isInitialized = true;
+  }
+
+  async cleanup(): Promise<void> {}
+
+  async executeStep(step: any, index: number): Promise<StepResult> {
+    return { status: 'passed', duration: 0, stepIndex: index };
+  }
+
+  protected buildResult(ctx: ExecutionContext) {
+    return { ...ctx };
+  }
+}
+```
+
+---
+
+## Shared Utility APIs
+
+### `generateId(prefix?: string): string`
+
+Located in `src/utils/ids.ts`. Generates a unique identifier using a timestamp and random segment, optionally prefixed.
+
+```typescript
+import { generateId } from '@gadugi/agentic-test';
+
+generateId();          // "1714000000000_k3j8f9d2x"
+generateId('conn');    // "conn_1714000000000_k3j8f9d2x"
+generateId('tui');     // "tui_1714000000000_k3j8f9d2x"
+```
+
+### `sanitizeConfigWithEnv(config, envField)`
+
+Located in `src/utils/agentUtils.ts`. Returns a safe copy of an agent config object where environment variable values are replaced by their key names (preventing secrets from appearing in logs).
+
+```typescript
+import { sanitizeConfigWithEnv } from '@gadugi/agentic-test';
+
+const safeConfig = sanitizeConfigWithEnv(this.config, 'environment');
+// { ...config, environment: ['API_KEY', 'DB_PASSWORD'] }  // values removed, keys retained
+
+const safeElectronConfig = sanitizeConfigWithEnv(this.config, 'env');
+// { ...config, env: ['NODE_ENV', 'DISPLAY'] }
+```
+
+### `validateDirectory(dirPath: string): Promise<void>`
+
+Located in `src/utils/fileUtils.ts`. Verifies that `dirPath` exists and is a directory. Throws if the path does not exist or is not a directory.
+
+```typescript
+import { validateDirectory } from '@gadugi/agentic-test';
+
+await validateDirectory('./screenshots');
+// Throws: Error: Path "./missing" does not exist or is not a directory
 ```
 
 ---

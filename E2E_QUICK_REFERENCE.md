@@ -3,8 +3,6 @@
 ## Quick Start
 
 ```bash
-cd /tmp/gadugi-agentic-test
-
 # Build the framework
 npm install
 npm run build
@@ -195,6 +193,6 @@ graph TD
 
 ---
 
-**Last Updated**: 2024-02-11
+**Last Updated**: 2026-02-22
 **Test Suite Version**: 1.0.0
 **Framework Version**: 1.0.0

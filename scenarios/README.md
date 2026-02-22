@@ -4,7 +4,7 @@ This directory contains YAML-based test scenarios for the TypeScript Agentic Tes
 
 ## Overview
 
-Test scenarios are defined in YAML format and describe complex testing workflows that involve multiple agents working together to test different aspects of the Your Application application.
+Test scenarios are defined in YAML format and describe complex testing workflows that involve multiple agents working together. Use these scenarios with the `@gadugi/agentic-test` framework (`gadugi-test` CLI) to orchestrate agents that test Electron apps, CLI tools, and TUI applications.
 
 ## Scenario Files
 
@@ -365,6 +365,55 @@ Scenarios are executed by the TypeScript Agentic Testing System orchestrator. Th
 7. Generate comprehensive reports
 
 For more information on running scenarios, see the main [README.md](../README.md) in the parent directory.
+
+## Schema Notes
+
+### Stable Scenario IDs
+
+The `id` field in a scenario definition is now a deterministic slug derived from the scenario `name`. You do not need to set `id` manually — the framework generates a stable identifier from the name, so scenario IDs remain consistent across runs and across team members:
+
+```yaml
+name: "CLI Smoke Test"
+# id is automatically: "cli-smoke-test"
+```
+
+Previously, each load generated a new UUID, which made cross-run comparisons unreliable.
+
+### Agents Array Validation
+
+The `agents` array is now validated on load. A scenario with an empty or missing `agents` field is rejected with a clear error message:
+
+```yaml
+# Valid — at least one agent required
+agents:
+  - name: "cli-agent"
+    type: "system"
+    config:
+      shell: "bash"
+```
+
+Running a scenario with no agents defined will produce an error like:
+
+```
+ScenarioValidationError: scenario "My Test" must define at least one agent
+```
+
+### Package Name
+
+All programmatic usage should import from `@gadugi/agentic-test`:
+
+```typescript
+import { runScenario, loadScenarios } from "@gadugi/agentic-test";
+
+const scenarios = await loadScenarios("./scenarios");
+await runScenario(scenarios[0]);
+```
+
+The CLI binary is `gadugi-test`:
+
+```bash
+gadugi-test run scenarios/my-test.yaml
+```
 
 ## Contributing
 
