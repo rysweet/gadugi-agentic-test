@@ -10,10 +10,10 @@ import { Octokit } from '@octokit/rest';
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { TestFailure, TestResult, TestError } from '../models/TestModels';
+import { TestFailure, TestResult, TestError, OrchestratorScenario } from '../models/TestModels';
 import { GitHubConfig } from '../models/Config';
 import { TestLogger, logger } from '../utils/logger';
-import { AgentType } from './index';
+import { IAgent, AgentType } from './index';
 
 /**
  * GitHub API rate limit information
@@ -195,12 +195,16 @@ const DEFAULT_CONFIG: Partial<IssueReporterConfig> = {
 
 /**
  * GitHub Issue Reporter Agent
- * 
+ *
  * Provides comprehensive GitHub integration for test failure reporting
  * and issue management with advanced features like deduplication,
  * template-based issue creation, and rate limiting.
+ *
+ * Implements IAgent<OrchestratorScenario, { issueNumber: number; url: string } | null>:
+ * execute() builds a TestFailure from the given scenario and reports it via createIssue().
+ * Returns null when issue creation is disabled in config.
  */
-export class IssueReporter {
+export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber: number; url: string } | null> {
   public readonly name = 'IssueReporter';
   public readonly type = AgentType.GITHUB;
 
@@ -261,6 +265,36 @@ export class IssueReporter {
     this.fingerprintCache.clear();
     this.issueTemplates.clear();
     this.logger.info('IssueReporter cleaned up');
+  }
+
+  /**
+   * Execute issue reporting for a scenario (implements IAgent interface).
+   *
+   * Constructs a TestFailure from the scenario metadata and delegates to createIssue().
+   * Returns null when createIssuesOnFailure is disabled in config.
+   *
+   * @param scenario - The orchestrator scenario that failed
+   * @returns Created issue details, or null if issue creation is disabled
+   */
+  async execute(scenario: OrchestratorScenario): Promise<{ issueNumber: number; url: string } | null> {
+    if (!this.config.createIssuesOnFailure) {
+      this.logger.info('Issue creation disabled; skipping execute()', {
+        scenarioId: scenario.id
+      });
+      return null;
+    }
+
+    this.logger.info('Executing IssueReporter for scenario', { scenarioId: scenario.id });
+
+    const failure: TestFailure = {
+      scenarioId: scenario.id,
+      timestamp: new Date(),
+      message: `Test scenario "${scenario.name}" failed: ${scenario.expectedOutcome}`,
+      category: scenario.interface?.toLowerCase(),
+      logs: []
+    };
+
+    return this.createIssue(failure);
   }
 
   /**
