@@ -54,7 +54,7 @@ export class MemoryOptimizer extends EventEmitter {
         this.emit('memoryAlert', usage);
         this.onRssExceeded?.();
       }
-    }, this.config.monitorInterval);
+    }, this.config.monitorInterval).unref();
   }
 
   /**

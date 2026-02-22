@@ -89,15 +89,41 @@ program
     process.exit(1);
   });
 
+// Shutdown helper - invokes ProcessLifecycleManager cleanup if available.
+// Registered inside library modules.  ProcessLifecycleManager deliberately
+// does NOT register global handlers; those belong here in the CLI entry point.
+async function shutdownProcessManager(): Promise<void> {
+  try {
+    const { getProcessLifecycleManager } = await import('./core/ProcessLifecycleManager');
+    await getProcessLifecycleManager().shutdown(3000);
+  } catch (_err) {
+    // Ignore errors during shutdown - we are exiting anyway
+  }
+}
+
+process.on('SIGTERM', async () => {
+  logInfo('Received SIGTERM, shutting down...');
+  await shutdownProcessManager();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  logInfo('Received SIGINT, shutting down...');
+  await shutdownProcessManager();
+  process.exit(0);
+});
+
 // Enhanced error handling for uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', async (error) => {
   logError(`Uncaught exception: ${error instanceof Error ? error.message : String(error)}`);
+  await shutdownProcessManager();
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason) => {
+process.on('unhandledRejection', async (reason, _promise) => {
   const message = reason instanceof Error ? reason.message : String(reason);
   logError(`Unhandled promise rejection: ${message}`);
+  await shutdownProcessManager();
   process.exit(1);
 });
 
