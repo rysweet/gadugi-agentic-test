@@ -342,6 +342,84 @@ fn: !!js/function 'function() { return 1; }'
 
       await expect(parser.loadScenarios('dangerous.yaml')).rejects.toThrow();
     });
+
+    it('should reject !!js/function YAML tags via JSON_SCHEMA in parseScenario', () => {
+      // !!js/function tags can execute arbitrary JavaScript when js-yaml processes them
+      // without a schema restriction. JSON_SCHEMA must block these dangerous type tags.
+      const dangerousYaml = `
+id: dangerous-inline
+name: "Dangerous Inline"
+description: "Attempts code execution"
+priority: high
+interface: cli
+steps: []
+fn: !!js/function 'function() { return process.env; }'
+`;
+      expect(() => parser.parseScenario(dangerousYaml)).toThrow();
+    });
+
+    it('should reject !!js/regexp YAML tags via JSON_SCHEMA in parseScenario', () => {
+      // !!js/regexp is another dangerous YAML type tag blocked by JSON_SCHEMA
+      const dangerousYaml = `
+id: dangerous-regexp
+name: "Dangerous Regexp"
+description: "Attempts type confusion via regexp tag"
+priority: medium
+interface: cli
+steps: []
+pattern: !!js/regexp /.*evil.*/i
+`;
+      expect(() => parser.parseScenario(dangerousYaml)).toThrow();
+    });
+
+    it('should reject !!js/undefined YAML tags via JSON_SCHEMA in parseScenario', () => {
+      // !!js/undefined is a js-yaml-specific type tag blocked by JSON_SCHEMA
+      const dangerousYaml = `
+id: dangerous-undef
+name: "Dangerous Undefined"
+description: "Attempts type confusion via undefined tag"
+priority: low
+interface: cli
+steps: []
+value: !!js/undefined ''
+`;
+      expect(() => parser.parseScenario(dangerousYaml)).toThrow();
+    });
+
+    it('should reject !!js/function YAML tags in validateYamlFile', async () => {
+      const dangerousYaml = `
+fn: !!js/function 'function() { require("child_process").execSync("id"); }'
+`;
+      mockFs.readFile.mockResolvedValue(dangerousYaml);
+
+      // validateYamlFile must also use JSON_SCHEMA to prevent code execution
+      // during structural validation of user-supplied files
+      const result = await parser.validateYamlFile('dangerous.yaml');
+      expect(result.valid).toBe(false);
+    });
+
+    it('should still accept safe, standard YAML types after JSON_SCHEMA restriction', () => {
+      const safeYaml = `
+id: safe-types
+name: "Safe Types"
+description: "Standard JSON-compatible types only"
+priority: high
+interface: cli
+steps:
+  - action: execute
+    target: echo hello
+estimatedDuration: 30
+enabled: true
+tags:
+  - unit
+  - security
+`;
+      const scenario = parser.parseScenario(safeYaml);
+      expect(scenario.id).toBe('safe-types');
+      expect(scenario.enabled).toBe(true);
+      expect(scenario.estimatedDuration).toBe(30);
+      expect(scenario.tags).toContain('unit');
+    });
   });
 
   describe('processIncludes path traversal prevention', () => {

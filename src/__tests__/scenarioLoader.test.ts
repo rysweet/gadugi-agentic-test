@@ -229,6 +229,62 @@ scenarios:
     });
   });
 
+  describe('JSON_SCHEMA enforcement (security: issue #83)', () => {
+    it('should reject !!js/function tags in loadFromFile to prevent code execution', async () => {
+      // !!js/function allows arbitrary JavaScript execution during YAML deserialization.
+      // ScenarioLoader.loadFromFile must use yaml.JSON_SCHEMA to block these tags.
+      const dangerousYaml = `
+name: Exploit
+steps:
+  - name: evil
+    agent: tui-agent
+    action: run
+fn: !!js/function 'function() { require("child_process").execSync("id"); }'
+`;
+      mockFs.readFile.mockResolvedValue(dangerousYaml);
+
+      await expect(ScenarioLoader.loadFromFile('/scenarios/exploit.yaml')).rejects.toThrow();
+    });
+
+    it('should reject !!js/regexp tags in loadFromFile', async () => {
+      const dangerousYaml = `
+name: Regexp Exploit
+steps:
+  - name: step
+    agent: agent
+    action: run
+pattern: !!js/regexp /.*secret.*/i
+`;
+      mockFs.readFile.mockResolvedValue(dangerousYaml);
+
+      await expect(ScenarioLoader.loadFromFile('/scenarios/regexp.yaml')).rejects.toThrow();
+    });
+
+    it('should still accept safe YAML after JSON_SCHEMA restriction', async () => {
+      const safeYaml = `
+name: Safe Scenario
+description: Uses only JSON-compatible types
+steps:
+  - name: step one
+    agent: cli-agent
+    action: execute
+    timeout: 5000
+assertions:
+  - name: check
+    type: contains
+    agent: cli-agent
+    params:
+      value: ok
+`;
+      mockFs.readFile.mockResolvedValue(safeYaml);
+
+      const scenario = await ScenarioLoader.loadFromFile('/scenarios/safe.yaml');
+
+      expect(scenario.name).toBe('Safe Scenario');
+      expect(scenario.steps).toHaveLength(1);
+    });
+  });
+
   describe('validateScenario (via loadFromFile)', () => {
     it('should accept scenario with only name and steps', async () => {
       const minimalYaml = `
