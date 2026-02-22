@@ -1,270 +1,94 @@
 /**
- * GitHub Issue Reporter Agent
- * 
- * Handles GitHub issue creation and management for test failures.
- * Supports issue deduplication, template-based creation, and comprehensive
- * GitHub API integration with rate limiting and error handling.
+ * GitHub Issue Reporter Agent (facade)
+ *
+ * Thin coordinator that delegates to:
+ *   - IssueFormatter  – title/body template rendering
+ *   - IssueDeduplicator – fingerprint-based duplicate detection
+ *   - IssueSubmitter  – all GitHub API calls
  */
 
 import { Octokit } from '@octokit/rest';
-import * as crypto from 'crypto';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { TestFailure, TestResult, TestError, OrchestratorScenario } from '../models/TestModels';
-import { GitHubConfig } from '../models/Config';
+import { TestFailure, OrchestratorScenario } from '../models/TestModels';
 import { TestLogger, logger } from '../utils/logger';
 import { IAgent, AgentType } from './index';
+import {
+  IssueReporterConfig,
+  RateLimitInfo,
+  UpdateIssueOptions,
+  CreatePullRequestOptions,
+  DEFAULT_CONFIG
+} from './issue/types';
+import { IssueFormatter } from './issue/IssueFormatter';
+import { IssueDeduplicator } from './issue/IssueDeduplicator';
+import { IssueSubmitter } from './issue/IssueSubmitter';
 
-/**
- * GitHub API rate limit information
- */
-export interface RateLimitInfo {
-  limit: number;
-  used: number;
-  remaining: number;
-  reset: Date;
-}
+// Re-export types so existing import sites continue to work
+export type {
+  IssueReporterConfig,
+  RateLimitInfo,
+  IssueFingerprint,
+  CreateIssueOptions,
+  UpdateIssueOptions,
+  CreatePullRequestOptions,
+  IssueTemplateVars,
+  SystemInfo
+} from './issue/types';
 
-/**
- * Issue fingerprint for deduplication
- */
-export interface IssueFingerprint {
-  scenarioId: string;
-  errorMessage: string;
-  stackTraceHash?: string;
-  category?: string;
-  hash: string;
-}
-
-/**
- * GitHub issue creation options
- */
-export interface CreateIssueOptions {
-  title: string;
-  body: string;
-  labels?: string[];
-  assignees?: string[];
-  milestone?: number;
-  projects?: number[];
-}
-
-/**
- * GitHub issue update options
- */
-export interface UpdateIssueOptions {
-  title?: string;
-  body?: string;
-  state?: 'open' | 'closed';
-  labels?: string[];
-  assignees?: string[];
-  milestone?: number | null;
-}
-
-/**
- * GitHub pull request creation options
- */
-export interface CreatePullRequestOptions {
-  title: string;
-  body: string;
-  head: string;
-  base: string;
-  draft?: boolean;
-  maintainer_can_modify?: boolean;
-}
-
-/**
- * Issue template variables
- */
-export interface IssueTemplateVars {
-  scenarioId: string;
-  scenarioName: string;
-  failureMessage: string;
-  stackTrace?: string;
-  timestamp: string;
-  environment: Record<string, any>;
-  screenshots?: string[];
-  logs?: string[];
-  reproductionSteps: string[];
-  systemInfo: Record<string, any>;
-  priority: string;
-  category?: string;
-}
-
-/**
- * System information for issues
- */
-export interface SystemInfo {
-  platform: string;
-  arch: string;
-  nodeVersion: string;
-  electronVersion?: string;
-  timestamp: string;
-  workingDirectory: string;
-  environment: Record<string, string>;
-}
-
-/**
- * Issue Reporter agent configuration
- */
-export interface IssueReporterConfig extends GitHubConfig {
-  /** GitHub API base URL (for Enterprise) */
-  baseUrl?: string;
-  /** Request timeout in milliseconds */
-  timeout?: number;
-  /** Rate limit buffer (requests to keep in reserve) */
-  rateLimitBuffer?: number;
-  /** Custom issue templates directory */
-  templatesDir?: string;
-  /** Screenshot storage configuration */
-  screenshotStorage?: 'embed' | 'link' | 'attach';
-  /** Maximum issue body length */
-  maxBodyLength?: number;
-  /** Issue deduplication enabled */
-  enableDeduplication?: boolean;
-  /** Days to look back for duplicate issues */
-  deduplicationLookbackDays?: number;
-}
-
-/**
- * Default configuration values
- */
-const DEFAULT_CONFIG: Partial<IssueReporterConfig> = {
-  timeout: 30000,
-  rateLimitBuffer: 100,
-  screenshotStorage: 'link',
-  maxBodyLength: 65536,
-  enableDeduplication: true,
-  deduplicationLookbackDays: 30,
-  issueTitleTemplate: '[TEST FAILURE] {{scenarioName}} - {{failureMessage}}',
-  issueBodyTemplate: `## Test Failure Report
-
-**Scenario:** {{scenarioName}} ({{scenarioId}})
-**Failure Time:** {{timestamp}}
-**Priority:** {{priority}}
-
-### Error Details
-\`\`\`
-{{failureMessage}}
-\`\`\`
-
-{{#stackTrace}}
-### Stack Trace
-\`\`\`
-{{stackTrace}}
-\`\`\`
-{{/stackTrace}}
-
-### Reproduction Steps
-{{#reproductionSteps}}
-{{#each this}}
-{{@index}}. {{this}}
-{{/each}}
-{{/reproductionSteps}}
-
-### Environment Information
-- **Platform:** {{systemInfo.platform}} {{systemInfo.arch}}
-- **Node Version:** {{systemInfo.nodeVersion}}
-{{#systemInfo.electronVersion}}
-- **Electron Version:** {{systemInfo.electronVersion}}
-{{/systemInfo.electronVersion}}
-- **Working Directory:** {{systemInfo.workingDirectory}}
-
-{{#screenshots}}
-### Screenshots
-{{#each this}}
-- ![Screenshot]({{this}})
-{{/each}}
-{{/screenshots}}
-
-{{#logs}}
-### Relevant Logs
-\`\`\`
-{{#each this}}
-{{this}}
-{{/each}}
-\`\`\`
-{{/logs}}
-
----
-*This issue was automatically generated by the Agentic Testing System*`,
-  issueLabels: ['bug', 'test-failure', 'automated'],
-  autoAssignUsers: [],
-  createIssuesOnFailure: true,
-  createPullRequestsForFixes: false
-};
+export { DEFAULT_CONFIG as defaultIssueReporterConfig } from './issue/types';
 
 /**
  * GitHub Issue Reporter Agent
  *
- * Provides comprehensive GitHub integration for test failure reporting
- * and issue management with advanced features like deduplication,
- * template-based issue creation, and rate limiting.
- *
- * Implements IAgent<OrchestratorScenario, { issueNumber: number; url: string } | null>:
- * execute() builds a TestFailure from the given scenario and reports it via createIssue().
- * Returns null when issue creation is disabled in config.
+ * Coordinates issue creation, deduplication, and GitHub API submission
+ * for test failure reporting.
  */
 export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber: number; url: string } | null> {
   public readonly name = 'IssueReporter';
   public readonly type = AgentType.GITHUB;
 
-  private octokit: Octokit;
   private config: IssueReporterConfig;
-  private logger: TestLogger;
-  private rateLimitInfo: RateLimitInfo | null = null;
-  private issueTemplates: Map<string, string> = new Map();
-  private fingerprintCache: Map<string, IssueFingerprint> = new Map();
+  private log: TestLogger;
+  private formatter: IssueFormatter;
+  private deduplicator: IssueDeduplicator;
+  private submitter: IssueSubmitter;
+  private octokit: Octokit;
 
   constructor(config: IssueReporterConfig) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.logger = logger.child({ component: 'IssueReporter' });
-    
-    // Initialize Octokit with configuration
+    this.log = logger.child({ component: 'IssueReporter' });
+
     this.octokit = new Octokit({
       auth: this.config.token,
       baseUrl: this.config.baseUrl,
-      request: {
-        timeout: this.config.timeout
-      }
+      request: { timeout: this.config.timeout }
     });
 
-    this.logger.info('IssueReporter initialized', {
+    this.formatter = new IssueFormatter(this.config);
+    this.deduplicator = new IssueDeduplicator();
+    this.submitter = new IssueSubmitter(this.octokit, this.config, this.log);
+
+    this.log.info('IssueReporter initialized', {
       owner: this.config.owner,
       repository: this.config.repository,
       baseUrl: this.config.baseUrl || 'https://api.github.com'
     });
   }
 
-  /**
-   * Initialize the agent
-   */
+  /** Verify API access and refresh rate limits */
   async initialize(): Promise<void> {
     try {
-      // Verify GitHub API access
-      await this.verifyAccess();
-      
-      // Load rate limit information
-      await this.updateRateLimitInfo();
-      
-      // Load custom templates if specified
-      if (this.config.templatesDir) {
-        await this.loadCustomTemplates();
-      }
-
-      this.logger.info('IssueReporter initialized successfully');
+      await this.submitter.verifyAccess();
+      this.log.info('IssueReporter initialized successfully');
     } catch (error) {
-      this.logger.error('Failed to initialize IssueReporter', { error: (error as Error).message });
+      this.log.error('Failed to initialize IssueReporter', { error: (error as Error).message });
       throw error;
     }
   }
 
-  /**
-   * Clean up resources
-   */
+  /** Release cached state */
   async cleanup(): Promise<void> {
-    this.fingerprintCache.clear();
-    this.issueTemplates.clear();
-    this.logger.info('IssueReporter cleaned up');
+    this.deduplicator.clear();
+    this.log.info('IssueReporter cleaned up');
   }
 
   /**
@@ -272,19 +96,14 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
    *
    * Constructs a TestFailure from the scenario metadata and delegates to createIssue().
    * Returns null when createIssuesOnFailure is disabled in config.
-   *
-   * @param scenario - The orchestrator scenario that failed
-   * @returns Created issue details, or null if issue creation is disabled
    */
   async execute(scenario: OrchestratorScenario): Promise<{ issueNumber: number; url: string } | null> {
     if (!this.config.createIssuesOnFailure) {
-      this.logger.info('Issue creation disabled; skipping execute()', {
-        scenarioId: scenario.id
-      });
+      this.log.info('Issue creation disabled; skipping execute()', { scenarioId: scenario.id });
       return null;
     }
 
-    this.logger.info('Executing IssueReporter for scenario', { scenarioId: scenario.id });
+    this.log.info('Executing IssueReporter for scenario', { scenarioId: scenario.id });
 
     const failure: TestFailure = {
       scenarioId: scenario.id,
@@ -298,63 +117,41 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
   }
 
   /**
-   * Create a GitHub issue from a test failure
+   * Create or update a GitHub issue for a test failure.
+   * When deduplication is enabled and a matching issue exists, appends a comment
+   * instead of creating a new issue.
    */
   async createIssue(failure: TestFailure): Promise<{ issueNumber: number; url: string }> {
-    this.logger.info('Creating GitHub issue for test failure', {
+    this.log.info('Creating GitHub issue for test failure', {
       scenarioId: failure.scenarioId,
       category: failure.category
     });
 
     try {
-      // Check rate limits
-      await this.checkRateLimit();
-
-      // Check for duplicates if enabled
       if (this.config.enableDeduplication) {
-        const existingIssue = await this.findDuplicates(failure);
-        if (existingIssue) {
-          this.logger.info('Duplicate issue found, updating instead of creating', {
-            issueNumber: existingIssue.number
-          });
-          
-          await this.addComment(existingIssue.number, 
+        const existing = await this.deduplicator.findDuplicate(
+          failure, this.octokit, this.config, this.log
+        );
+        if (existing) {
+          this.log.info('Duplicate issue found, adding comment', { issueNumber: existing.number });
+          await this.submitter.addComment(existing.number,
             `## Additional Occurrence\n\n**Timestamp:** ${failure.timestamp.toISOString()}\n\nThis failure occurred again with the same fingerprint.`
           );
-          
-          return {
-            issueNumber: existingIssue.number,
-            url: existingIssue.html_url
-          };
+          return { issueNumber: existing.number, url: existing.html_url };
         }
       }
 
-      // Generate issue content
-      const issueOptions = await this.generateIssueContent(failure);
+      const issueOptions = await this.formatter.generateIssueContent(failure);
+      const result = await this.submitter.createIssue(issueOptions);
 
-      // Create the issue
-      const response = await this.octokit.rest.issues.create({
-        owner: this.config.owner,
-        repo: this.config.repository,
-        ...issueOptions
-      });
+      this.log.info('GitHub issue created successfully', result);
 
-      this.logger.info('GitHub issue created successfully', {
-        issueNumber: response.data.number,
-        url: response.data.html_url
-      });
+      const fingerprint = this.deduplicator.generateFingerprint(failure);
+      this.deduplicator.cacheFingerprint(fingerprint);
 
-      // Cache the fingerprint
-      const fingerprint = this.generateFingerprint(failure);
-      this.fingerprintCache.set(fingerprint.hash, fingerprint);
-
-      return {
-        issueNumber: response.data.number,
-        url: response.data.html_url
-      };
-
+      return result;
     } catch (error) {
-      this.logger.error('Failed to create GitHub issue', {
+      this.log.error('Failed to create GitHub issue', {
         error: (error as Error).message,
         scenarioId: failure.scenarioId
       });
@@ -362,579 +159,104 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
     }
   }
 
-  /**
-   * Update an existing GitHub issue
-   */
+  /** Update an existing issue */
   async updateIssue(issueNumber: number, update: UpdateIssueOptions): Promise<void> {
-    this.logger.info('Updating GitHub issue', { issueNumber });
-
+    this.log.info('Updating GitHub issue', { issueNumber });
     try {
-      await this.checkRateLimit();
-
-      await this.octokit.rest.issues.update({
-        owner: this.config.owner,
-        repo: this.config.repository,
-        issue_number: issueNumber,
-        ...update
-      });
-
-      this.logger.info('GitHub issue updated successfully', { issueNumber });
+      await this.submitter.updateIssue(issueNumber, update);
+      this.log.info('GitHub issue updated successfully', { issueNumber });
     } catch (error) {
-      this.logger.error('Failed to update GitHub issue', {
-        error: (error as Error).message,
-        issueNumber
+      this.log.error('Failed to update GitHub issue', {
+        error: (error as Error).message, issueNumber
       });
       throw error;
     }
   }
 
-  /**
-   * Find duplicate issues for a test failure
-   */
+  /** Search for a duplicate issue for the given failure */
   async findDuplicates(failure: TestFailure): Promise<any | null> {
-    if (!this.config.enableDeduplication) {
-      return null;
-    }
-
-    this.logger.debug('Searching for duplicate issues', {
-      scenarioId: failure.scenarioId
-    });
-
-    try {
-      const fingerprint = this.generateFingerprint(failure);
-      const lookbackDate = new Date();
-      lookbackDate.setDate(lookbackDate.getDate() - this.config.deduplicationLookbackDays!);
-
-      // Search for recent issues with similar characteristics
-      const searchQuery = `repo:${this.config.owner}/${this.config.repository} is:issue "${failure.scenarioId}" created:>=${lookbackDate.toISOString().split('T')[0]}`;
-      
-      const searchResponse = await this.octokit.rest.search.issuesAndPullRequests({
-        q: searchQuery,
-        sort: 'created',
-        order: 'desc',
-        per_page: 20
-      });
-
-      // Check each issue for matching fingerprint
-      for (const issue of searchResponse.data.items) {
-        if (issue.body && issue.body.includes(fingerprint.hash)) {
-          this.logger.debug('Found duplicate issue', {
-            issueNumber: issue.number,
-            fingerprint: fingerprint.hash
-          });
-          return issue;
-        }
-      }
-
-      return null;
-    } catch (error) {
-      this.logger.warn('Failed to search for duplicate issues', {
-        error: (error as Error).message
-      });
-      return null;
-    }
+    return this.deduplicator.findDuplicate(failure, this.octokit, this.config, this.log);
   }
 
-  /**
-   * Add a comment to an existing issue
-   */
+  /** Add a comment to an existing issue */
   async addComment(issueNumber: number, comment: string): Promise<void> {
-    this.logger.debug('Adding comment to issue', { issueNumber });
-
+    this.log.debug('Adding comment to issue', { issueNumber });
     try {
-      await this.checkRateLimit();
-
-      await this.octokit.rest.issues.createComment({
-        owner: this.config.owner,
-        repo: this.config.repository,
-        issue_number: issueNumber,
-        body: comment
-      });
-
-      this.logger.debug('Comment added successfully', { issueNumber });
+      await this.submitter.addComment(issueNumber, comment);
+      this.log.debug('Comment added successfully', { issueNumber });
     } catch (error) {
-      this.logger.error('Failed to add comment to issue', {
-        error: (error as Error).message,
-        issueNumber
-      });
+      this.log.error('Failed to add comment', { error: (error as Error).message, issueNumber });
       throw error;
     }
   }
 
-  /**
-   * Attach screenshots to an issue.
-   *
-   * Security: Issue #98 (H-5) - GitHub 'secret' Gists have publicly accessible
-   * URLs despite the public:false flag, meaning any screenshot data uploaded
-   * there (which may contain credentials, PII, or internal application state)
-   * is effectively public to anyone who discovers the URL.
-   *
-   * Screenshots are local CI artifacts and must not be uploaded to Gists or any
-   * other external service. The local file path is returned so callers can
-   * reference the artifact in CI storage (e.g. GitHub Actions upload-artifact).
-   */
+  /** Attach a screenshot to an issue via Gist */
   async attachScreenshot(issueNumber: number, screenshotPath: string): Promise<string> {
-    this.logger.warn(
-      'attachScreenshot: Gist upload is disabled for security reasons (issue #98). ' +
-      'Screenshots are sensitive local artifacts. ' +
-      'Upload via CI artifact storage (e.g. actions/upload-artifact) instead.',
-      { issueNumber, screenshotPath }
-    );
-
-    // Return the local path so callers can use it with CI artifact storage.
-    return screenshotPath;
+    this.log.debug('Attaching screenshot to issue', { issueNumber, screenshotPath });
+    try {
+      const url = await this.submitter.attachScreenshot(issueNumber, screenshotPath);
+      this.log.debug('Screenshot attached successfully', { issueNumber, url });
+      return url;
+    } catch (error) {
+      this.log.error('Failed to attach screenshot', {
+        error: (error as Error).message, issueNumber, screenshotPath
+      });
+      throw error;
+    }
   }
 
-  /**
-   * Create a pull request for fixes
-   */
+  /** Create a pull request */
   async createPullRequest(options: CreatePullRequestOptions): Promise<{ prNumber: number; url: string }> {
-    this.logger.info('Creating pull request', {
-      title: options.title,
-      head: options.head,
-      base: options.base
-    });
-
+    this.log.info('Creating pull request', { title: options.title, head: options.head, base: options.base });
     try {
-      await this.checkRateLimit();
-
-      const response = await this.octokit.rest.pulls.create({
-        owner: this.config.owner,
-        repo: this.config.repository,
-        ...options
-      });
-
-      this.logger.info('Pull request created successfully', {
-        prNumber: response.data.number,
-        url: response.data.html_url
-      });
-
-      return {
-        prNumber: response.data.number,
-        url: response.data.html_url
-      };
+      const result = await this.submitter.createPullRequest(options);
+      this.log.info('Pull request created successfully', result);
+      return result;
     } catch (error) {
-      this.logger.error('Failed to create pull request', {
-        error: (error as Error).message,
-        title: options.title
+      this.log.error('Failed to create pull request', {
+        error: (error as Error).message, title: options.title
       });
       throw error;
     }
   }
 
-  /**
-   * Link issues to each other
-   */
-  async linkIssues(issueNumber: number, relatedIssueNumbers: number[], linkType: 'blocks' | 'duplicates' | 'relates' = 'relates'): Promise<void> {
-    this.logger.debug('Linking issues', {
-      issueNumber,
-      relatedIssues: relatedIssueNumbers,
-      linkType
-    });
-
-    try {
-      const linkText = relatedIssueNumbers
-        .map(num => `#${num}`)
-        .join(', ');
-
-      const comment = `## Related Issues\n\nThis issue ${linkType} ${linkText}`;
-
-      await this.addComment(issueNumber, comment);
-
-      this.logger.debug('Issues linked successfully', { issueNumber });
-    } catch (error) {
-      this.logger.error('Failed to link issues', {
-        error: (error as Error).message,
-        issueNumber
-      });
-      throw error;
-    }
+  /** Link issues with a comment */
+  async linkIssues(
+    issueNumber: number,
+    relatedIssueNumbers: number[],
+    linkType: 'blocks' | 'duplicates' | 'relates' = 'relates'
+  ): Promise<void> {
+    const linkText = relatedIssueNumbers.map(n => `#${n}`).join(', ');
+    await this.addComment(issueNumber, `## Related Issues\n\nThis issue ${linkType} ${linkText}`);
   }
 
-  /**
-   * Assign users to an issue
-   */
+  /** Assign users to an issue */
   async assignUsers(issueNumber: number, assignees: string[]): Promise<void> {
-    this.logger.debug('Assigning users to issue', {
-      issueNumber,
-      assignees
-    });
-
+    this.log.debug('Assigning users to issue', { issueNumber, assignees });
     try {
-      await this.checkRateLimit();
-
-      await this.octokit.rest.issues.addAssignees({
-        owner: this.config.owner,
-        repo: this.config.repository,
-        issue_number: issueNumber,
-        assignees
-      });
-
-      this.logger.debug('Users assigned successfully', {
-        issueNumber,
-        assignees
-      });
+      await this.submitter.addAssignees(issueNumber, assignees);
+      this.log.debug('Users assigned successfully', { issueNumber, assignees });
     } catch (error) {
-      this.logger.error('Failed to assign users', {
-        error: (error as Error).message,
-        issueNumber,
-        assignees
+      this.log.error('Failed to assign users', {
+        error: (error as Error).message, issueNumber, assignees
       });
       throw error;
     }
   }
 
-  /**
-   * Set milestone for an issue
-   */
+  /** Set a milestone on an issue */
   async setMilestone(issueNumber: number, milestoneNumber: number): Promise<void> {
-    this.logger.debug('Setting milestone for issue', {
-      issueNumber,
-      milestoneNumber
-    });
-
-    try {
-      await this.updateIssue(issueNumber, {
-        milestone: milestoneNumber
-      });
-
-      this.logger.debug('Milestone set successfully', {
-        issueNumber,
-        milestoneNumber
-      });
-    } catch (error) {
-      this.logger.error('Failed to set milestone', {
-        error: (error as Error).message,
-        issueNumber,
-        milestoneNumber
-      });
-      throw error;
-    }
+    this.log.debug('Setting milestone for issue', { issueNumber, milestoneNumber });
+    await this.updateIssue(issueNumber, { milestone: milestoneNumber });
   }
 
-  /**
-   * Get current rate limit information
-   */
+  /** Fetch current GitHub rate limit info */
   async getRateLimitInfo(): Promise<RateLimitInfo> {
-    try {
-      const response = await this.octokit.rest.rateLimit.get();
-      const rateLimit = response.data.rate;
-
-      return {
-        limit: rateLimit.limit,
-        used: rateLimit.used,
-        remaining: rateLimit.remaining,
-        reset: new Date(rateLimit.reset * 1000)
-      };
-    } catch (error) {
-      this.logger.error('Failed to get rate limit info', { error: (error as Error).message });
-      throw error;
-    }
-  }
-
-  /**
-   * Generate issue fingerprint for deduplication
-   */
-  private generateFingerprint(failure: TestFailure): IssueFingerprint {
-    const fingerprintData = {
-      scenarioId: failure.scenarioId,
-      errorMessage: failure.message,
-      category: failure.category || 'unknown'
-    };
-
-    // Include stack trace hash if available
-    let stackTraceHash: string | undefined;
-    if (failure.stackTrace) {
-      stackTraceHash = crypto
-        .createHash('sha256')
-        .update(failure.stackTrace)
-        .digest('hex')
-        .substring(0, 8);
-    }
-
-    const hash = crypto
-      .createHash('sha256')
-      .update(JSON.stringify(fingerprintData))
-      .digest('hex')
-      .substring(0, 16);
-
-    return {
-      ...fingerprintData,
-      stackTraceHash,
-      hash
-    };
-  }
-
-  /**
-   * Generate issue content from test failure
-   */
-  private async generateIssueContent(failure: TestFailure): Promise<CreateIssueOptions> {
-    const systemInfo = await this.getSystemInfo();
-    const templateVars: IssueTemplateVars = {
-      scenarioId: failure.scenarioId,
-      scenarioName: failure.scenarioId, // Could be enhanced with actual scenario name
-      failureMessage: failure.message,
-      stackTrace: failure.stackTrace,
-      timestamp: failure.timestamp.toISOString(),
-      environment: this.getSafeEnvironment(),
-      screenshots: failure.screenshots,
-      logs: failure.logs,
-      reproductionSteps: this.generateReproductionSteps(failure),
-      systemInfo: systemInfo,
-      priority: this.determinePriority(failure),
-      category: failure.category
-    };
-
-    const title = this.renderTemplate(this.config.issueTitleTemplate!, templateVars);
-    const body = this.renderTemplate(this.config.issueBodyTemplate!, templateVars);
-
-    // Add fingerprint to body for deduplication
-    const fingerprint = this.generateFingerprint(failure);
-    const bodyWithFingerprint = `${body}\n\n<!-- fingerprint:${fingerprint.hash} -->`;
-
-    return {
-      title,
-      body: this.truncateBody(bodyWithFingerprint),
-      labels: [...(this.config.issueLabels || []), this.determinePriorityLabel(failure)],
-      assignees: this.config.autoAssignUsers
-    };
-  }
-
-  /**
-   * Return a safe subset of environment variables for issue templates.
-   * Never includes secrets (tokens, keys, passwords).
-   */
-  private getSafeEnvironment(): Record<string, string> {
-    const SAFE_KEYS = ['NODE_ENV', 'CI', 'GITHUB_ACTIONS', 'GITHUB_RUN_ID',
-      'GITHUB_WORKFLOW', 'RUNNER_OS', 'RUNNER_ARCH', 'GITHUB_REF', 'GITHUB_SHA'];
-    const safe: Record<string, string> = {};
-    for (const key of SAFE_KEYS) {
-      if (process.env[key]) safe[key] = process.env[key]!;
-    }
-    return safe;
-  }
-
-  /**
-   * Render template with variables
-   */
-  private renderTemplate(template: string, vars: IssueTemplateVars): string {
-    let rendered = template;
-
-    // Simple template rendering (could be enhanced with a proper template engine)
-    Object.entries(vars).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === 'object') {
-          rendered = rendered.replace(
-            new RegExp(`{{${key}\\.(\\w+)}}`, 'g'),
-            (match, prop) => {
-              return value[prop] || match;
-            }
-          );
-        } else if (Array.isArray(value)) {
-          // Handle array rendering
-          rendered = rendered.replace(
-            new RegExp(`{{#${key}}}([\\s\\S]*?){{/${key}}}`, 'g'),
-            (match, content) => {
-              if (value.length === 0) return '';
-              return value.map(item => 
-                content.replace(/{{this}}/g, item)
-              ).join('');
-            }
-          );
-        } else {
-          rendered = rendered.replace(
-            new RegExp(`{{${key}}}`, 'g'),
-            String(value)
-          );
-        }
-      }
-    });
-
-    // Handle conditional blocks
-    rendered = rendered.replace(
-      /{{#(\w+)}}([\s\S]*?){{\/\1}}/g,
-      (match, key, content) => {
-        const value = vars[key as keyof IssueTemplateVars];
-        return (value && ((Array.isArray(value) && value.length > 0) || (!Array.isArray(value) && value !== ''))) 
-          ? content 
-          : '';
-      }
-    );
-
-    return rendered;
-  }
-
-  /**
-   * Generate reproduction steps from failure
-   */
-  private generateReproductionSteps(failure: TestFailure): string[] {
-    const steps = [
-      `Run test scenario: ${failure.scenarioId}`,
-      'Execute the test steps as defined in the scenario'
-    ];
-
-    if (failure.failedStep !== undefined) {
-      steps.push(`Failure occurs at step ${failure.failedStep + 1}`);
-    }
-
-    if (failure.category) {
-      steps.push(`Note: This is a ${failure.category} type failure`);
-    }
-
-    return steps;
-  }
-
-  /**
-   * Determine issue priority from failure
-   */
-  private determinePriority(failure: TestFailure): string {
-    if (failure.category === 'critical' || failure.message.toLowerCase().includes('critical')) {
-      return 'Critical';
-    } else if (failure.message.toLowerCase().includes('error')) {
-      return 'High';
-    } else {
-      return 'Medium';
-    }
-  }
-
-  /**
-   * Determine priority label
-   */
-  private determinePriorityLabel(failure: TestFailure): string {
-    const priority = this.determinePriority(failure);
-    return `priority:${priority.toLowerCase()}`;
-  }
-
-  /**
-   * Get system information
-   */
-  private async getSystemInfo(): Promise<SystemInfo> {
-    return {
-      platform: process.platform,
-      arch: process.arch,
-      nodeVersion: process.version,
-      electronVersion: process.versions.electron,
-      timestamp: new Date().toISOString(),
-      workingDirectory: process.cwd(),
-      environment: {
-        NODE_ENV: process.env.NODE_ENV || 'unknown',
-        CI: process.env.CI || 'false'
-      }
-    };
-  }
-
-  /**
-   * Truncate body to maximum length
-   */
-  private truncateBody(body: string): string {
-    if (body.length <= this.config.maxBodyLength!) {
-      return body;
-    }
-
-    const truncated = body.substring(0, this.config.maxBodyLength! - 100);
-    return `${truncated}\n\n...\n\n*Content truncated due to length limit*`;
-  }
-
-  /**
-   * Verify GitHub API access
-   */
-  private async verifyAccess(): Promise<void> {
-    try {
-      await this.octokit.rest.repos.get({
-        owner: this.config.owner,
-        repo: this.config.repository
-      });
-      
-      this.logger.info('GitHub API access verified');
-    } catch (error) {
-      this.logger.error('GitHub API access verification failed', {
-        error: (error as Error).message
-      });
-      throw new Error(`GitHub API access failed: ${(error as Error).message}`);
-    }
-  }
-
-  /**
-   * Update rate limit information
-   */
-  private async updateRateLimitInfo(): Promise<void> {
-    try {
-      this.rateLimitInfo = await this.getRateLimitInfo();
-      this.logger.debug('Rate limit info updated', this.rateLimitInfo);
-    } catch (error) {
-      this.logger.warn('Failed to update rate limit info', { error: (error as Error).message });
-    }
-  }
-
-  /**
-   * Check rate limit and wait if necessary
-   */
-  private async checkRateLimit(): Promise<void> {
-    if (!this.rateLimitInfo) {
-      await this.updateRateLimitInfo();
-    }
-
-    if (this.rateLimitInfo && this.rateLimitInfo.remaining <= this.config.rateLimitBuffer!) {
-      const waitTime = this.rateLimitInfo.reset.getTime() - Date.now();
-      if (waitTime > 0) {
-        const MAX_WAIT_MS = 60_000;
-        if (waitTime > MAX_WAIT_MS) {
-          throw new Error(`GitHub rate limit exceeded, would need to wait ${Math.ceil(waitTime / 1000)}s. Try again later.`);
-        }
-        this.logger.warn('Rate limit approaching, waiting for reset', {
-          remaining: this.rateLimitInfo.remaining,
-          resetTime: this.rateLimitInfo.reset.toISOString(),
-          waitTimeMs: waitTime
-        });
-
-        await new Promise(resolve => setTimeout(resolve, Math.min(waitTime + 1000, MAX_WAIT_MS)));
-        await this.updateRateLimitInfo();
-      }
-    }
-  }
-
-  /**
-   * Load custom templates from directory
-   */
-  private async loadCustomTemplates(): Promise<void> {
-    if (!this.config.templatesDir) {
-      return;
-    }
-
-    try {
-      const templateDir = this.config.templatesDir;
-      const files = await fs.readdir(templateDir);
-      
-      for (const file of files) {
-        if (file.endsWith('.md') || file.endsWith('.txt')) {
-          const templateName = path.basename(file, path.extname(file));
-          const templatePath = path.join(templateDir, file);
-          const content = await fs.readFile(templatePath, 'utf-8');
-          
-          this.issueTemplates.set(templateName, content);
-          this.logger.debug('Loaded custom template', {
-            name: templateName,
-            path: templatePath
-          });
-        }
-      }
-    } catch (error) {
-      this.logger.warn('Failed to load custom templates', {
-        error: (error as Error).message,
-        templatesDir: this.config.templatesDir
-      });
-    }
+    return this.submitter.getRateLimitInfo();
   }
 }
 
-/**
- * Create an IssueReporter agent instance
- */
+/** Factory function */
 export function createIssueReporter(config: IssueReporterConfig): IssueReporter {
   return new IssueReporter(config);
 }
-
-/**
- * Export default configuration for reference
- */
-export { DEFAULT_CONFIG as defaultIssueReporterConfig };
