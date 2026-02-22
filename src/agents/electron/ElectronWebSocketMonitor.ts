@@ -1,15 +1,20 @@
 /**
- * ElectronWebSocketMonitor - Socket.IO connection management and event collection
+ * ElectronWebSocketMonitor - Socket.IO connection management and event collection.
+ *
+ * Delegates all connection logic to WebSocketAgent instead of using socket.io-client directly.
  */
 
-import { io, Socket } from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { ElectronUIAgentConfig, WebSocketEvent } from './types';
 import { TestLogger } from '../../utils/logger';
+import { WebSocketAgent } from '../WebSocketAgent';
+import { EventListener } from '../websocket/types';
 
 /**
  * Manages a Socket.IO connection for monitoring application WebSocket events.
  * Emits 'websocket_connected', 'websocket_disconnected', and 'websocket_event' on the provided emitter.
+ *
+ * Delegates all connection lifecycle to WebSocketAgent.
  */
 export class ElectronWebSocketMonitor {
   private config: ElectronUIAgentConfig;
@@ -17,7 +22,7 @@ export class ElectronWebSocketMonitor {
   private emitter: EventEmitter;
 
   public events: WebSocketEvent[] = [];
-  private socket: Socket | null = null;
+  private wsAgent?: WebSocketAgent;
 
   constructor(config: ElectronUIAgentConfig, logger: TestLogger, emitter: EventEmitter) {
     this.config = config;
@@ -26,7 +31,7 @@ export class ElectronWebSocketMonitor {
   }
 
   /**
-   * Connect to the configured Socket.IO endpoint and begin collecting events.
+   * Connect to the configured Socket.IO endpoint via WebSocketAgent and begin collecting events.
    * No-op if websocketConfig is not set.
    */
   async connect(): Promise<void> {
@@ -35,65 +40,63 @@ export class ElectronWebSocketMonitor {
     const wsConfig = this.config.websocketConfig;
 
     try {
-      this.socket = io(wsConfig.url, {
-        reconnection: true,
-        reconnectionAttempts: wsConfig.reconnectAttempts,
-        reconnectionDelay: wsConfig.reconnectDelay,
-        timeout: 10000
-      });
-
-      this.socket.on('connect', () => {
-        this.logger.info('Socket.IO connected', { url: wsConfig.url });
-        this.emitter.emit('websocket_connected');
-      });
-
-      wsConfig.events.forEach(eventType => {
-        this.socket!.on(eventType, (data: any) => {
-          const event: WebSocketEvent = {
+      const eventListeners: EventListener[] = wsConfig.events.map(eventType => ({
+        event: eventType,
+        enabled: true,
+        handler: (data: any) => {
+          const wsEvent: WebSocketEvent = {
             type: eventType,
             timestamp: new Date(),
             data,
             source: 'socket.io'
           };
-          this.events.push(event);
-          this.emitter.emit('websocket_event', event);
-        });
-      });
-
-      this.socket.onAny((eventType: string, ...args: any[]) => {
-        if (!wsConfig.events.includes(eventType)) {
-          const event: WebSocketEvent = {
-            type: eventType,
-            timestamp: new Date(),
-            data: args.length === 1 ? args[0] : args,
-            source: 'socket.io'
-          };
-          this.events.push(event);
-          this.emitter.emit('websocket_event', event);
+          this.events.push(wsEvent);
+          this.emitter.emit('websocket_event', wsEvent);
         }
+      }));
+
+      this.wsAgent = new WebSocketAgent({
+        serverURL: wsConfig.url,
+        reconnection: {
+          enabled: true,
+          maxAttempts: wsConfig.reconnectAttempts,
+          delay: wsConfig.reconnectDelay,
+          exponentialBackoff: false,
+          maxBackoffDelay: wsConfig.reconnectDelay * wsConfig.reconnectAttempts,
+          randomizationFactor: 0
+        },
+        connectionTimeout: 10000,
+        eventListeners
       });
 
-      this.socket.on('connect_error', (error) => {
-        this.logger.error('Socket.IO connection error', { error: error.message });
+      this.wsAgent.on('connected', () => {
+        this.logger.info('Socket.IO connected', { url: wsConfig.url });
+        this.emitter.emit('websocket_connected');
       });
 
-      this.socket.on('disconnect', (reason) => {
+      this.wsAgent.on('disconnected', (reason: string) => {
         this.logger.info('Socket.IO disconnected', { reason });
         this.emitter.emit('websocket_disconnected');
       });
 
+      this.wsAgent.on('error', (error: Error) => {
+        this.logger.error('Socket.IO connection error', { error: error.message });
+      });
+
+      await this.wsAgent.initialize();
+      await this.wsAgent.connect(wsConfig.url);
     } catch (error: any) {
       this.logger.error('Failed to connect Socket.IO', { error: error?.message });
     }
   }
 
   /**
-   * Disconnect from the Socket.IO endpoint
+   * Disconnect from the Socket.IO endpoint via WebSocketAgent
    */
-  disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+  async disconnect(): Promise<void> {
+    if (this.wsAgent) {
+      await this.wsAgent.cleanup();
+      this.wsAgent = undefined;
     }
   }
 }
