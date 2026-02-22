@@ -153,7 +153,10 @@ program
         // Use shared default config, with CLI timeout override
         const testConfig: import('./models/Config').TestConfig = config || (() => {
           const defaults = createDefaultConfig();
-          const timeoutMs = parseInt(options.timeout);
+          const timeoutMs = parseInt(options.timeout, 10);
+          if (!Number.isFinite(timeoutMs) || timeoutMs < 1000 || timeoutMs > 3_600_000) {
+            throw new CLIError('--timeout must be a number between 1000 and 3600000 ms', 'INVALID_TIMEOUT');
+          }
           defaults.execution.defaultTimeout = timeoutMs;
           defaults.execution.resourceLimits.maxExecutionTime = timeoutMs;
           defaults.cli.defaultTimeout = timeoutMs;
@@ -198,8 +201,8 @@ program
           logInfo(`Error code: ${error.code}`);
         }
       } else {
-        logError('Test execution failed:');
-        console.error(error);
+        logger.error('Operation failed', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+        logError(`Operation failed: ${error instanceof Error ? error.message : String(error)}`);
       }
       process.exit(1);
     }
@@ -337,8 +340,8 @@ program
           logInfo(`Error code: ${error.code}`);
         }
       } else {
-        logError('Watch mode failed:');
-        console.error(error);
+        logger.error('Operation failed', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+        logError(`Operation failed: ${error instanceof Error ? error.message : String(error)}`);
       }
       process.exit(1);
     }
@@ -456,8 +459,8 @@ program
           logInfo(`Error code: ${error.code}`);
         }
       } else {
-        logError('Validation failed:');
-        console.error(error);
+        logger.error('Operation failed', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+        logError(`Operation failed: ${error instanceof Error ? error.message : String(error)}`);
       }
       process.exit(1);
     }
@@ -545,8 +548,8 @@ program
           logInfo(`Error code: ${error.code}`);
         }
       } else {
-        logError('Failed to list scenarios:');
-        console.error(error);
+        logger.error('Operation failed', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+        logError(`Operation failed: ${error instanceof Error ? error.message : String(error)}`);
       }
       process.exit(1);
     }
@@ -652,8 +655,8 @@ program
           logInfo(`Error code: ${error.code}`);
         }
       } else {
-        logError('Project initialization failed:');
-        console.error(error);
+        logger.error('Operation failed', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+        logError(`Operation failed: ${error instanceof Error ? error.message : String(error)}`);
       }
       process.exit(1);
     }
@@ -1122,15 +1125,16 @@ build/
 
 // Enhanced error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
-  logError('Uncaught exception:');
-  console.error(error);
+  logger.error('Uncaught exception', { error: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : undefined });
+  logError(`Uncaught exception: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  logError('Unhandled rejection at:');
-  console.error('Promise:', promise);
-  console.error('Reason:', reason);
+process.on('unhandledRejection', (reason) => {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const stack = reason instanceof Error ? reason.stack : undefined;
+  logger.error('Unhandled promise rejection', { error: message, stack });
+  logError(`Unhandled promise rejection: ${message}`);
   process.exit(1);
 });
 
