@@ -21,7 +21,7 @@ import { TestSession, OrchestratorScenario, TestInterface, TestStatus } from './
 type TestScenario = OrchestratorScenario;
 import { logger, setupLogger, LogLevel } from './utils/logger';
 import { loadConfigFromFile } from './utils/config';
-import { parseYamlScenarios } from './utils/yamlParser';
+import { parseScenariosFromString } from './utils/yamlParser';
 
 /**
  * Command line arguments interface (used by loadConfiguration)
@@ -309,7 +309,8 @@ export async function loadTestScenarios(scenarioFiles?: string[]): Promise<TestS
     for (const file of scenarioFiles) {
       try {
         const content = await fs.readFile(file, 'utf-8');
-        const fileScenarios = await parseYamlScenarios(content);
+        // parseScenariosFromString accepts YAML content (string), not a file path
+        const fileScenarios = await parseScenariosFromString(content);
         scenarios.push(...fileScenarios);
         logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
       } catch (error) {
@@ -326,7 +327,8 @@ export async function loadTestScenarios(scenarioFiles?: string[]): Promise<TestS
         for (const file of yamlFiles) {
           const filePath = path.join(scenarioDir, file);
           const content = await fs.readFile(filePath, 'utf-8');
-          const fileScenarios = await parseYamlScenarios(content);
+          // parseScenariosFromString accepts YAML content (string), not a file path
+          const fileScenarios = await parseScenariosFromString(content);
           scenarios.push(...fileScenarios);
           logger.debug(`Loaded ${fileScenarios.length} scenarios from ${file}`);
         }
@@ -524,9 +526,20 @@ export async function runTests(options: ProgrammaticTestOptions = {}): Promise<T
   // Setup logging
   setupLogger({ level: LogLevel.INFO });
 
-  // Load configuration
+  // Load configuration - provide all required CliArguments fields so that
+  // loadConfiguration() does not receive undefined for logLevel (which would
+  // throw "TypeError: Cannot read properties of undefined (reading 'toLowerCase')")
+  const cliArgs: CliArguments = {
+    config: opts.configPath || '',
+    suite: opts.suite || 'smoke',
+    dryRun: opts.dryRun || false,
+    logLevel: 'INFO',
+    noIssues: false,
+    verbose: false,
+    debug: false,
+  };
   const baseConfig = opts.configPath
-    ? await loadConfiguration(opts.configPath, { noIssues: false } as CliArguments)
+    ? await loadConfiguration(opts.configPath, cliArgs)
     : createDefaultConfig();
 
   const config = opts.config
