@@ -5,6 +5,7 @@
 import { CircuitBreakerOptions, CircuitBreakerState } from './types';
 import { RetryManager } from './RetryExecutor';
 import { RetryOptions } from './types';
+import { logger } from '../logger';
 
 /**
  * Circuit breaker that wraps an operation and trips open after repeated failures.
@@ -196,7 +197,7 @@ export function createCircuitBreaker<T>(
   return new CircuitBreaker({
     failureThreshold,
     resetTimeout,
-    onCircuitOpen: () => console.warn('Circuit breaker opened'),
-    onCircuitClose: () => console.info('Circuit breaker closed')
+    onCircuitOpen: () => logger.warn('Circuit breaker opened'),
+    onCircuitClose: () => logger.info('Circuit breaker closed')
   });
 }
