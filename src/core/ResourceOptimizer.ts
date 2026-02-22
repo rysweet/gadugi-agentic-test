@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import * as zlib from 'zlib';
 import { ProcessLifecycleManager } from './ProcessLifecycleManager';
 import { PtyTerminal, PtyTerminalConfig } from './PtyTerminal';
 
@@ -136,7 +137,7 @@ export class ResourceOptimizer extends EventEmitter {
   private processManager: ProcessLifecycleManager;
 
   // Resource management
-  private pendingAcquisitions = new Map<string, Array<{ resolve: Function; reject: Function; timeout: NodeJS.Timeout }>>();
+  private pendingAcquisitions = new Map<string, Array<{ resolve: (resource: PtyTerminal) => void; reject: (error: Error) => void; timeout: NodeJS.Timeout }>>();
   private resourceIdCounter = 0;
   private isDestroying = false;
 
@@ -671,7 +672,7 @@ export class ResourceOptimizer extends EventEmitter {
   /**
    * Remove from waiting queue
    */
-  private removeFromWaitingQueue(configKey: string, resolve: Function): void {
+  private removeFromWaitingQueue(configKey: string, resolve: (resource: PtyTerminal) => void): void {
     const requests = this.pendingAcquisitions.get(configKey);
     if (!requests) return;
 
@@ -789,7 +790,6 @@ export class ResourceOptimizer extends EventEmitter {
    * Compress buffer using Node.js built-in compression
    */
   private compressBuffer(buffer: Buffer): Buffer {
-    const zlib = require('zlib');
     try {
       return zlib.gzipSync(buffer);
     } catch (error) {
@@ -802,7 +802,6 @@ export class ResourceOptimizer extends EventEmitter {
    * Decompress buffer
    */
   private decompressBuffer(buffer: Buffer): Buffer {
-    const zlib = require('zlib');
     try {
       return zlib.gunzipSync(buffer);
     } catch (error) {
