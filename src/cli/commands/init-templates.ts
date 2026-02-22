@@ -18,7 +18,7 @@ execution:
 
 cli:
   executablePath: ${template === 'electron' ? 'npm run electron' : 'atg'}
-  workingDirectory: ${process.cwd()}
+  workingDirectory: ./
   defaultTimeout: 30000
   environment: {}
   captureOutput: true

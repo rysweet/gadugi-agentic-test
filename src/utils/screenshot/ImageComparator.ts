@@ -6,6 +6,7 @@
 
 import * as path from 'path';
 import { Jimp, loadFont } from 'jimp';
+import { logger } from '../logger';
 import { FileUtils } from '../fileUtils';
 import pixelmatchDefault from 'pixelmatch';
 import { ComparisonOptions, ComparisonResult, DiffAlgorithm, DiffColorOptions } from './types';
@@ -108,11 +109,18 @@ export class ImageComparator {
         sbs.composite(baseline, 0, 0);
         sbs.composite(actual, tw, 0);
         sbs.composite(diffImage, tw * 2, 0);
-        const fontPath = path.join(__dirname, '../../../node_modules/@jimp/plugin-print/fonts/open-sans/open-sans-16-black/open-sans-16-black.fnt');
-        const font = await loadFont(fontPath);
-        sbs.print({ font, x: 10, y: 10, text: 'Baseline' });
-        sbs.print({ font, x: tw + 10, y: 10, text: 'Actual' });
-        sbs.print({ font, x: tw * 2 + 10, y: 10, text: 'Diff' });
+        try {
+          const fontPath = require.resolve(
+            '@jimp/plugin-print/fonts/open-sans/open-sans-16-black/open-sans-16-black.fnt'
+          );
+          const font = await loadFont(fontPath);
+          sbs.print({ font, x: 10, y: 10, text: 'Baseline' });
+          sbs.print({ font, x: tw + 10, y: 10, text: 'Actual' });
+          sbs.print({ font, x: tw * 2 + 10, y: 10, text: 'Diff' });
+        } catch {
+          // Skip text annotations if the font is not available (e.g. bundled scenarios)
+          logger.warn('Could not load diff font, text annotations disabled');
+        }
         diffImage = sbs;
       }
 
