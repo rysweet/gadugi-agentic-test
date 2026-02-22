@@ -14,6 +14,9 @@ describe('ScenarioLoader', () => {
       const yamlContent = `
 name: Login Test
 description: Test the login flow
+agents:
+  - id: tui-agent
+    type: tui
 steps:
   - name: launch app
     agent: tui-agent
@@ -44,6 +47,9 @@ assertions:
       const wrappedYaml = `
 scenario:
   name: Wrapped Scenario
+  agents:
+    - id: cli-agent
+      type: cli
   steps:
     - name: step one
       agent: cli-agent
@@ -112,6 +118,33 @@ description: Missing steps array
       await expect(ScenarioLoader.loadFromFile('/scenarios/nosteps.yaml')).rejects.toThrow('Scenario must have steps array');
     });
 
+    it('should throw for scenario missing agents', async () => {
+      const noAgentsYaml = `
+name: No Agents
+steps:
+  - name: step one
+    agent: agent-1
+    action: run
+`;
+      mockFs.readFile.mockResolvedValue(noAgentsYaml);
+
+      await expect(ScenarioLoader.loadFromFile('/scenarios/noagents.yaml')).rejects.toThrow('Scenario must have at least one agent');
+    });
+
+    it('should throw for scenario with empty agents array', async () => {
+      const emptyAgentsYaml = `
+name: Empty Agents
+agents: []
+steps:
+  - name: step one
+    agent: agent-1
+    action: run
+`;
+      mockFs.readFile.mockResolvedValue(emptyAgentsYaml);
+
+      await expect(ScenarioLoader.loadFromFile('/scenarios/emptyagents.yaml')).rejects.toThrow('Scenario must have at least one agent');
+    });
+
     it('should throw when file cannot be read', async () => {
       mockFs.readFile.mockRejectedValue(new Error('ENOENT: no such file'));
 
@@ -130,6 +163,9 @@ description: Missing steps array
 
       const scenario1 = `
 name: Test 1
+agents:
+  - id: a
+    type: cli
 steps:
   - name: s1
     agent: a
@@ -137,6 +173,9 @@ steps:
 `;
       const scenario2 = `
 name: Test 2
+agents:
+  - id: b
+    type: tui
 steps:
   - name: s2
     agent: b
@@ -144,6 +183,9 @@ steps:
 `;
       const scenario3 = `
 name: Test 3
+agents:
+  - id: c
+    type: cli
 steps:
   - name: s3
     agent: c
@@ -264,6 +306,9 @@ pattern: !!js/regexp /.*secret.*/i
       const safeYaml = `
 name: Safe Scenario
 description: Uses only JSON-compatible types
+agents:
+  - id: cli-agent
+    type: cli
 steps:
   - name: step one
     agent: cli-agent
@@ -286,9 +331,12 @@ assertions:
   });
 
   describe('validateScenario (via loadFromFile)', () => {
-    it('should accept scenario with only name and steps', async () => {
+    it('should accept scenario with only name, steps, and agents', async () => {
       const minimalYaml = `
 name: Minimal
+agents:
+  - id: agent-1
+    type: cli
 steps:
   - name: do something
     agent: agent-1
@@ -305,6 +353,9 @@ steps:
     it('should accept scenario with steps as non-empty array', async () => {
       const yaml = `
 name: Array Steps
+agents:
+  - id: a1
+    type: cli
 steps:
   - name: first
     agent: a1

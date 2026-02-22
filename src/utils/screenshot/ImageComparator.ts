@@ -4,9 +4,9 @@
  * compareScreenshots, createDiff, calculateSimilarityScore, batchCompare
  */
 
-import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Jimp, loadFont } from 'jimp';
+import { FileUtils } from '../fileUtils';
 import pixelmatchDefault from 'pixelmatch';
 import { ComparisonOptions, ComparisonResult, DiffAlgorithm, DiffColorOptions } from './types';
 import { createPixelDiff, createPerceptualDiff, createStructuralDiff } from './DiffRenderer';
@@ -116,7 +116,7 @@ export class ImageComparator {
         diffImage = sbs;
       }
 
-      await this.ensureDirectoryExists(path.dirname(outputPath));
+      await FileUtils.ensureDirectory(path.dirname(outputPath));
       await diffImage.write(outputPath as `${string}.${string}`);
       return outputPath;
     } catch (error) {
@@ -146,7 +146,4 @@ export class ImageComparator {
     };
   }
 
-  private async ensureDirectoryExists(dirPath: string): Promise<void> {
-    try { await fs.access(dirPath); } catch { await fs.mkdir(dirPath, { recursive: true }); }
-  }
 }

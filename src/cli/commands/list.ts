@@ -92,13 +92,8 @@ export function registerListCommand(program: Command): void {
           });
 
           // Summary
-          const enabled = filteredScenarios.length;
-          const disabled = 0; // All enabled for now
-
           console.log(chalk.bold('Summary:'));
-          console.log(`${chalk.green('●')} Enabled: ${enabled}`);
-          console.log(`${chalk.red('○')} Disabled: ${disabled}`);
-          console.log(`Total: ${filteredScenarios.length}`);
+          console.log(`${chalk.green('●')} Scenarios: ${filteredScenarios.length}`);
         }
       } catch (error) {
         handleCommandError(error);

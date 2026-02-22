@@ -15,6 +15,7 @@ import {
   OrganizationOptions,
   DEFAULT_OPTIONS,
 } from './types';
+import { FileUtils } from '../fileUtils';
 
 export class ScreenshotCapture {
   constructor(
@@ -48,7 +49,7 @@ export class ScreenshotCapture {
       );
     }
 
-    await this.ensureDirectoryExists(path.dirname(finalOptions.path));
+    await FileUtils.ensureDirectory(path.dirname(finalOptions.path));
 
     const buffer = await page.screenshot(finalOptions);
     await fs.writeFile(finalOptions.path, buffer);
@@ -95,7 +96,7 @@ export class ScreenshotCapture {
       );
     }
 
-    await this.ensureDirectoryExists(path.dirname(finalOptions.path));
+    await FileUtils.ensureDirectory(path.dirname(finalOptions.path));
 
     const buffer = await element.screenshot(finalOptions);
     await fs.writeFile(finalOptions.path, buffer);
@@ -202,14 +203,6 @@ export class ScreenshotCapture {
 
   private calculateHash(buffer: Buffer): string {
     return crypto.createHash('md5').update(buffer).digest('hex');
-  }
-
-  private async ensureDirectoryExists(dirPath: string): Promise<void> {
-    try {
-      await fs.access(dirPath);
-    } catch {
-      await fs.mkdir(dirPath, { recursive: true });
-    }
   }
 
   private sleep(ms: number): Promise<void> {

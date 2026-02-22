@@ -79,6 +79,9 @@ export class ScenarioLoader {
     if (!scenario.steps || !Array.isArray(scenario.steps)) {
       throw new Error('Scenario must have steps array');
     }
+    if (!scenario.agents || !Array.isArray(scenario.agents) || scenario.agents.length === 0) {
+      throw new Error('Scenario must have at least one agent');
+    }
     return scenario as ScenarioDefinition;
   }
 }

@@ -278,7 +278,7 @@ export interface TestSession {
     skipped: number;
   };
   /** Configuration used */
-  config?: unknown;
+  config?: import('./Config').TestConfig;
   /** Number of scenarios executed */
   scenariosExecuted?: number;
   /** Number of issues created from failures */

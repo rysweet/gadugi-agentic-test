@@ -11,6 +11,7 @@ import {
   ComparisonResult,
   OrganizationOptions,
 } from './types';
+import { FileUtils } from '../fileUtils';
 
 export class ScreenshotReporter {
   constructor(
@@ -57,7 +58,7 @@ export class ScreenshotReporter {
       })),
     };
 
-    await this.ensureDirectoryExists(path.dirname(reportPath));
+    await FileUtils.ensureDirectory(path.dirname(reportPath));
     await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
     return reportPath;
   }
@@ -78,7 +79,7 @@ export class ScreenshotReporter {
         `${this.runId}.json`
       );
 
-    await this.ensureDirectoryExists(path.dirname(finalManifestPath));
+    await FileUtils.ensureDirectory(path.dirname(finalManifestPath));
 
     const runScreenshots = Array.from(this.metadata.values());
     const manifest = {
@@ -116,15 +117,4 @@ export class ScreenshotReporter {
     return finalFilePath;
   }
 
-  // ----------------------------------------------------------------
-  // Private helpers
-  // ----------------------------------------------------------------
-
-  private async ensureDirectoryExists(dirPath: string): Promise<void> {
-    try {
-      await fs.access(dirPath);
-    } catch {
-      await fs.mkdir(dirPath, { recursive: true });
-    }
-  }
 }
