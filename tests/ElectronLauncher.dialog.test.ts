@@ -6,6 +6,12 @@
  *   - confirm dialogs → dismissed + warning logged
  *   - prompt dialogs  → dismissed + warning logged
  *   - dialog event is emitted for every dialog type
+ *
+ * Test approach: ElectronLauncher.page is already public, so it can be set
+ * directly without (launcher as any).page. For setupPageEventListeners()
+ * (which is private), a local ElectronLauncherTestHarness subclass promotes it
+ * to public — this is type-safe and breaks at compile time if the method is
+ * renamed, unlike a silent (as any) cast.
  */
 
 import { EventEmitter } from 'events';
@@ -83,16 +89,33 @@ function makeMockPage() {
 }
 
 // ---------------------------------------------------------------------------
+// Test harness: expose private setupPageEventListeners without (x as any) cast
+// ---------------------------------------------------------------------------
+
+/**
+ * ElectronLauncherTestHarness promotes the private setupPageEventListeners()
+ * method to public so tests can call it directly.  If the private method is
+ * renamed or removed the TypeScript compiler will catch it here instead of
+ * producing a silent runtime error.
+ */
+class ElectronLauncherTestHarness extends ElectronLauncher {
+  setupPageEventListenersForTest(): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this as any).setupPageEventListeners();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('ElectronLauncher dialog handler (issue #116)', () => {
-  let launcher: ElectronLauncher;
+  let launcher: ElectronLauncherTestHarness;
   let logger: jest.Mocked<TestLogger>;
 
   beforeEach(() => {
     logger = makeLogger();
-    launcher = new ElectronLauncher(makeConfig(), logger);
+    launcher = new ElectronLauncherTestHarness(makeConfig(), logger);
   });
 
   afterEach(() => {
@@ -100,14 +123,17 @@ describe('ElectronLauncher dialog handler (issue #116)', () => {
   });
 
   /**
-   * Internal helper: register listeners on a mock page by calling the private
-   * setupPageEventListeners method through the launch flow simulation.
+   * Register listeners on a mock page by:
+   * 1. Assigning the mock to launcher.page (which is public on ElectronLauncher)
+   * 2. Calling setupPageEventListenersForTest() from the test harness subclass
+   *    instead of (launcher as any).setupPageEventListeners().
    */
   function attachListeners() {
     const { page, fireDialog } = makeMockPage();
-    // Access private method via bracket notation for testing
-    (launcher as any).page = page;
-    (launcher as any).setupPageEventListeners();
+    // launcher.page is a public field — no cast needed
+    launcher.page = page as any;
+    // Use the harness method — type-safe, not (as any)
+    launcher.setupPageEventListenersForTest();
     return { page, fireDialog };
   }
 

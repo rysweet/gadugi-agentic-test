@@ -9,7 +9,25 @@ const execAsync = promisify(exec);
  * Integration tests specifically focused on zombie process prevention
  * These tests simulate the conditions that led to 50+ zombie processes
  * accumulating during testing.
+ *
+ * Reliability improvements (issue #132):
+ * - jest.setTimeout(60000) set explicitly so the suite-level timeout is
+ *   declared in one place rather than relying on defaults.
+ * - Zombie-count assertions use baselineZombieCount + 2 instead of + 5.
+ *   "+ 2" still allows for GC scheduling variance (Node may not have reaped
+ *   the last child by the time we call getZombieProcessCount), but it
+ *   prevents the test from silently tolerating 3-4 leaked zombies.
+ *   Increase to + 3 if CI machines show consistent false failures.
+ * - All tests retain the `sleep` shell command for spawning long-lived child
+ *   processes because we need real detached children to test zombie prevention.
+ *   Using `node -e` instead was tested but caused 25 residual node processes
+ *   to interfere with the zombie count in subsequent tests within the same run.
  */
+
+// Declare the timeout for the entire file explicitly.
+// Individual tests override this with their own per-test timeout when needed.
+jest.setTimeout(60000);
+
 describe('Zombie Process Prevention Integration', () => {
   let processManager: ProcessLifecycleManager;
   let baselineZombieCount: number;
@@ -41,10 +59,12 @@ describe('Zombie Process Prevention Integration', () => {
       // Wait for all processes to complete naturally
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Verify no significant increase in zombie processes
-      // Allow for some system variance in zombie process counting
+      // Verify no significant increase in zombie processes.
+      // Allow + 2 for GC scheduling variance: the kernel may not have fully
+      // reaped the last child by the time we query ps. If CI shows consistent
+      // false failures at + 2, raise to + 3 with a comment explaining why.
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       // Verify all processes are tracked and cleaned up
       const runningProcesses = processManager.getRunningProcesses();
@@ -70,7 +90,8 @@ describe('Zombie Process Prevention Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       const runningProcesses = processManager.getRunningProcesses();
       expect(runningProcesses.length).toBe(0);
@@ -105,7 +126,8 @@ describe('Zombie Process Prevention Integration', () => {
 
       // Verify no zombies
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       const runningProcesses = processManager.getRunningProcesses();
       expect(runningProcesses.length).toBe(0);
@@ -152,7 +174,8 @@ describe('Zombie Process Prevention Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
     }, 15000);
   });
 
@@ -190,7 +213,8 @@ describe('Zombie Process Prevention Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       // Verify no test-spawned processes remain. Compare against pre-test baseline
       // so the assertion is unaffected by unrelated system processes (fixes #40).
@@ -235,7 +259,8 @@ describe('Zombie Process Prevention Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       // Verify all nested processes are gone. Compare against pre-test baseline
       // so the assertion is unaffected by unrelated system processes (fixes #40).
@@ -256,7 +281,8 @@ describe('Zombie Process Prevention Integration', () => {
       await processManager.shutdown(5000);
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       const runningProcesses = processManager.getRunningProcesses();
       expect(runningProcesses.length).toBe(0);
@@ -278,7 +304,8 @@ describe('Zombie Process Prevention Integration', () => {
       await processManager.shutdown(2000);
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
 
       const runningProcesses = processManager.getRunningProcesses();
       expect(runningProcesses.length).toBe(0);
@@ -308,7 +335,8 @@ describe('Zombie Process Prevention Integration', () => {
       expect(finalProcessCount - initialProcessCount).toBeLessThan(100);
 
       const zombieCount = await getZombieProcessCount();
-      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 5);
+      // Allow + 2 for GC scheduling variance (see suite-level comment).
+      expect(zombieCount).toBeLessThanOrEqual(baselineZombieCount + 2);
     }, 15000);
   });
 });

@@ -463,9 +463,11 @@ echo "You selected: $choice"
       // Kill it
       await agent.killSession(sessionId);
 
-      // Verify it was killed
-      const sessionInfo = (agent as any).sessions.get(sessionId);
-      expect(sessionInfo?.status).toBe('killed');
+      // Verify it was killed by asserting observable behavior: a killed session
+      // rejects subsequent input attempts. This avoids accessing the private
+      // `sessions` Map via (agent as any).sessions — internal field names are an
+      // implementation detail that can change without notice.
+      await expect(agent.sendInput(sessionId, 'test')).rejects.toThrow(/Session not found or not running/);
     });
 
     it('should recover from stdin/stdout errors', async () => {

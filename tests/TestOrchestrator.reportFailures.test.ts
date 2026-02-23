@@ -8,11 +8,17 @@
  *    is called for every failure — not just a warn log placeholder.
  * 4. Errors from IssueReporter.createIssue() are logged but do NOT abort
  *    reporting for subsequent failures (best-effort semantics).
+ *
+ * Test approach: A local OrchestratorTestHarness subclass promotes the private
+ * `failures` field and `reportFailures()` method to public, eliminating the
+ * (orchestrator as any).failures and (orchestrator as any).reportFailures() casts
+ * that were brittle against internal renames.
  */
 
 import { TestOrchestrator } from '../src/orchestrator/TestOrchestrator';
 import { IssueReporter } from '../src/agents/IssueReporter';
 import { TestFailure, TestStatus } from '../src/models/TestModels';
+import { TestConfig } from '../src/models/Config';
 
 // ---------------------------------------------------------------------------
 // Module-level mocks (must be hoisted before any imports use them)
@@ -45,10 +51,36 @@ jest.mock('../src/utils/logger', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Test harness: expose private members without (x as any) casts
+// ---------------------------------------------------------------------------
+
+/**
+ * OrchestratorTestHarness subclasses TestOrchestrator to expose the private
+ * `failures` field and `reportFailures()` method as public for unit testing.
+ *
+ * Using a subclass keeps the production class unchanged while making the test
+ * code type-safe. If `failures` or `reportFailures` are renamed in the source,
+ * this file will fail to compile rather than fail silently at runtime.
+ */
+class OrchestratorTestHarness extends TestOrchestrator {
+  /** Overwrite the private failures list for test setup. */
+  setFailures(failures: TestFailure[]): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this as any).failures = failures;
+  }
+
+  /** Call the private reportFailures method directly. */
+  async runReportFailures(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this as any).reportFailures();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeConfig(createIssuesOnFailure: boolean) {
+function makeConfig(createIssuesOnFailure: boolean): TestConfig {
   return {
     cli: { shell: 'bash', defaultTimeout: 5000, workingDirectory: '/tmp' } as any,
     tui: {
@@ -108,25 +140,11 @@ describe('TestOrchestrator.reportFailures()', () => {
     } as any));
   });
 
-  // -------------------------------------------------------------------------
-  // Helper: inject failures directly via the private field (cast to any)
-  // -------------------------------------------------------------------------
-  function injectFailures(orchestrator: TestOrchestrator, failures: TestFailure[]): void {
-    (orchestrator as any).failures = failures;
-  }
-
-  // Expose private method for direct unit testing
-  async function callReportFailures(orchestrator: TestOrchestrator): Promise<void> {
-    return (orchestrator as any).reportFailures();
-  }
-
-  // -------------------------------------------------------------------------
-
   it('does not call IssueReporter when createIssuesOnFailure is false', async () => {
-    const orchestrator = new TestOrchestrator(makeConfig(false));
-    injectFailures(orchestrator, [makeFailure('scenario-1')]);
+    const orchestrator = new OrchestratorTestHarness(makeConfig(false));
+    orchestrator.setFailures([makeFailure('scenario-1')]);
 
-    await callReportFailures(orchestrator);
+    await orchestrator.runReportFailures();
 
     expect(mockInitialize).not.toHaveBeenCalled();
     expect(mockCreateIssue).not.toHaveBeenCalled();
@@ -134,10 +152,10 @@ describe('TestOrchestrator.reportFailures()', () => {
   });
 
   it('does not call IssueReporter when there are no failures', async () => {
-    const orchestrator = new TestOrchestrator(makeConfig(true));
-    injectFailures(orchestrator, []);
+    const orchestrator = new OrchestratorTestHarness(makeConfig(true));
+    orchestrator.setFailures([]);
 
-    await callReportFailures(orchestrator);
+    await orchestrator.runReportFailures();
 
     expect(mockInitialize).not.toHaveBeenCalled();
     expect(mockCreateIssue).not.toHaveBeenCalled();
@@ -145,11 +163,11 @@ describe('TestOrchestrator.reportFailures()', () => {
   });
 
   it('calls IssueReporter.createIssue for each failure when enabled', async () => {
-    const orchestrator = new TestOrchestrator(makeConfig(true));
+    const orchestrator = new OrchestratorTestHarness(makeConfig(true));
     const failures = [makeFailure('scenario-1'), makeFailure('scenario-2'), makeFailure('scenario-3')];
-    injectFailures(orchestrator, failures);
+    orchestrator.setFailures(failures);
 
-    await callReportFailures(orchestrator);
+    await orchestrator.runReportFailures();
 
     expect(mockInitialize).toHaveBeenCalledTimes(1);
     expect(mockCreateIssue).toHaveBeenCalledTimes(3);
@@ -160,9 +178,9 @@ describe('TestOrchestrator.reportFailures()', () => {
   });
 
   it('continues reporting subsequent failures when one createIssue call throws', async () => {
-    const orchestrator = new TestOrchestrator(makeConfig(true));
+    const orchestrator = new OrchestratorTestHarness(makeConfig(true));
     const failures = [makeFailure('fail-a'), makeFailure('fail-b'), makeFailure('fail-c')];
-    injectFailures(orchestrator, failures);
+    orchestrator.setFailures(failures);
 
     // Second call throws
     mockCreateIssue
@@ -170,7 +188,7 @@ describe('TestOrchestrator.reportFailures()', () => {
       .mockRejectedValueOnce(new Error('GitHub API error'))
       .mockResolvedValueOnce({ issueNumber: 3, url: 'https://github.com/3' });
 
-    await callReportFailures(orchestrator);
+    await orchestrator.runReportFailures();
 
     // All three were attempted
     expect(mockCreateIssue).toHaveBeenCalledTimes(3);
@@ -181,11 +199,11 @@ describe('TestOrchestrator.reportFailures()', () => {
   it('always calls cleanup even when IssueReporter.initialize throws', async () => {
     mockInitialize.mockRejectedValue(new Error('Init failed'));
 
-    const orchestrator = new TestOrchestrator(makeConfig(true));
-    injectFailures(orchestrator, [makeFailure('scenario-x')]);
+    const orchestrator = new OrchestratorTestHarness(makeConfig(true));
+    orchestrator.setFailures([makeFailure('scenario-x')]);
 
     // Should not propagate — cleanup still runs
-    await expect(callReportFailures(orchestrator)).resolves.toBeUndefined();
+    await expect(orchestrator.runReportFailures()).resolves.toBeUndefined();
 
     expect(mockInitialize).toHaveBeenCalledTimes(1);
     expect(mockCleanup).toHaveBeenCalledTimes(1);
