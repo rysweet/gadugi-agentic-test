@@ -51,6 +51,15 @@ export interface ElectronUIAgentConfig {
     retryDelay: number;
     restartOnFailure: boolean;
   };
+  /**
+   * When true, the browser and WebSocket connection are closed after each
+   * scenario execution in onAfterExecute(). Useful when the agent is used
+   * outside of ScenarioRouter or in single-scenario mode.
+   *
+   * Default: false — preserves existing behavior where the router or caller
+   * is responsible for closing resources via close() / cleanup().
+   */
+  closeAfterEachScenario?: boolean;
 }
 
 /**

@@ -11,6 +11,55 @@ export interface IAgent<TScenario = unknown, TResult = unknown> {
   cleanup(): Promise<void>;
 }
 
+/**
+ * Interface for pipeline agents that generate or transform data rather than
+ * executing test scenarios.
+ *
+ * Pipeline agents (ComprehensionAgent, PriorityAgent, IssueReporter) have
+ * specialized methods for their particular role (e.g. analyzeFeature(),
+ * analyzePriority(), createIssue()) and should NOT be invoked through the
+ * generic IAgent.execute() path.
+ *
+ * These agents also implement IAgent for backward compatibility, but callers
+ * should prefer the specialized methods.
+ *
+ * Use the \`isPipelineAgent()\` type guard to distinguish pipeline agents from
+ * execution agents at runtime.
+ */
+export interface IPipelineAgent {
+  /** Human-readable agent name */
+  readonly name: string;
+  /** Agent type classification */
+  readonly type: string;
+  /** Initialize the agent (e.g. connect to external services) */
+  initialize(): Promise<void>;
+  /** Release all resources held by the agent */
+  cleanup(): Promise<void>;
+  /**
+   * Marker property that distinguishes pipeline agents from execution agents.
+   * Always true for pipeline agents; absent or false on execution agents.
+   * @internal used by isPipelineAgent() type guard
+   */
+  readonly isPipelineAgent: true;
+}
+
+/**
+ * Type guard: returns true when \`candidate\` satisfies the IPipelineAgent
+ * interface (i.e. has an \`isPipelineAgent: true\` marker).
+ *
+ * @example
+ * if (isPipelineAgent(agent)) {
+ *   // agent is IPipelineAgent — use its specialized methods
+ * }
+ */
+export function isPipelineAgent(candidate: unknown): candidate is IPipelineAgent {
+  return (
+    typeof candidate === 'object' &&
+    candidate !== null &&
+    (candidate as any).isPipelineAgent === true
+  );
+}
+
 // Agent types
 export enum AgentType {
   UI = 'ui',

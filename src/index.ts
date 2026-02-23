@@ -50,6 +50,9 @@ export type {
 } from './core/AdaptiveWaiter';
 
 // Programmatic library API (config, scenario loading, runTests, etc.)
+// NOTE: setupGracefulShutdown is intentionally NOT exported here.
+// It installs global process signal handlers and belongs only in CLI
+// entry points. Import it from './cli/setup' if you need it.
 export {
   createDefaultConfig,
   loadConfiguration,
@@ -58,7 +61,6 @@ export {
   saveResults,
   displayResults,
   performDryRun,
-  setupGracefulShutdown,
   runTests,
   TEST_SUITES,
   TestOrchestrator,
@@ -84,6 +86,7 @@ export type {
 export {
   // Base interfaces and enums
   AgentType,
+  isPipelineAgent,
   // Agent implementations
   ElectronUIAgent, createElectronUIAgent,
   CLIAgent, createCLIAgent,
@@ -98,6 +101,7 @@ export {
 
 export type {
   IAgent,
+  IPipelineAgent,
   // ElectronUIAgent types
   ElectronUIAgentConfig, WebSocketEvent, PerformanceSample,
   // CLIAgent types

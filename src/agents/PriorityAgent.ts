@@ -11,7 +11,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { IAgent, AgentType } from './index';
+import { IAgent, IPipelineAgent, AgentType } from './index';
 import {
   OrchestratorScenario,
   TestFailure,
@@ -51,9 +51,20 @@ export type {
 } from './priority/types';
 export { DEFAULT_PRIORITY_FACTORS } from './priority/types';
 
-export class PriorityAgent extends EventEmitter implements IAgent {
+/**
+ * PriorityAgent - Pipeline agent for test failure priority analysis.
+ *
+ * Implements IPipelineAgent because it analyses test failures and assigns
+ * priorities rather than executing test scenarios itself. The primary API is
+ * analyzePriority(), rankFailures(), and generatePriorityReport().
+ *
+ * Also implements IAgent for backward compatibility.
+ */
+export class PriorityAgent extends EventEmitter implements IAgent, IPipelineAgent {
   public readonly name = 'PriorityAgent';
   public readonly type = AgentType.PRIORITY;
+  /** @inheritdoc IPipelineAgent */
+  public readonly isPipelineAgent = true as const;
 
   private readonly config: Required<PriorityAgentConfig>;
   private readonly analyzer: PriorityAnalyzer;
@@ -88,6 +99,10 @@ export class PriorityAgent extends EventEmitter implements IAgent {
    * Returns null when the scenario has no steps (nothing to analyze).
    * Otherwise constructs a real TestFailure from the scenario context and
    * delegates to analyzePriority().
+   *
+   * @deprecated Prefer calling analyzePriority() or generatePriorityReport()
+   * directly. This method exists only for IAgent backward compatibility.
+   * PriorityAgent is a pipeline agent — use isPipelineAgent() to detect it.
    */
   async execute(scenario: OrchestratorScenario): Promise<PriorityAssignment | null> {
     if (!this.isInitialized) {
