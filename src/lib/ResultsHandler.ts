@@ -40,33 +40,34 @@ export async function saveResults(
 }
 
 /**
- * Print a formatted summary of a TestSession to stdout.
+ * Log a formatted summary of a TestSession via the structured logger.
+ * Uses logger.info instead of console.log so that library consumers can
+ * control log output (suppression, redirection, structured sinks).
  */
 export function displayResults(session: TestSession): void {
-  console.log('\n' + '='.repeat(60));
-  console.log('TEST SESSION RESULTS');
-  console.log('='.repeat(60));
-  console.log(`Session ID: ${session.id}`);
-
   const duration =
     session.endTime && session.startTime
       ? (session.endTime.getTime() - session.startTime.getTime()) / 1000
       : 0;
-  console.log(`Duration: ${duration.toFixed(2)} seconds`);
-  console.log(`Total Tests: ${session.summary.total}`);
-  console.log(`Passed: ${session.summary.passed}`);
-  console.log(`Failed: ${session.summary.failed}`);
-  console.log(`Skipped: ${session.summary.skipped}`);
 
   const passRate =
     session.summary.total > 0
       ? (session.summary.passed / session.summary.total) * 100
       : 0;
-  console.log(`Pass Rate: ${passRate.toFixed(1)}%`);
+
+  logger.info('TEST SESSION RESULTS', {
+    sessionId: session.id,
+    duration: `${duration.toFixed(2)} seconds`,
+    total: session.summary.total,
+    passed: session.summary.passed,
+    failed: session.summary.failed,
+    skipped: session.summary.skipped,
+    passRate: `${passRate.toFixed(1)}%`,
+  });
 }
 
 /**
- * Perform a dry run: display what would be executed without running anything.
+ * Perform a dry run: log what would be executed without running anything.
  */
 export async function performDryRun(
   scenarios: TestScenario[],
@@ -74,22 +75,23 @@ export async function performDryRun(
 ): Promise<void> {
   const filteredScenarios = filterScenariosForSuite(scenarios, suite);
 
-  console.log('\n' + '='.repeat(60));
-  console.log('DRY RUN MODE - Not executing tests');
-  console.log('='.repeat(60));
-  console.log(
-    `Would execute ${filteredScenarios.length} scenarios for suite '${suite}':`
-  );
+  logger.info('DRY RUN MODE - Not executing tests', {
+    suite,
+    scenarioCount: filteredScenarios.length,
+  });
 
   for (const scenario of filteredScenarios) {
-    console.log(
-      `  - [${scenario.interface || TestInterface.CLI}] ${scenario.id}: ${scenario.name}`
-    );
+    const meta: Record<string, unknown> = {
+      interface: scenario.interface || TestInterface.CLI,
+      id: scenario.id,
+      name: scenario.name,
+    };
     if (scenario.description) {
-      console.log(`    ${scenario.description}`);
+      meta.description = scenario.description;
     }
     if (scenario.tags && scenario.tags.length > 0) {
-      console.log(`    Tags: ${scenario.tags.join(', ')}`);
+      meta.tags = scenario.tags;
     }
+    logger.info('  scenario', meta);
   }
 }

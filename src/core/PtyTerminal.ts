@@ -326,6 +326,11 @@ export class PtyTerminal extends EventEmitter {
 
     this.isDestroyed = true;
 
+    // Remove listeners registered in setupProcessManagerEvents() to prevent
+    // dangling references after this terminal is destroyed.
+    this.processManager.removeAllListeners('processExited');
+    this.processManager.removeAllListeners('error');
+
     try {
       // Kill the process if it's running
       if (this.isRunning()) {

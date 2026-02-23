@@ -176,6 +176,12 @@ export class ResourceOptimizer extends EventEmitter {
     if (this.isDestroying) return;
     this.isDestroying = true;
 
+    // Remove all forwarding listeners before stopping sub-optimizers to
+    // prevent dangling references and MaxListenersExceededWarning on reuse.
+    this.memoryOpt.removeAllListeners();
+    this.cpuOpt.removeAllListeners();
+    this.concurrencyOpt.removeAllListeners();
+
     this.memoryOpt.stop();
     this.cpuOpt.stop();
 
