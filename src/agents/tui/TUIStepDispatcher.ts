@@ -70,7 +70,7 @@ export async function dispatchStep(
   }
 }
 
-async function executeAction(step: TestStep, deps: StepDispatcherDeps): Promise<any> {
+async function executeAction(step: TestStep, deps: StepDispatcherDeps): Promise<unknown> {
   const getSessionId = () => step.target || deps.getMostRecentSessionId();
 
   switch (step.action.toLowerCase()) {
