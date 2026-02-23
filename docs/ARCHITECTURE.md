@@ -418,9 +418,11 @@ graph TD
     Orchestrator --> SessionManager
     Orchestrator --> ResultAggregator
 
-    ScenarioRouter --> TUIAgent
-    ScenarioRouter --> CLIAgent
-    ScenarioRouter --> ElectronUIAgent
+    ScenarioRouter --> Registry["agentRegistry: Partial&lt;Record&lt;TestInterface, IAgent&gt;&gt;"]
+    Registry --> TUIAgent
+    Registry --> CLIAgent
+    Registry --> ElectronUIAgent
+    Registry --> APIAgent
 
     ResultAggregator --> PriorityAgent
     ResultAggregator --> IssueReporter
@@ -428,9 +430,21 @@ graph TD
 
 ### ScenarioRouter — `src/orchestrator/ScenarioRouter.ts`
 
-Dispatches scenarios to the correct agent based on the scenario's `type` field.
-Enforces the `maxParallel` concurrency limit via a semaphore. Aborts remaining
-scenarios when `failFast` is set and a scenario fails.
+Dispatches scenarios to the correct agent based on the scenario's `interface` field
+using an **IAgent registry** (`Partial<Record<TestInterface, IAgent>>`).
+
+The registry is built by `TestOrchestrator` in its constructor and passed to
+`ScenarioRouter`. This decoupling means:
+
+- `ScenarioRouter` has no imports of concrete agent classes
+- Adding support for a new `TestInterface` value (e.g. `WEBSOCKET`) only requires
+  registering an entry in `TestOrchestrator` — `ScenarioRouter` needs no changes
+- All five interface types route correctly: `CLI`, `TUI`, `API` (parallel), `GUI`
+  (sequential with initialize/cleanup), and `MIXED` (per-scenario selection)
+- Unregistered interface types are reported as explicit failures, never silently dropped
+
+Enforces the `maxParallel` concurrency limit. Aborts remaining scenarios when
+`failFast` is set and a scenario fails.
 
 ### SessionManager — `src/orchestrator/SessionManager.ts`
 
@@ -717,9 +731,16 @@ sequenceDiagram
 `OrchestratorScenario` (the internal execution type) by `adaptScenarioToComplex()`
 in `src/adapters/scenarioAdapter.ts` before being passed to `ScenarioRouter`.
 
-**Suite filtering:** `TestOrchestrator.filterScenariosForSuite()` selects scenarios
-by tag prefix (`smoke:`, `critical:`, `auth:`) for the `smoke` suite, or passes all
-scenarios for `full` and `regression` suites.
+**Suite filtering:** `filterScenariosForSuite()` from `src/lib/ScenarioLoader.ts`
+selects scenarios by tag prefix (`smoke:`, `critical:`, `auth:`) for the `smoke`
+suite, or passes all scenarios for `full` and `regression` suites. `TestOrchestrator`
+imports and delegates to this canonical function; there is no private duplicate.
+
+**Type naming disambiguation:**
+- `TestModels.TestSuite` — a named collection of `OrchestratorScenario[]` for execution
+- `SuiteFilterConfig` (formerly `TestSuite` in `TestOrchestrator`) — pattern-based
+  suite selector `{ name, patterns: string[], tags?: string[] }` used to decide which
+  scenarios belong to a named run; exported as `OrchestratorTestSuite` from the public API
 
 ---
 

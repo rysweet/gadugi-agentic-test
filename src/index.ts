@@ -141,4 +141,12 @@ export type {
 // Orchestrator exports (TestOrchestrator & createTestOrchestrator already
 // re-exported via ./lib above)
 export type { OrchestratorEvents } from './orchestrator';
-export type { TestSuite as OrchestratorTestSuite } from './orchestrator';
+/**
+ * OrchestratorTestSuite: public alias for SuiteFilterConfig.
+ *
+ * This is the pattern-based suite selector — { name, patterns: string[] }.
+ * It is NOT the same as TestModels.TestSuite which contains scenario objects.
+ * The alias preserves backward compatibility with consumers importing
+ * `OrchestratorTestSuite` from the public API.
+ */
+export type { SuiteFilterConfig as OrchestratorTestSuite } from './orchestrator';

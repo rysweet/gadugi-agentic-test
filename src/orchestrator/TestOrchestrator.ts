@@ -2,7 +2,7 @@
  * TestOrchestrator
  *
  * Thin orchestration facade. Delegates to:
- *   - ScenarioRouter  : dispatch scenarios to agents
+ *   - ScenarioRouter  : dispatch scenarios to agents (via IAgent registry)
  *   - SessionManager  : session lifecycle and persistence
  *   - ResultAggregator: collect results, analyze, report
  */
@@ -14,27 +14,40 @@ import {
   OrchestratorScenario,
   TestResult,
   TestSession,
-  TestFailure
+  TestFailure,
+  TestInterface
 } from '../models/TestModels';
 import { ScenarioDefinition } from '../scenarios';
 import { TestConfig } from '../models/Config';
 import { ElectronUIAgent } from '../agents/ElectronUIAgent';
 import { CLIAgent } from '../agents/CLIAgent';
 import { TUIAgent } from '../agents/TUIAgent';
+import { APIAgent } from '../agents/APIAgent';
+import { IAgent } from '../agents';
 import { IssueReporter } from '../agents/IssueReporter';
 import { PriorityAgent } from '../agents/PriorityAgent';
 import { logger } from '../utils/logger';
 import { ScenarioLoader } from '../scenarios';
 import { adaptScenarioToComplex } from '../adapters/scenarioAdapter';
+import { filterScenariosForSuite } from '../lib/ScenarioLoader';
 import { ScenarioRouter } from './ScenarioRouter';
 import { SessionManager } from './SessionManager';
 import { ResultAggregator } from './ResultAggregator';
 import { adaptTUIConfig, adaptPriorityConfig, adaptUIConfig } from './agentAdapters';
 
 /**
- * Test suite configuration
+ * Suite filter configuration used internally by TestOrchestrator.
+ *
+ * NOTE: This is intentionally distinct from `TestModels.TestSuite`, which
+ * describes a named collection of OrchestratorScenario objects for consumption
+ * by test runners. SuiteFilterConfig describes patterns used to select which
+ * scenarios belong to a named run (e.g. "smoke", "full").
+ *
+ * Distinction at a glance:
+ *   - TestModels.TestSuite  → { name, scenarios: OrchestratorScenario[] }
+ *   - SuiteFilterConfig     → { name, patterns: string[], tags?: string[] }
  */
-export interface TestSuite {
+export interface SuiteFilterConfig {
   name: string;
   description?: string;
   patterns: string[];
@@ -73,6 +86,7 @@ export class TestOrchestrator extends EventEmitter {
     const uiAgent = config.ui?.browser
       ? new ElectronUIAgent(adaptUIConfig(config.ui))
       : null;
+    const apiAgent = new APIAgent(config.api ?? {});
 
     this.issueReporter = new IssueReporter(config.github || {
       token: '', owner: '', repository: '', baseBranch: 'main',
@@ -91,10 +105,24 @@ export class TestOrchestrator extends EventEmitter {
       createIssues: config.github?.createIssuesOnFailure ?? false
     });
 
+    /**
+     * Agent registry: maps each TestInterface value to the IAgent that handles
+     * it. Adding a new interface type (e.g. WEBSOCKET) only requires adding an
+     * entry here — ScenarioRouter needs no changes.
+     *
+     * GUI falls back to cliAgent when no Electron agent is configured so that
+     * scenarios are never silently swallowed.
+     */
+    const agentRegistry: Partial<Record<TestInterface, IAgent>> = {
+      [TestInterface.CLI]:   cliAgent,
+      [TestInterface.TUI]:   tuiAgent,
+      [TestInterface.GUI]:   uiAgent ?? cliAgent,
+      [TestInterface.API]:   apiAgent,
+      [TestInterface.MIXED]: cliAgent,
+    };
+
     this.router = new ScenarioRouter({
-      cliAgent,
-      tuiAgent,
-      uiAgent,
+      agentRegistry,
       maxParallel: config.execution?.maxParallel || 3,
       failFast: config.execution?.continueOnFailure === false,
       retryCount: config.execution?.maxRetries || 2,
@@ -124,7 +152,7 @@ export class TestOrchestrator extends EventEmitter {
 
     try {
       const orchestratorScenarios = loadedScenarios.map(adaptScenarioToComplex);
-      const filtered = this.filterScenariosForSuite(orchestratorScenarios, suite);
+      const filtered = filterScenariosForSuite(orchestratorScenarios, suite);
       logger.info(`Selected ${filtered.length} scenarios for suite '${suite}'`);
 
       this.emit('phase:start', 'execution');
@@ -163,7 +191,7 @@ export class TestOrchestrator extends EventEmitter {
     try {
       this.emit('phase:start', 'discovery');
       const scenarios = await this.loadScenarios(scenarioFiles);
-      const filtered = this.filterScenariosForSuite(scenarios, suite);
+      const filtered = filterScenariosForSuite(scenarios, suite);
       logger.info(`Selected ${filtered.length} scenarios for suite '${suite}'`);
       this.emit('phase:end', 'discovery');
 
@@ -275,38 +303,6 @@ export class TestOrchestrator extends EventEmitter {
 
     logger.info(`Loaded ${scenarios.length} total test scenarios`);
     return scenarios;
-  }
-
-  private filterScenariosForSuite(scenarios: OrchestratorScenario[], suite: string): OrchestratorScenario[] {
-    const suiteConfig: Record<string, string[]> = {
-      smoke: ['smoke:', 'critical:', 'auth:'],
-      regression: ['*'],
-      full: ['*']
-    };
-    const patterns = suiteConfig[suite] || ['*'];
-    if (patterns.includes('*')) return scenarios;
-
-    const filtered: OrchestratorScenario[] = [];
-    for (const scenario of scenarios) {
-      for (const pattern of patterns) {
-        if (pattern.endsWith(':')) {
-          const prefix = pattern.slice(0, -1);
-          if (scenario.id.startsWith(prefix) || scenario.tags?.some(t => t.startsWith(prefix))) {
-            filtered.push(scenario); break;
-          }
-        } else if (pattern.includes('*')) {
-          const regex = new RegExp(pattern.replace('*', '.*'));
-          if (regex.test(scenario.id) || scenario.tags?.some(t => regex.test(t))) {
-            filtered.push(scenario); break;
-          }
-        } else {
-          if (scenario.id === pattern || scenario.tags?.includes(pattern)) {
-            filtered.push(scenario); break;
-          }
-        }
-      }
-    }
-    return filtered;
   }
 
 }
