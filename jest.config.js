@@ -15,7 +15,7 @@ module.exports = {
     }]
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(pixelmatch|jimp)/)'
+    'node_modules/(?!(pixelmatch|jimp|chalk)/)'
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
