@@ -19,6 +19,6 @@
  */
 export function generateId(prefix = ''): string {
   const ts = Date.now();
-  const rand = Math.random().toString(36).substr(2, 9);
+  const rand = Math.random().toString(36).slice(2, 11);
   return prefix ? `${prefix}_${ts}_${rand}` : `${ts}_${rand}`;
 }

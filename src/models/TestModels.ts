@@ -326,7 +326,7 @@ export interface TestAssertion {
 }
 
 // Backward compatibility aliases
-/** @deprecated Use OrchestratorStep - kept for backward compatibility with existing code */
+/** @deprecated Use OrchestratorStep instead - kept for backward compatibility with existing code. Will be removed in v2.0. */
 export type TestStep = OrchestratorStep;
-/** @deprecated Use OrchestratorScenario directly - this alias is removed to resolve naming conflict with scenarios/ScenarioDefinition */
+/** @deprecated Use OrchestratorScenario directly - this alias is removed to resolve naming conflict with scenarios/ScenarioDefinition. Will be removed in v2.0. */
 // export type TestScenario = OrchestratorScenario; // REMOVED: caused naming conflict with scenarios/index.ts TestScenario

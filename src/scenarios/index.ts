@@ -100,7 +100,7 @@ export interface ScenarioDefinition {
   metadata?: ScenarioMetadata;
 }
 
-/** @deprecated Use ScenarioDefinition instead - renamed to resolve naming conflict with models/TestModels.TestScenario */
+/** @deprecated Use ScenarioDefinition instead - renamed to resolve naming conflict with models/TestModels.TestScenario. Will be removed in v2.0. */
 export type TestScenario = ScenarioDefinition;
 
 export interface ScenarioConfig {

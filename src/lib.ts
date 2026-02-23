@@ -138,5 +138,5 @@ export type { TestSession } from './models/TestModels';
 
 export { TestInterface } from './models/TestModels';
 export type { TestResult, TestSuite, OrchestratorScenario } from './models/TestModels';
-/** @deprecated Use OrchestratorScenario */
+/** @deprecated Use OrchestratorScenario instead. Will be removed in v2.0. */
 export type { OrchestratorScenario as TestScenario } from './models/TestModels';

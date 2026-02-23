@@ -1,7 +1,7 @@
 // Core exports
 export { ProcessLifecycleManager, processLifecycleManager } from './core/ProcessLifecycleManager';
 export { PtyTerminal } from './core/PtyTerminal';
-/** @deprecated Use PtyTerminal instead - renamed to resolve naming conflict with agents/TUIAgent */
+/** @deprecated Use PtyTerminal instead - renamed to resolve naming conflict with agents/TUIAgent. Will be removed in v2.0. */
 export { PtyTerminal as CoreTUIAgent } from './core/PtyTerminal';
 export { ResourceOptimizer, resourceOptimizer } from './core/ResourceOptimizer';
 export {
@@ -29,9 +29,9 @@ export type {
   PtyTerminalEvents
 } from './core/PtyTerminal';
 
-/** @deprecated Use PtyTerminalConfig instead */
+/** @deprecated Use PtyTerminalConfig instead. Will be removed in v2.0. */
 export type { PtyTerminalConfig as CoreTUIAgentConfig } from './core/PtyTerminal';
-/** @deprecated Use PtyTerminalEvents instead */
+/** @deprecated Use PtyTerminalEvents instead. Will be removed in v2.0. */
 export type { PtyTerminalEvents as CoreTUIAgentEvents } from './core/PtyTerminal';
 
 export type {

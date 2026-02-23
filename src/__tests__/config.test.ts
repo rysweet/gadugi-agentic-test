@@ -302,6 +302,115 @@ logging:
       expect(result.valid).toBe(false);
       expect(result.errors.some(e => e.includes('executionOrder'))).toBe(true);
     });
+
+    it('should reject createIssuesOnFailure:true when github.token is missing', () => {
+      const result = manager.validateConfig({
+        github: { createIssuesOnFailure: true, token: '' }
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('github.token'))).toBe(true);
+    });
+
+    it('should accept createIssuesOnFailure:true when github.token is non-empty', () => {
+      const result = manager.validateConfig({
+        github: { createIssuesOnFailure: true, token: 'ghp_abc123' }
+      });
+
+      expect(result.errors.some(e => e.includes('github.token'))).toBe(false);
+    });
+
+    it('should accept createIssuesOnFailure:false with empty token', () => {
+      const result = manager.validateConfig({
+        github: { createIssuesOnFailure: false, token: '' }
+      });
+
+      expect(result.errors.some(e => e.includes('github.token'))).toBe(false);
+    });
+
+    it('should reject maxRetries greater than 10', () => {
+      const result = manager.validateConfig({
+        execution: { maxRetries: 11 }
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('maxRetries'))).toBe(true);
+    });
+
+    it('should reject maxRetries less than 0', () => {
+      const result = manager.validateConfig({
+        execution: { maxRetries: -1 }
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('maxRetries'))).toBe(true);
+    });
+
+    it('should accept maxRetries of 0', () => {
+      const result = manager.validateConfig({
+        execution: { maxRetries: 0 }
+      });
+
+      expect(result.errors.some(e => e.includes('maxRetries'))).toBe(false);
+    });
+
+    it('should accept maxRetries of 10', () => {
+      const result = manager.validateConfig({
+        execution: { maxRetries: 10 }
+      });
+
+      expect(result.errors.some(e => e.includes('maxRetries'))).toBe(false);
+    });
+
+    it('should reject tui.shell that is an empty string', () => {
+      const result = manager.validateConfig({
+        tui: { shell: '' }
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('tui.shell'))).toBe(true);
+    });
+
+    it('should accept tui.shell that is a non-empty string', () => {
+      const result = manager.validateConfig({
+        tui: { shell: '/bin/bash' }
+      });
+
+      expect(result.errors.some(e => e.includes('tui.shell'))).toBe(false);
+    });
+
+    it('should accept tui.shell absent (undefined)', () => {
+      const result = manager.validateConfig({
+        tui: {}
+      });
+
+      expect(result.errors.some(e => e.includes('tui.shell'))).toBe(false);
+    });
+
+    it('should reject reporting.formats containing unknown format', () => {
+      const result = manager.validateConfig({
+        reporting: { formats: ['html', 'xml'] }
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('reporting.formats'))).toBe(true);
+    });
+
+    it('should accept reporting.formats with only html and json', () => {
+      const result = manager.validateConfig({
+        reporting: { formats: ['html', 'json'] }
+      });
+
+      expect(result.errors.some(e => e.includes('reporting.formats'))).toBe(false);
+    });
+
+    it('should accept reporting.formats with only html', () => {
+      const result = manager.validateConfig({
+        reporting: { formats: ['html'] }
+      });
+
+      expect(result.errors.some(e => e.includes('reporting.formats'))).toBe(false);
+    });
   });
 
   describe('exportToFile', () => {

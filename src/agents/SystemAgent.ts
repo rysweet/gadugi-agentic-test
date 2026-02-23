@@ -28,6 +28,7 @@ export class SystemAgent extends EventEmitter implements IAgent {
   private config: SystemAgentConfig;
   private logger: TestLogger;
   private monitoringInterval?: NodeJS.Timeout;
+  private baselineCaptureInterval?: NodeJS.Timeout;
   private isMonitoring = false;
   private metricsHistory: SystemMetrics[] = [];
   private performanceBaseline?: PerformanceBaseline;
@@ -89,6 +90,10 @@ export class SystemAgent extends EventEmitter implements IAgent {
     this.logger.info('Cleaning up SystemAgent...');
     try {
       await this.stopMonitoring();
+      if (this.baselineCaptureInterval) {
+        clearInterval(this.baselineCaptureInterval);
+        this.baselineCaptureInterval = undefined;
+      }
       this.fsWatcher.closeAll();
       if (this.config.cleanup?.killZombieProcesses) await this.killZombieProcesses();
       if (this.config.cleanup?.cleanTempFiles) await this.cleanTempFiles();
@@ -175,11 +180,14 @@ export class SystemAgent extends EventEmitter implements IAgent {
     const duration = this.config.performanceBaseline?.baselineDuration || 30000;
     const samples: SystemMetrics[] = [];
     this.logger.info(`Capturing performance baseline for ${duration}ms...`);
-    const interval = setInterval(async () => {
+    this.baselineCaptureInterval = setInterval(async () => {
       try { samples.push(await this.captureMetrics()); } catch (e) { this.logger.error('Error capturing baseline sample', { error: e }); }
     }, 1000);
     setTimeout(() => {
-      clearInterval(interval);
+      if (this.baselineCaptureInterval) {
+        clearInterval(this.baselineCaptureInterval);
+        this.baselineCaptureInterval = undefined;
+      }
       if (samples.length === 0) return;
       const len = samples.length;
       this.performanceBaseline = {
