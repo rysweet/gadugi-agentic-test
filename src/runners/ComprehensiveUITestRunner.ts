@@ -136,13 +136,13 @@ export class ComprehensiveUITestRunner {
 
   private generateFinalReport(): void {
     this.tester.logSection('Test Results Summary');
-    console.log(`${colors.green}Passed: ${this.results.passed}${colors.reset}`);
-    console.log(`${colors.red}Failed: ${this.results.failed}${colors.reset}`);
+    process.stdout.write(`${colors.green}Passed: ${this.results.passed}${colors.reset}\n`);
+    process.stdout.write(`${colors.red}Failed: ${this.results.failed}${colors.reset}\n`);
 
     if (this.results.errors.length > 0) {
-      console.log(`\n${colors.red}Errors:${colors.reset}`);
+      process.stdout.write(`\n${colors.red}Errors:${colors.reset}\n`);
       this.results.errors.forEach((err, idx) => {
-        console.log(`  ${idx + 1}. ${err.test}: ${err.error}`);
+        process.stdout.write(`  ${idx + 1}. ${err.test}: ${err.error}\n`);
       });
     }
   }

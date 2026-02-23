@@ -23,7 +23,7 @@ export class WebSocketMessageHandler {
     private readonly connection: WebSocketConnection
   ) {}
 
-  async sendMessage(event: string, data?: any, ack?: boolean): Promise<WebSocketMessage> {
+  async sendMessage(event: string, data?: unknown, ack?: boolean): Promise<WebSocketMessage> {
     const socket = this.connection.getSocket();
     if (!socket || !socket.connected) throw new Error('WebSocket is not connected');
 
@@ -46,7 +46,7 @@ export class WebSocketMessageHandler {
 
     if (ack) {
       return new Promise((resolve) => {
-        socket.emit(event, data, (response: any) => {
+        socket.emit(event, data, (response: unknown) => {
           this.handleAcknowledgment(messageId, response);
           resolve(message);
         });
@@ -56,7 +56,7 @@ export class WebSocketMessageHandler {
     return message;
   }
 
-  async waitForMessage(event: string, timeout = 10000, filter?: (data: any) => boolean): Promise<WebSocketMessage> {
+  async waitForMessage(event: string, timeout = 10000, filter?: (data: unknown) => boolean): Promise<WebSocketMessage> {
     const socket = this.connection.getSocket();
     if (!socket) throw new Error('WebSocket is not connected');
 
@@ -66,7 +66,7 @@ export class WebSocketMessageHandler {
         reject(new Error(`Timeout waiting for event: ${event}`));
       }, timeout);
 
-      const handler = (data: any) => {
+      const handler = (data: unknown) => {
         if (filter && !filter(data)) return;
         clearTimeout(handle);
         socket.off(event, handler);
@@ -100,7 +100,7 @@ export class WebSocketMessageHandler {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
       const timeout = setTimeout(() => reject(new Error('Ping timeout')), 5000);
-      socket.emit('ping', startTime, (_response: any) => {
+      socket.emit('ping', startTime, (_response: unknown) => {
         clearTimeout(timeout);
         const latency = Date.now() - startTime;
         this.recordLatency('ping', latency);
@@ -111,7 +111,7 @@ export class WebSocketMessageHandler {
 
   addEventListener(event: string, _handlerStr?: string): void {
     const socket = this.connection.getSocket();
-    const handler = (data: any) => { this.logger.debug(`Event received: ${event}`, { data }); };
+    const handler = (data: unknown) => { this.logger.debug(`Event received: ${event}`, { data }); };
     if (socket) { socket.on(event, handler); this.eventHandlers.set(event, handler); }
   }
 
@@ -129,7 +129,7 @@ export class WebSocketMessageHandler {
       const socket = this.connection.getSocket();
       if (!listener.enabled || !socket) return;
 
-      const wrapped = (data: any) => {
+      const wrapped = (data: unknown) => {
         const message: WebSocketMessage = {
           id: this.generateMessageId(), event: listener.event, data,
           timestamp: new Date(), direction: 'received', namespace: this.config.namespace
@@ -162,12 +162,15 @@ export class WebSocketMessageHandler {
   setupDefaultEventListeners(): void {
     this.config.eventListeners.push({
       event: 'error',
-      handler: (error: any) => { this.logger.error('WebSocket error event', { error }); },
+      handler: (error: unknown) => { this.logger.error('WebSocket error event', { error }); },
       enabled: true
     });
     this.config.eventListeners.push({
       event: 'pong',
-      handler: (latency: number) => { this.recordLatency('ping', latency); },
+      handler: (data: unknown) => {
+        const latency = typeof data === 'number' ? data : Date.now();
+        this.recordLatency('ping', latency);
+      },
       enabled: this.config.performance.measureLatency
     });
   }
@@ -194,7 +197,7 @@ export class WebSocketMessageHandler {
     this.eventHandlers.clear();
   }
 
-  private handleAcknowledgment(messageId: string, _response: any): void {
+  private handleAcknowledgment(messageId: string, _response: unknown): void {
     const pending = this.pendingMessages.get(messageId);
     if (pending && this.config.performance.measureLatency) {
       this.recordLatency(pending.event, Date.now() - pending.timestamp.getTime());

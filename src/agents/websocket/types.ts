@@ -23,7 +23,7 @@ export enum ConnectionState {
 export interface WebSocketMessage {
   id: string;
   event: string;
-  data: any;
+  data: unknown;
   timestamp: Date;
   direction: 'sent' | 'received';
   ack?: boolean;
@@ -61,7 +61,7 @@ export interface LatencyMeasurement {
  */
 export interface EventListener {
   event: string;
-  handler: (data: any) => void | Promise<void>;
+  handler: (data: unknown) => void | Promise<void>;
   once?: boolean;
   enabled: boolean;
 }

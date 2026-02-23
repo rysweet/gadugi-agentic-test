@@ -68,7 +68,7 @@ export class SmartUITestRunner {
   }
 
   private log(color: ColorKey, emoji: string, msg: string): void {
-    console.log(`${colors[color]}${emoji} ${msg}${colors.reset}`);
+    process.stdout.write(`${colors[color]}${emoji} ${msg}${colors.reset}\n`);
   }
 
   /** Initialize the test runner: create screenshot dir and launch Electron. */

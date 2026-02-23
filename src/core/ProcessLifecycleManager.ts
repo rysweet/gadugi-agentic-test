@@ -418,12 +418,11 @@ export function getProcessLifecycleManager(): ProcessLifecycleManager {
 export const processLifecycleManager: ProcessLifecycleManager = new Proxy(
   {} as ProcessLifecycleManager,
   {
-    get(_target, prop) {
-      return (getProcessLifecycleManager() as any)[prop];
+    get(_target, prop, receiver) {
+      return Reflect.get(getProcessLifecycleManager(), prop, receiver);
     },
-    set(_target, prop, value) {
-      (getProcessLifecycleManager() as any)[prop] = value;
-      return true;
+    set(_target, prop, value, receiver) {
+      return Reflect.set(getProcessLifecycleManager(), prop, value, receiver);
     }
   }
 );

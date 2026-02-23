@@ -50,15 +50,15 @@ export class UIFlowTester {
   // ---------------------------------------------------------------------------
 
   private logSuccess(msg: string): void {
-    console.log(`${colors.green}✅ ${msg}${colors.reset}`);
+    process.stdout.write(`${colors.green}✅ ${msg}${colors.reset}\n`);
     this.results.passed++;
   }
 
   private logError(msg: string, error?: Error | string): void {
-    console.log(`${colors.red}❌ ${msg}${colors.reset}`);
+    process.stdout.write(`${colors.red}❌ ${msg}${colors.reset}\n`);
     if (error) {
       const errorMsg = error instanceof Error ? error.message : error;
-      console.log(`   ${colors.red}${errorMsg}${colors.reset}`);
+      process.stdout.write(`   ${colors.red}${errorMsg}${colors.reset}\n`);
     }
     this.results.failed++;
     this.results.errors.push({
@@ -68,13 +68,13 @@ export class UIFlowTester {
   }
 
   logInfo(msg: string): void {
-    console.log(`${colors.blue}ℹ️  ${msg}${colors.reset}`);
+    process.stdout.write(`${colors.blue}ℹ️  ${msg}${colors.reset}\n`);
   }
 
   logSection(msg: string): void {
-    console.log(`\n${colors.yellow}${'='.repeat(60)}${colors.reset}`);
-    console.log(`${colors.yellow}${msg}${colors.reset}`);
-    console.log(`${colors.yellow}${'='.repeat(60)}${colors.reset}\n`);
+    process.stdout.write(`\n${colors.yellow}${'='.repeat(60)}${colors.reset}\n`);
+    process.stdout.write(`${colors.yellow}${msg}${colors.reset}\n`);
+    process.stdout.write(`${colors.yellow}${'='.repeat(60)}${colors.reset}\n\n`);
   }
 
   // ---------------------------------------------------------------------------
