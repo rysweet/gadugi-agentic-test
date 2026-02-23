@@ -11,11 +11,11 @@
   },
   "bin": {
     "gadugi-test": "./dist/cli.js",
-    "gadugi-smart-test": "./dist/runners/SmartUITestRunner.js"
+    "gadugi-smart-test": "./dist/runners/smart-cli.js"
   },
   "scripts": {
     "build": "tsc --skipLibCheck --noEmitOnError false && npm run postbuild",
-    "postbuild": "chmod +x dist/cli.js dist/runners/SmartUITestRunner.js 2>/dev/null || true",
+    "postbuild": "chmod +x dist/cli.js dist/runners/smart-cli.js 2>/dev/null || true",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",

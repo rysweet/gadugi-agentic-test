@@ -52,6 +52,7 @@ export class TUIAgent extends BaseAgent {
   private sessionManager: TUISessionManager;
   private inputSimulator: TUIInputSimulator;
   private menuNavigator: TUIMenuNavigator;
+  private errorHandler: (error: Error) => void;
 
   constructor(config: TUIAgentConfig = {}) {
     super();
@@ -60,7 +61,9 @@ export class TUIAgent extends BaseAgent {
     this.sessionManager = new TUISessionManager(this.config, this.logger, this);
     this.inputSimulator = new TUIInputSimulator(this.config, this.logger);
     this.menuNavigator = new TUIMenuNavigator(this.logger);
-    this.on('error', (error) => this.logger.error('TUIAgent error', { error: error.message }));
+    // Store the handler reference so it can be removed in cleanup()
+    this.errorHandler = (error: Error) => this.logger.error('TUIAgent error', { error: error.message });
+    this.on('error', this.errorHandler);
   }
 
   async initialize(): Promise<void> {
@@ -194,6 +197,9 @@ export class TUIAgent extends BaseAgent {
       if (this.performanceMonitor) { clearInterval(this.performanceMonitor); this.performanceMonitor = undefined; }
       await this.sessionManager.cleanupSessions();
       this.menuNavigator.resetContext();
+      // Remove the error handler registered in the constructor to prevent
+      // dangling listener references after cleanup.
+      this.removeListener('error', this.errorHandler);
       this.logger.info('TUIAgent cleanup completed');
       this.emit('cleanup');
     } catch (error: any) {
