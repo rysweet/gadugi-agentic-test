@@ -21,7 +21,6 @@ export {
   saveResults,
   displayResults,
   performDryRun,
-  setupGracefulShutdown,
   runTests,
   TestOrchestrator,
   createTestOrchestrator
@@ -34,6 +33,13 @@ export type {
   TestResult,
   OrchestratorScenario
 } from './lib';
+
+/**
+ * @deprecated setupGracefulShutdown has moved to src/cli/setup.ts.
+ * Import from './cli/setup' in CLI entry points only.
+ * This re-export will be removed in the next major release.
+ */
+export { setupGracefulShutdown } from './cli/setup';
 
 // Re-export TestStatus for backwards compatibility
 export { TestStatus } from './models/TestModels';

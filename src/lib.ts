@@ -11,6 +11,9 @@
  *   - ConfigurationLoader  – default config factory + file loading
  *   - ScenarioLoader       – YAML scenario discovery + suite filtering
  *   - ResultsHandler       – result persistence + display + dry-run
+ *
+ * NOTE: setupGracefulShutdown has been moved to src/cli/setup.ts.
+ * It is a CLI-only concern and must NOT be part of the library API.
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -19,7 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { TestOrchestrator, createTestOrchestrator } from './orchestrator';
 import { TestConfig } from './models/Config';
 import { TestSession, TestStatus } from './models/TestModels';
-import { logger, setupLogger, LogLevel } from './utils/logger';
+import { setupLogger, LogLevel } from './utils/logger';
 
 // Sub-module re-exports
 export { createDefaultConfig, loadConfiguration } from './lib/ConfigurationLoader';
@@ -32,36 +35,6 @@ export { saveResults, displayResults, performDryRun } from './lib/ResultsHandler
 import { createDefaultConfig, loadConfiguration } from './lib/ConfigurationLoader';
 import { loadTestScenarios } from './lib/ScenarioLoader';
 import { saveResults, performDryRun } from './lib/ResultsHandler';
-
-/**
- * Setup graceful shutdown handlers.
- *
- * Installs process-level signal handlers and should only be
- * called from CLI entry points, never from library code.
- */
-export function setupGracefulShutdown(orchestrator: TestOrchestrator): void {
-  const shutdown = (signal: string) => {
-    logger.info(`Received ${signal}, shutting down gracefully...`);
-    orchestrator.abort();
-    setTimeout(() => {
-      logger.warn('Forcing shutdown');
-      process.exit(1);
-    }, 5000);
-  };
-
-  process.on('SIGINT',  () => shutdown('SIGINT'));
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection:', { reason, promise });
-    process.exit(1);
-  });
-
-  process.on('uncaughtException', (error) => {
-    logger.error('Uncaught Exception:', error);
-    process.exit(1);
-  });
-}
 
 /**
  * Programmatic API options for running tests
@@ -78,9 +51,9 @@ export interface ProgrammaticTestOptions {
 /**
  * Run tests programmatically.
  *
- * Unlike the CLI entry points, this function does NOT install
- * signal handlers. Callers who want graceful shutdown should
- * call `setupGracefulShutdown()` separately.
+ * This function does NOT install signal handlers.
+ * CLI entry points that need graceful shutdown should import
+ * \`setupGracefulShutdown\` from \`./cli/setup\` (CLI-only).
  */
 export async function runTests(options: ProgrammaticTestOptions = {}): Promise<TestSession> {
   const opts: ProgrammaticTestOptions = {

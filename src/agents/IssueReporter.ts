@@ -10,7 +10,7 @@
 import { Octokit } from '@octokit/rest';
 import { TestFailure, OrchestratorScenario } from '../models/TestModels';
 import { TestLogger, logger } from '../utils/logger';
-import { IAgent, AgentType } from './index';
+import { IAgent, IPipelineAgent, AgentType } from './index';
 import {
   IssueReporterConfig,
   RateLimitInfo,
@@ -41,10 +41,18 @@ export { DEFAULT_CONFIG as defaultIssueReporterConfig } from './issue/types';
  *
  * Coordinates issue creation, deduplication, and GitHub API submission
  * for test failure reporting.
+ *
+ * Implements IPipelineAgent because it reports on failures rather than
+ * executing test scenarios. The primary API is createIssue(), updateIssue(),
+ * and createPullRequest().
+ *
+ * Also implements IAgent for backward compatibility.
  */
-export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber: number; url: string } | null> {
+export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber: number; url: string } | null>, IPipelineAgent {
   public readonly name = 'IssueReporter';
   public readonly type = AgentType.GITHUB;
+  /** @inheritdoc IPipelineAgent */
+  public readonly isPipelineAgent = true as const;
 
   private config: IssueReporterConfig;
   private log: TestLogger;
@@ -96,6 +104,10 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
    *
    * Constructs a TestFailure from the scenario metadata and delegates to createIssue().
    * Returns null when createIssuesOnFailure is disabled in config.
+   *
+   * @deprecated Prefer calling createIssue() directly with a TestFailure.
+   * This method exists only for IAgent backward compatibility.
+   * IssueReporter is a pipeline agent — use isPipelineAgent() to detect it.
    */
   async execute(scenario: OrchestratorScenario): Promise<{ issueNumber: number; url: string } | null> {
     if (!this.config.createIssuesOnFailure) {

@@ -95,6 +95,23 @@ export class ElectronUIAgent extends BaseAgent {
   protected async onAfterExecute(scenario: OrchestratorScenario, status: TestStatus): Promise<void> {
     this.logger.scenarioEnd(scenario.id, status, 0 /* duration tracked inside BaseAgent */);
     this.currentScenarioId = undefined;
+
+    // When configured for single-scenario mode, close browser and WebSocket
+    // after each execution so resources are not leaked by callers that do not
+    // use ScenarioRouter's finally block.
+    if (this.config.closeAfterEachScenario) {
+      try {
+        this.perfMonitor.stop();
+        await this.wsMonitor.disconnect();
+        await this.launcher.close();
+        this.logger.info('ElectronUIAgent: closed resources after scenario', { scenarioId: scenario.id });
+      } catch (error: any) {
+        this.logger.error('ElectronUIAgent: error closing resources after scenario', {
+          scenarioId: scenario.id,
+          error: error?.message,
+        });
+      }
+    }
   }
 
   async launch(): Promise<void> {

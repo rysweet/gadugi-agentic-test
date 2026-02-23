@@ -8,7 +8,7 @@
  */
 
 import { logger } from '../utils/logger';
-import { IAgent, AgentType } from './index';
+import { IAgent, IPipelineAgent, AgentType } from './index';
 import { OrchestratorScenario } from '../models/TestModels';
 import { ComprehensionAgentConfig, FeatureSpec, DiscoveredFeature } from './comprehension/types';
 import { DocumentationLoader } from './comprehension/DocumentationLoader';
@@ -31,10 +31,19 @@ export { DocumentationLoader } from './comprehension/DocumentationLoader';
 
 /**
  * ComprehensionAgent - Main agent class for feature comprehension and test generation
+ *
+ * Implements IPipelineAgent because it generates test scenarios from documentation
+ * rather than executing them. The primary API is analyzeFeature(),
+ * generateTestScenarios(), and processDiscoveredFeatures().
+ *
+ * Also implements IAgent for backward compatibility. The execute() method
+ * returns a skip notice and should not be used in production.
  */
-export class ComprehensionAgent implements IAgent {
+export class ComprehensionAgent implements IAgent, IPipelineAgent {
   name = 'ComprehensionAgent';
   type = AgentType.COMPREHENSION;
+  /** @inheritdoc IPipelineAgent */
+  readonly isPipelineAgent = true as const;
 
   private config: ComprehensionAgentConfig;
   private docLoader: DocumentationLoader;
@@ -65,7 +74,13 @@ export class ComprehensionAgent implements IAgent {
     }
   }
 
-  /** ComprehensionAgent generates scenarios; it does not execute them */
+  /**
+   * ComprehensionAgent generates scenarios; it does not execute them.
+   *
+   * @deprecated Do not call execute() on a pipeline agent.
+   * Use analyzeFeature(), generateTestScenarios(), or processDiscoveredFeatures() instead.
+   * This method exists only for IAgent backward compatibility.
+   */
   async execute(_scenario: any): Promise<any> {
     logger.warn('ComprehensionAgent.execute() called - this agent generates scenarios, not executes them');
     return { status: 'skipped', reason: 'ComprehensionAgent does not execute scenarios' };
