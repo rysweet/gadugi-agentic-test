@@ -48,7 +48,7 @@ export class ScreenshotManager {
 
   // -- Comparison delegation --
   compareScreenshots(baseline: string, actual: string, opts: ComparisonOptions = {}): Promise<ComparisonResult> { return this.comparator.compareScreenshots(baseline, actual, opts); }
-  /** @deprecated Use createDiff instead */
+  /** @deprecated Use createDiff instead. Will be removed in v2.0. */
   createDifferenceImage(baseline: string, actual: string, outputPath: string): Promise<string> { return this.comparator.createDiff(baseline, actual, outputPath); }
   createDiff(baseline: string, actual: string, outputPath: string, opts: { algorithm?: import('./types').DiffAlgorithm; colorOptions?: import('./types').DiffColorOptions; includeAA?: boolean; showSideBySide?: boolean } = {}): Promise<string> { return this.comparator.createDiff(baseline, actual, outputPath, opts); }
   calculateSimilarityScore(baseline: string, actual: string, opts: { weights?: { pixel: number; perceptual: number; structural: number } } = {}): Promise<{ overall: number; pixel: number; perceptual: number; structural: number }> { return this.comparator.calculateSimilarityScore(baseline, actual, opts); }
@@ -71,7 +71,7 @@ export class ScreenshotManager {
   // -- Reporting delegation --
   generateComparisonReport(results: Array<ComparisonResult & { name: string }>, outputPath?: string): Promise<string> { return this.reporter.generateComparisonReport(results, outputPath); }
   exportManifest(manifestPath?: string): Promise<string> { return this.reporter.exportManifest(manifestPath); }
-  /** @deprecated Use exportManifest instead */
+  /** @deprecated Use exportManifest instead. Will be removed in v2.0. */
   archiveRun(manifestPath?: string): Promise<string> { return this.reporter.exportManifest(manifestPath); }
   exportMetadata(filePath?: string): Promise<string> { return this.reporter.exportMetadata(filePath); }
 

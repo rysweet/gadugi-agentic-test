@@ -131,3 +131,10 @@ Additional architecture findings:
 **Open — Quality (tracked as GitHub issues):**
 - [#27](https://github.com/rysweet/gadugi-agentic-test/issues/27) — Add tests for `TestOrchestrator`, `ScenarioLoader`, `CLIAgent`
 - [#28](https://github.com/rysweet/gadugi-agentic-test/issues/28) — Split oversized agent files; extract shared `delay()` and `deepEqual()`
+
+**Resolved — WS-D Quality Wave (2026-02-23, [#129](https://github.com/rysweet/gadugi-agentic-test/issues/129)):**
+- D1 — `ids.ts`: `.substr()` replaced with `.slice()` (deprecated API regression)
+- D2 — `utils/index.ts`: Removed dead exports (`LegacyConfigManager`, `TimeUtils`, `legacyLogger`, `createLegacyLogger`, `StringUtils`)
+- D3 — All 9 `@deprecated` annotations updated with `Will be removed in v2.0.` removal timeline
+- D4 — `ConfigValidator.ts`: Added 4 missing validations (github.token, maxRetries bounds, tui.shell type, reporting.formats allowlist)
+- D5 — `SystemAgent.ts`: `baselineCaptureInterval` stored on instance; cleared in `cleanup()`

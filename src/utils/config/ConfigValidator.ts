@@ -44,6 +44,46 @@ export function validateConfig(config: any): ValidationResult {
         errors.push('priority.executionOrder must be an array');
       }
     }
+
+    // Require github.token when createIssuesOnFailure is enabled
+    if (config.github) {
+      if (config.github.createIssuesOnFailure === true) {
+        if (typeof config.github.token !== 'string' || config.github.token.trim() === '') {
+          errors.push('github.token must be a non-empty string when github.createIssuesOnFailure is true');
+        }
+      }
+    }
+
+    // execution.maxRetries must be between 0 and 10
+    if (config.execution) {
+      if (typeof config.execution.maxRetries === 'number') {
+        if (config.execution.maxRetries < 0 || config.execution.maxRetries > 10) {
+          errors.push('execution.maxRetries must be between 0 and 10');
+        }
+      }
+    }
+
+    // tui.shell if provided must be a non-empty string
+    if (config.tui) {
+      if ('shell' in config.tui) {
+        if (typeof config.tui.shell !== 'string' || config.tui.shell.trim() === '') {
+          errors.push('tui.shell must be a non-empty string when provided');
+        }
+      }
+    }
+
+    // reporting.formats must only contain 'html' or 'json'
+    if (config.reporting) {
+      if (Array.isArray(config.reporting.formats)) {
+        const allowedFormats = ['html', 'json'];
+        const invalidFormats = config.reporting.formats.filter(
+          (f: unknown) => !allowedFormats.includes(f as string)
+        );
+        if (invalidFormats.length > 0) {
+          errors.push(`reporting.formats contains unsupported values: ${invalidFormats.join(', ')}. Allowed: html, json`);
+        }
+      }
+    }
   } catch (error: unknown) {
     errors.push(`Configuration validation error: ${error instanceof Error ? error.message : String(error)}`);
   }
