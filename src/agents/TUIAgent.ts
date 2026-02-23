@@ -78,7 +78,9 @@ export class TUIAgent extends BaseAgent {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to initialize TUIAgent', { error: message });
-      throw new Error(`Failed to initialize TUIAgent: ${message}`);
+      // Re-throw the original error so callers can match its message directly
+      // (e.g. tests checking for "Working directory does not exist").
+      throw error instanceof Error ? error : new Error(message);
     }
   }
 
