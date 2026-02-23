@@ -44,8 +44,8 @@ export async function validateDirectory(dirPath: string): Promise<void> {
     if (!stats.isDirectory()) {
       throw new Error(`Working directory is not a directory: ${dirPath}`);
     }
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(`Working directory does not exist: ${dirPath}`);
     }
     throw error;

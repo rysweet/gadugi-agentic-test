@@ -49,11 +49,11 @@ export function registerValidateCommand(program: Command): void {
               const scenario = await ScenarioLoader.loadFromFile(options.file);
               logSuccess(`Scenario "${scenario.name}" is valid`);
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             validationResults.push({
               file: options.file,
               valid: false,
-              errors: [error.message],
+              errors: [error instanceof Error ? error.message : String(error)],
             });
           }
         } else {
@@ -94,11 +94,11 @@ export function registerValidateCommand(program: Command): void {
               if (result.valid) {
                 await ScenarioLoader.loadFromFile(filePath); // Additional validation
               }
-            } catch (error: any) {
+            } catch (error: unknown) {
               validationResults.push({
                 file: filePath,
                 valid: false,
-                errors: [error.message],
+                errors: [error instanceof Error ? error.message : String(error)],
               });
             }
             progressBar.update(index + 1);

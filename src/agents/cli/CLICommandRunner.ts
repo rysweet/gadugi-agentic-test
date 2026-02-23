@@ -51,19 +51,20 @@ export class CLICommandRunner {
         this.logger.commandComplete(command, result.exitCode, Date.now() - startTime);
         this.commandHistory.push(result);
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         attempt++;
+        const message = error instanceof Error ? error.message : String(error);
         if (attempt >= maxAttempts) {
           const failedResult: CommandResult = {
             command: `${command} ${args.join(' ')}`.trim(), exitCode: -1, stdout: '',
-            stderr: error?.message || 'Unknown error', duration: Date.now() - startTime,
+            stderr: message || 'Unknown error', duration: Date.now() - startTime,
             workingDirectory: context.cwd, environment: context.env
           };
           this.commandHistory.push(failedResult);
           throw error;
         }
         this.logger.warn(`Command attempt ${attempt} failed, retrying in ${this.config.retryConfig.retryDelay}ms`,
-          { error: error?.message, attempt, maxAttempts });
+          { error: message, attempt, maxAttempts });
         await delay(this.config.retryConfig.retryDelay);
       }
     }
@@ -82,8 +83,8 @@ export class CLICommandRunner {
       }
       info.status = 'killed';
       this.runningProcesses.delete(processId);
-    } catch (error: any) {
-      this.logger.error(`Failed to kill process ${processId}`, { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error(`Failed to kill process ${processId}`, { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }

@@ -9,7 +9,7 @@
 import { TestStep, TestStatus, StepResult } from '../../models/TestModels';
 import { TestLogger } from '../../utils/logger';
 import { delay } from '../../utils/async';
-import { ColorInfo, InputSimulation } from './types';
+import { ColorInfo, InputSimulation, MenuNavigation, TerminalOutput } from './types';
 
 /**
  * Callbacks that TUIStepDispatcher uses to interact with the TUIAgent
@@ -17,10 +17,10 @@ import { ColorInfo, InputSimulation } from './types';
 export interface StepDispatcherDeps {
   spawnTUI(command: string, args: string[]): Promise<string>;
   sendInput(sessionId: string, input: string | InputSimulation): Promise<void>;
-  navigateMenu(sessionId: string, path: string[]): Promise<any>;
+  navigateMenu(sessionId: string, path: string[]): Promise<MenuNavigation>;
   validateOutput(sessionId: string, expected: any): Promise<boolean>;
   validateFormatting(sessionId: string, expectedColors: ColorInfo[]): Promise<boolean>;
-  captureOutput(sessionId: string): any;
+  captureOutput(sessionId: string): TerminalOutput | null;
   waitForOutputPattern(sessionId: string, pattern: string, timeout: number): Promise<void>;
   resizeTerminal(sessionId: string, cols: number, rows: number): void;
   killSession(sessionId: string): Promise<void>;
@@ -57,7 +57,7 @@ export async function dispatchStep(
       duration,
       actualResult: typeof result === 'string' ? result : JSON.stringify(result)
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
     logger.stepComplete(stepIndex, TestStatus.FAILED, duration);
 
@@ -65,7 +65,7 @@ export async function dispatchStep(
       stepIndex,
       status: TestStatus.FAILED,
       duration,
-      error: error?.message
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }

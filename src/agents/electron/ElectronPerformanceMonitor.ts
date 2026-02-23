@@ -40,8 +40,8 @@ export class ElectronPerformanceMonitor {
         if (this.samples.length > 1000) {
           this.samples.splice(0, 100);
         }
-      } catch (error: any) {
-        this.logger.debug('Failed to collect performance sample', { error: error?.message });
+      } catch (error: unknown) {
+        this.logger.debug('Failed to collect performance sample', { error: error instanceof Error ? error.message : String(error) });
       }
     }, sampleInterval);
   }
@@ -103,8 +103,8 @@ export class ElectronPerformanceMonitor {
 
       Object.assign(sample, metrics);
 
-    } catch (error: any) {
-      this.logger.debug('Failed to collect browser metrics', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.debug('Failed to collect browser metrics', { error: error instanceof Error ? error.message : String(error) });
     }
 
     return sample;

@@ -54,8 +54,8 @@ export class APIRequestExecutor {
   async testConnectivity(): Promise<void> {
     try {
       await this.axiosInstance.head('/');
-    } catch (error: any) {
-      this.logger.warn('Connectivity test failed', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.warn('Connectivity test failed', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -136,24 +136,25 @@ export class APIRequestExecutor {
         }
 
         return apiResponse;
-      } catch (error: any) {
+      } catch (error: unknown) {
         attempt++;
+        const axiosError = error as import('axios').AxiosError;
         if (attempt >= maxAttempts || !this.shouldRetry(error)) {
           const duration = Date.now() - startTime;
           const errorResponse: APIResponse = {
             requestId,
-            status: error.response?.status || 0,
-            statusText: error.response?.statusText || 'Request Failed',
-            headers: error.response?.headers || {},
-            data: error.response?.data || error.message,
+            status: axiosError.response?.status || 0,
+            statusText: axiosError.response?.statusText || 'Request Failed',
+            headers: (axiosError.response?.headers as Record<string, string>) || {},
+            data: axiosError.response?.data || (error instanceof Error ? error.message : String(error)),
             duration,
             timestamp: new Date()
           };
           this.responseHistory.push(errorResponse);
           this.logger.error(`Request failed after ${attempt} attempts`, {
             requestId,
-            error: error?.message,
-            status: error.response?.status
+            error: error instanceof Error ? error.message : String(error),
+            status: axiosError.response?.status
           });
           throw error;
         }
@@ -161,7 +162,7 @@ export class APIRequestExecutor {
         const retryDelay = this.calculateRetryDelay(attempt);
         this.logger.warn(`Request attempt ${attempt} failed, retrying in ${retryDelay}ms`, {
           requestId,
-          error: error?.message,
+          error: error instanceof Error ? error.message : String(error),
           attempt,
           maxAttempts
         });

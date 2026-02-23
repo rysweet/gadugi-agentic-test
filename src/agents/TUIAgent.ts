@@ -75,9 +75,10 @@ export class TUIAgent extends BaseAgent {
       this.isInitialized = true;
       this.logger.info('TUIAgent initialized successfully');
       this.emit('initialized');
-    } catch (error: any) {
-      this.logger.error('Failed to initialize TUIAgent', { error: error?.message });
-      throw new Error(`Failed to initialize TUIAgent: ${error?.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to initialize TUIAgent', { error: message });
+      throw new Error(`Failed to initialize TUIAgent: ${message}`);
     }
   }
 
@@ -181,8 +182,8 @@ export class TUIAgent extends BaseAgent {
         }
       }
       return true;
-    } catch (error: any) {
-      this.logger.error('Color validation failed', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error('Color validation failed', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -202,8 +203,8 @@ export class TUIAgent extends BaseAgent {
       this.removeListener('error', this.errorHandler);
       this.logger.info('TUIAgent cleanup completed');
       this.emit('cleanup');
-    } catch (error: any) {
-      this.logger.error('Error during cleanup', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error('Error during cleanup', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
