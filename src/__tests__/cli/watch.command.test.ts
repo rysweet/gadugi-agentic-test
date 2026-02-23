@@ -199,4 +199,198 @@ describe('registerWatchCommand', () => {
     const allOutput = consoleLogSpy.mock.calls.map((c) => c.join(' ')).join('\n');
     expect(allOutput).toContain('Watch mode started');
   });
+
+  describe('config loading', () => {
+    it('loads configuration from file when --config is provided', async () => {
+      const fakeConfig = {
+        execution: { defaultTimeout: 30000, resourceLimits: { maxExecutionTime: 300000 } },
+        cli: { defaultTimeout: 30000 },
+        ui: { defaultTimeout: 30000 },
+        tui: { defaultTimeout: 30000 },
+      };
+      mockLoadFromFileCfg.mockResolvedValue(undefined);
+      mockGetConfig.mockReturnValue(fakeConfig);
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios', '--config', './my-config.yaml']);
+
+      expect(mockLoadFromFileCfg).toHaveBeenCalledWith('./my-config.yaml');
+      expect(mockGetConfig).toHaveBeenCalled();
+    });
+
+    it('exits with error when config file cannot be loaded', async () => {
+      mockLoadFromFileCfg.mockRejectedValue(new Error('file not found'));
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await expect(invokeWatch(['--directory', './scenarios', '--config', './bad.yaml']))
+        .rejects.toThrow('process.exit(1)');
+    });
+  });
+
+  describe('file change event handlers', () => {
+    it('change event handler clears previous debounce timeout and schedules runTests', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      // Get the 'change' handler registered with the watcher
+      const changeCall = mockWatcherOn.mock.calls.find((c: unknown[]) => c[0] === 'change');
+      expect(changeCall).toBeDefined();
+
+      const changeHandler = changeCall![1] as (filePath: string) => void;
+
+      // Use fake timers to test debounce
+      jest.useFakeTimers();
+
+      // Simulate multiple rapid changes
+      changeHandler('/scenarios/test1.yaml');
+      changeHandler('/scenarios/test2.yaml');
+      changeHandler('/scenarios/test3.yaml');
+
+      // Only one timer should be pending (debounce cleared the previous ones)
+      expect(jest.getTimerCount()).toBe(1);
+
+      jest.useRealTimers();
+    });
+
+    it('add event handler logs new file and schedules debounced runTests', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      const addCall = mockWatcherOn.mock.calls.find((c: unknown[]) => c[0] === 'add');
+      expect(addCall).toBeDefined();
+
+      const addHandler = addCall![1] as (filePath: string) => void;
+
+      jest.useFakeTimers();
+      addHandler('/scenarios/new-scenario.yaml');
+
+      // One timer pending after add event
+      expect(jest.getTimerCount()).toBe(1);
+
+      jest.useRealTimers();
+    });
+
+    it('unlink event handler logs deleted file and schedules debounced runTests', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      const unlinkCall = mockWatcherOn.mock.calls.find((c: unknown[]) => c[0] === 'unlink');
+      expect(unlinkCall).toBeDefined();
+
+      const unlinkHandler = unlinkCall![1] as (filePath: string) => void;
+
+      jest.useFakeTimers();
+      unlinkHandler('/scenarios/deleted.yaml');
+
+      expect(jest.getTimerCount()).toBe(1);
+
+      jest.useRealTimers();
+    });
+
+    it('error event handler logs the error message without crashing', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      const errorCall = mockWatcherOn.mock.calls.find((c: unknown[]) => c[0] === 'error');
+      expect(errorCall).toBeDefined();
+
+      const errorHandler = errorCall![1] as (error: Error) => void;
+
+      // Calling the error handler should not throw
+      expect(() => errorHandler(new Error('EACCES: permission denied'))).not.toThrow();
+
+      // logError uses console.log (with chalk.red prefix)
+      expect(consoleLogSpy).toHaveBeenCalled();
+    });
+
+    it('error event handler accepts non-Error objects', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      const errorCall = mockWatcherOn.mock.calls.find((c: unknown[]) => c[0] === 'error');
+      const errorHandler = errorCall![1] as (error: unknown) => void;
+
+      // Should handle non-Error thrown values gracefully
+      expect(() => errorHandler('string error')).not.toThrow();
+    });
+
+    it('debounce: multiple changes within window trigger only one test run', async () => {
+      let resolveInitial!: () => void;
+      const initialRunPromise = new Promise<void>((res) => { resolveInitial = res; });
+
+      mockLoadFromDirectory.mockResolvedValueOnce([]).mockResolvedValue([]);
+
+      // Track how many times runTests is called via loadFromDirectory calls
+      let loadCallCount = 0;
+      mockLoadFromDirectory.mockImplementation(() => {
+        loadCallCount++;
+        return Promise.resolve([]);
+      });
+
+      jest.useFakeTimers();
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      // Reset count after initial run
+      const countAfterInit = loadCallCount;
+
+      const changeCall = mockWatcherOn.mock.calls.find((c: unknown[]) => c[0] === 'change');
+      const changeHandler = changeCall![1] as (filePath: string) => void;
+
+      // Fire multiple changes rapidly
+      changeHandler('/a.yaml');
+      changeHandler('/b.yaml');
+      changeHandler('/c.yaml');
+
+      // Advance timers by debounce amount
+      await jest.runAllTimersAsync();
+
+      jest.useRealTimers();
+
+      // Only one additional call should have happened after the debounce fires
+      expect(loadCallCount - countAfterInit).toBe(1);
+    });
+  });
+
+  describe('SIGINT graceful shutdown', () => {
+    it('SIGINT handler closes the watcher', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './scenarios']);
+
+      const sigintCall = processOnSpy.mock.calls.find((c: unknown[]) => c[0] === 'SIGINT');
+      expect(sigintCall).toBeDefined();
+
+      const sigintHandler = sigintCall![1] as () => void;
+
+      // Temporarily suppress the process.exit throw to allow watcher.close() assertion
+      processExitSpy.mockImplementation(() => { /* swallow exit(0) */ });
+
+      sigintHandler();
+
+      // Allow the .then() callback to execute
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(mockWatcherClose).toHaveBeenCalled();
+    });
+  });
+
+  describe('no scenarios found', () => {
+    it('logs warning when no scenarios are found in directory', async () => {
+      mockLoadFromDirectory.mockResolvedValue([]);
+
+      await invokeWatch(['--directory', './empty-dir']);
+
+      const allOutput = consoleLogSpy.mock.calls.map((c) => c.join(' ')).join('\n') +
+        consoleErrorSpy.mock.calls.map((c) => c.join(' ')).join('\n');
+      // The warning about no scenarios should be output
+      expect(allOutput).toContain('No scenarios');
+    });
+  });
 });

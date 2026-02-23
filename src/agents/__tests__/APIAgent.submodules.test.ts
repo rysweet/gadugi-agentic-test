@@ -369,6 +369,89 @@ describe('APIResponseValidator', () => {
       expect(() => validator.validateResponseSchema('{}'))
         .toThrow(/schema validation is disabled/i);
     });
+
+    describe('with schema validation enabled', () => {
+      const enabledValidator = new APIResponseValidator({ enabled: true });
+
+      it('returns true when data matches the JSON schema', () => {
+        const schema = JSON.stringify({
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            name: { type: 'string' },
+          },
+          required: ['id', 'name'],
+        });
+        const result = enabledValidator.validateResponseSchema(schema, { id: 1, name: 'Alice' });
+        expect(result).toBe(true);
+      });
+
+      it('returns false when data does not match the JSON schema', () => {
+        const schema = JSON.stringify({
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+          },
+          required: ['id'],
+        });
+        // Missing required field 'id'
+        const result = enabledValidator.validateResponseSchema(schema, { name: 'no-id' });
+        expect(result).toBe(false);
+      });
+
+      it('returns false when data type does not match schema type', () => {
+        const schema = JSON.stringify({ type: 'object' });
+        const result = enabledValidator.validateResponseSchema(schema, 'a string, not an object');
+        expect(result).toBe(false);
+      });
+
+      it('returns true for an empty object matching an empty schema', () => {
+        const schema = JSON.stringify({});
+        const result = enabledValidator.validateResponseSchema(schema, {});
+        expect(result).toBe(true);
+      });
+
+      it('throws when schemaStr is not valid JSON', () => {
+        expect(() => enabledValidator.validateResponseSchema('not-json', {}))
+          .toThrow(/invalid json schema/i);
+      });
+
+      it('returns true when responseData is undefined and schema allows it', () => {
+        // A schema with no required constraints allows undefined/null
+        const schema = JSON.stringify({ type: 'object' });
+        // undefined should fail (not an object)
+        const result = enabledValidator.validateResponseSchema(schema, undefined);
+        expect(result).toBe(false);
+      });
+
+      it('validates nested objects correctly', () => {
+        const schema = JSON.stringify({
+          type: 'object',
+          properties: {
+            user: {
+              type: 'object',
+              properties: {
+                email: { type: 'string' },
+              },
+              required: ['email'],
+            },
+          },
+          required: ['user'],
+        });
+        // Missing nested required field 'email'
+        const result = enabledValidator.validateResponseSchema(schema, { user: { name: 'Alice' } });
+        expect(result).toBe(false);
+      });
+
+      it('validates array schema correctly', () => {
+        const schema = JSON.stringify({
+          type: 'array',
+          items: { type: 'number' },
+        });
+        expect(enabledValidator.validateResponseSchema(schema, [1, 2, 3])).toBe(true);
+        expect(enabledValidator.validateResponseSchema(schema, [1, 'two', 3])).toBe(false);
+      });
+    });
   });
 
   describe('parseHeaders()', () => {
