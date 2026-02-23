@@ -105,8 +105,8 @@ export class TUIMenuNavigator {
 
       deps.emit('menuNavigated', { sessionId, path, context: this.menuContext });
       return { ...this.menuContext };
-    } catch (error: any) {
-      this.logger.error('Menu navigation failed', { sessionId, path, error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error('Menu navigation failed', { sessionId, path, error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }

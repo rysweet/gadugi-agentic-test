@@ -17,6 +17,18 @@ import { generateId } from '../../utils/ids';
 import { delay } from '../../utils/async';
 
 /**
+ * Summary info for a single TUI session, returned by getSessionInfo()
+ */
+export interface SessionInfo {
+  pid?: number;
+  command: string;
+  args: string[];
+  status: 'running' | 'completed' | 'failed' | 'killed';
+  startTime: Date;
+  outputBufferSize: number;
+}
+
+/**
  * Manages the lifecycle of TUI terminal sessions
  */
 /**
@@ -109,9 +121,10 @@ export class TUISessionManager {
       this.emitter.emit('sessionStarted', session);
 
       return sessionId;
-    } catch (error: any) {
-      this.logger.error(`Failed to spawn TUI application: ${command}`, { error: error?.message });
-      throw new Error(`Failed to spawn TUI application: ${error?.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to spawn TUI application: ${command}`, { error: message });
+      throw new Error(`Failed to spawn TUI application: ${message}`);
     }
   }
 
@@ -144,9 +157,10 @@ export class TUISessionManager {
       session.status = 'killed';
       this.sessions.delete(sessionId);
       this.emitter.emit('sessionKilled', { sessionId });
-    } catch (error: any) {
-      this.logger.error(`Failed to kill session ${sessionId}`, { error: error?.message });
-      throw new Error(`Failed to kill session ${sessionId}: ${error?.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to kill session ${sessionId}`, { error: message });
+      throw new Error(`Failed to kill session ${sessionId}: ${message}`);
     }
   }
 
@@ -186,8 +200,8 @@ export class TUISessionManager {
   /**
    * Get summary info about all active sessions
    */
-  getSessionInfo(): Record<string, any> {
-    const info: Record<string, any> = {};
+  getSessionInfo(): Record<string, SessionInfo> {
+    const info: Record<string, SessionInfo> = {};
 
     for (const [sessionId, session] of this.sessions.entries()) {
       info[sessionId] = {

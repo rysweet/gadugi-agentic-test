@@ -63,11 +63,11 @@ async function basicSpaTest(): Promise<void> {
     // Take a success screenshot
     await agent.screenshot('build-completed-successfully');
     
-  } catch (error: any) {
-    console.error('Test failed:', error?.message);
+  } catch (error: unknown) {
+    console.error('Test failed:', error instanceof Error ? error.message : String(error));
     await agent.screenshot('test-failure');
     throw error;
-    
+
   } finally {
     await agent.close();
     await agent.cleanup();
@@ -146,8 +146,8 @@ async function fullScenarioTest(): Promise<void> {
     console.log('- Screenshots:', result.screenshots?.length || 0);
     console.log('- Performance samples:', result.performanceSamples?.length || 0);
     
-  } catch (error: any) {
-    console.error('Scenario execution failed:', error?.message);
+  } catch (error: unknown) {
+    console.error('Scenario execution failed:', error instanceof Error ? error.message : String(error));
     throw error;
   }
 }
@@ -265,16 +265,16 @@ async function errorHandlingTest(): Promise<void> {
     // Intentionally try to interact with non-existent elements
     try {
       await agent.clickButton('[data-testid="non-existent-button"]');
-    } catch (error: any) {
-      console.log('Expected error caught:', error?.message);
+    } catch (error: unknown) {
+      console.log('Expected error caught:', error instanceof Error ? error.message : String(error));
       await agent.screenshot('after-expected-error');
     }
-    
+
     // Try to fill a non-existent input
     try {
       await agent.fillInput('[data-testid="non-existent-input"]', 'test value');
-    } catch (error: any) {
-      console.log('Expected error caught:', error?.message);
+    } catch (error: unknown) {
+      console.log('Expected error caught:', error instanceof Error ? error.message : String(error));
       await agent.screenshot('after-second-expected-error');
     }
     

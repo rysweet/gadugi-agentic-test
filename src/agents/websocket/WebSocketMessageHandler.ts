@@ -146,10 +146,10 @@ export class WebSocketMessageHandler {
         try {
           const result = listener.handler(data);
           if (result instanceof Promise) {
-            result.catch(err => this.logger.error('Event handler error', { event: listener.event, error: err.message }));
+            result.catch((err: unknown) => this.logger.error('Event handler error', { event: listener.event, error: err instanceof Error ? err.message : String(err) }));
           }
-        } catch (err: any) {
-          this.logger.error('Event handler error', { event: listener.event, error: err.message });
+        } catch (err: unknown) {
+          this.logger.error('Event handler error', { event: listener.event, error: err instanceof Error ? err.message : String(err) });
         }
       };
 

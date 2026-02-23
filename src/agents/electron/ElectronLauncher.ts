@@ -109,8 +109,8 @@ export class ElectronLauncher extends EventEmitter {
     if (this.app) {
       try {
         await this.app.close();
-      } catch (error: any) {
-        this.logger.warn('Error closing Electron app during cleanup', { error: error?.message });
+      } catch (error: unknown) {
+        this.logger.warn('Error closing Electron app during cleanup', { error: error instanceof Error ? error.message : String(error) });
       }
       this.app = null;
     }
@@ -135,8 +135,8 @@ export class ElectronLauncher extends EventEmitter {
         status: 'running',
         startTime: new Date()
       };
-    } catch (error: any) {
-      this.logger.debug('Failed to get process info', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.debug('Failed to get process info', { error: error instanceof Error ? error.message : String(error) });
       return undefined;
     }
   }
@@ -180,8 +180,8 @@ export class ElectronLauncher extends EventEmitter {
 
       await exportData.exportScreenshots();
 
-    } catch (error: any) {
-      this.logger.warn('Failed to export final data', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.warn('Failed to export final data', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

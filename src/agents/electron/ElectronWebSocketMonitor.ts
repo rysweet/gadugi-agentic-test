@@ -85,8 +85,8 @@ export class ElectronWebSocketMonitor {
 
       await this.wsAgent.initialize();
       await this.wsAgent.connect(wsConfig.url);
-    } catch (error: any) {
-      this.logger.error('Failed to connect Socket.IO', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error('Failed to connect Socket.IO', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

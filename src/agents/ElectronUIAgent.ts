@@ -62,11 +62,11 @@ export class ElectronUIAgent extends BaseAgent {
       this.isInitialized = true;
       this.logger.info('ElectronUIAgent initialized successfully');
       this.emit('initialized');
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new TestError({
         type: 'InitializationError',
-        message: `Failed to initialize ElectronUIAgent: ${error?.message}`,
-        stackTrace: error?.stack,
+        message: `Failed to initialize ElectronUIAgent: ${error instanceof Error ? error.message : String(error)}`,
+        stackTrace: error instanceof Error ? error.stack : undefined,
         timestamp: new Date(),
         context: { config: this.sanitizeConfig() }
       });
@@ -127,8 +127,8 @@ export class ElectronUIAgent extends BaseAgent {
       });
       this.logger.info('ElectronUIAgent cleanup completed');
       this.emit('cleanup');
-    } catch (error: any) {
-      this.logger.error('Error during cleanup', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error('Error during cleanup', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

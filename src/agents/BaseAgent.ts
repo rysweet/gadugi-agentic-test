@@ -15,7 +15,7 @@
 
 import { EventEmitter } from 'events';
 import { IAgent, AgentType } from './index';
-import { OrchestratorScenario, TestStatus, StepResult } from '../models/TestModels';
+import { OrchestratorScenario, TestStatus, StepResult, TestStep } from '../models/TestModels';
 
 /**
  * Timing and status snapshot passed to `buildResult()`.
@@ -52,7 +52,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
    * Subclasses contain all action-dispatch logic here.
    * Declared as protected minimum; subclasses may widen to public.
    */
-  abstract executeStep(step: any, index: number): Promise<StepResult>;
+  abstract executeStep(step: TestStep, index: number): Promise<StepResult>;
 
   /**
    * Assemble the final result object from the shared execution context.
@@ -144,9 +144,9 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
         stepResults,
       };
       return this.buildResult(ctx);
-    } catch (executeError: any) {
+    } catch (executeError: unknown) {
       status = TestStatus.ERROR;
-      error = executeError?.message;
+      error = executeError instanceof Error ? executeError.message : String(executeError);
       throw executeError;
     } finally {
       await this.onAfterExecute(scenario, status);

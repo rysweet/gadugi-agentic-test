@@ -62,9 +62,9 @@ export class ElectronPageInteractor {
       await page.waitForTimeout(500);
       await this.captureCurrentState(page, `tab_${tabName.toLowerCase()}`);
       this.logger.debug(`Successfully clicked tab: ${tabName}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.captureFailureScreenshot(page, `tab_click_failure_${tabName}`);
-      throw new Error(`Failed to click tab "${tabName}": ${error?.message}`);
+      throw new Error(`Failed to click tab "${tabName}": ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -80,9 +80,9 @@ export class ElectronPageInteractor {
       const actual = await element.inputValue();
       if (actual !== value) this.logger.warn(`Input value mismatch. Expected: "${value}", Actual: "${actual}"`);
       this.logger.debug(`Successfully filled input: ${selector}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.captureFailureScreenshot(page, 'fill_input_failure');
-      throw new Error(`Failed to fill input "${selector}": ${error?.message}`);
+      throw new Error(`Failed to fill input "${selector}": ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -96,9 +96,9 @@ export class ElectronPageInteractor {
       await element.scrollIntoViewIfNeeded();
       await element.click();
       this.logger.debug(`Successfully clicked button: ${selector}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.captureFailureScreenshot(page, 'click_button_failure');
-      throw new Error(`Failed to click button "${selector}": ${error?.message}`);
+      throw new Error(`Failed to click button "${selector}": ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -115,9 +115,9 @@ export class ElectronPageInteractor {
       await element.waitFor({ state, timeout });
       this.logger.debug(`Element found: ${selector}`);
       return element;
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.captureFailureScreenshot(page, 'wait_for_element_failure');
-      throw new Error(`Element "${selector}" not found: ${error?.message}`);
+      throw new Error(`Element "${selector}" not found: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -130,9 +130,9 @@ export class ElectronPageInteractor {
       const text = await element.textContent() || '';
       this.logger.debug(`Element text: ${text}`);
       return text;
-    } catch (error: any) {
+    } catch (error: unknown) {
       await this.captureFailureScreenshot(page, 'get_element_text_failure');
-      throw new Error(`Failed to get text from element "${selector}": ${error?.message}`);
+      throw new Error(`Failed to get text from element "${selector}": ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -147,8 +147,8 @@ export class ElectronPageInteractor {
       });
       this.logger.screenshot(metadata.fileName);
       return metadata;
-    } catch (error: any) {
-      this.logger.error(`Failed to take screenshot "${name}"`, { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error(`Failed to take screenshot "${name}"`, { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -231,12 +231,12 @@ export class ElectronPageInteractor {
       this.logger.stepComplete(stepIndex, TestStatus.PASSED, duration);
       return { stepIndex, status: TestStatus.PASSED, duration, actualResult: typeof result === 'string' ? result : undefined };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
       this.logger.stepComplete(stepIndex, TestStatus.FAILED, duration);
       await this.captureFailureScreenshot(page, `step_${stepIndex}_failure`, currentScenarioId);
       return {
-        stepIndex, status: TestStatus.FAILED, duration, error: error?.message,
+        stepIndex, status: TestStatus.FAILED, duration, error: error instanceof Error ? error.message : String(error),
         screenshot: await this.getLastScreenshotPath(currentScenarioId)
       };
     }
@@ -259,8 +259,8 @@ export class ElectronPageInteractor {
       if (page && this.config.screenshotConfig?.mode !== 'off') {
         await this.screenshot(page, name || `failure_${Date.now()}`, currentScenarioId);
       }
-    } catch (error: any) {
-      this.logger.warn('Failed to capture failure screenshot', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.warn('Failed to capture failure screenshot', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -269,8 +269,8 @@ export class ElectronPageInteractor {
   private async captureCurrentState(page: Page, label: string): Promise<void> {
     try {
       await this.screenshotManager.capturePageScreenshot(page, { description: label });
-    } catch (error: any) {
-      this.logger.debug('Failed to capture current state', { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.debug('Failed to capture current state', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

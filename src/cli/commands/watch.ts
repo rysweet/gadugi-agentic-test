@@ -48,9 +48,9 @@ export function registerWatchCommand(program: Command): void {
             await configManager.loadFromFile(options.config);
             config = configManager.getConfig();
             logSuccess(`Configuration loaded from: ${options.config}`);
-          } catch (error: any) {
+          } catch (error: unknown) {
             throw new CLIError(
-              `Failed to load configuration: ${error.message}`,
+              `Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`,
               'CONFIG_ERROR'
             );
           }
@@ -107,8 +107,8 @@ export function registerWatchCommand(program: Command): void {
             } else {
               logSuccess('All tests passed - watching for changes...');
             }
-          } catch (error: any) {
-            logError(`Test execution failed: ${error.message}`);
+          } catch (error: unknown) {
+            logError(`Test execution failed: ${error instanceof Error ? error.message : String(error)}`);
             logInfo('Watching for changes...');
           }
         };

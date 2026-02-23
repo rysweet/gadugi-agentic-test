@@ -6,6 +6,7 @@
  */
 
 export { TUISessionManager } from './TUISessionManager';
+export type { SessionInfo } from './TUISessionManager';
 export { TUIInputSimulator } from './TUIInputSimulator';
 export { TUIMenuNavigator } from './TUIMenuNavigator';
 export type { MenuNavigatorDeps } from './TUIMenuNavigator';

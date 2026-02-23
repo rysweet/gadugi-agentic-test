@@ -91,8 +91,8 @@ export class TUIInputSimulator {
       }
 
       onInputSent(sessionId, inputData);
-    } catch (error: any) {
-      this.logger.error(`Failed to send input to session ${sessionId}`, { error: error?.message });
+    } catch (error: unknown) {
+      this.logger.error(`Failed to send input to session ${sessionId}`, { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }

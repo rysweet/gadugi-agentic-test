@@ -32,12 +32,12 @@ export class WebSocketStepExecutor {
         duration: Date.now() - startTime,
         actualResult: typeof result === 'string' ? result : JSON.stringify(result)
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         stepIndex,
         status: TestStatus.FAILED,
         duration: Date.now() - startTime,
-        error: error?.message
+        error: error instanceof Error ? error.message : String(error)
       };
     }
   }

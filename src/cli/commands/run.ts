@@ -41,8 +41,8 @@ export function registerRunCommand(program: Command): void {
             await configManager.loadFromFile(options.config);
             config = configManager.getConfig();
             logSuccess(`Configuration loaded from: ${options.config}`);
-          } catch (error: any) {
-            throw new CLIError(`Failed to load configuration: ${error.message}`, 'CONFIG_ERROR');
+          } catch (error: unknown) {
+            throw new CLIError(`Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`, 'CONFIG_ERROR');
           }
         } else {
           // Try loading default config files

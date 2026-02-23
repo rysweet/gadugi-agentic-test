@@ -54,8 +54,8 @@ export class APIAgent extends BaseAgent {
       this.authHandler.applyAuth(this.config.auth);
       this.isInitialized = true;
       this.emit('initialized');
-    } catch (error: any) {
-      throw new Error(`Failed to initialize APIAgent: ${error?.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Failed to initialize APIAgent: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -129,8 +129,8 @@ export class APIAgent extends BaseAgent {
       }
       return { stepIndex, status: TestStatus.PASSED, duration: Date.now() - startTime,
         actualResult: typeof result === 'string' ? result : JSON.stringify(result) };
-    } catch (error: any) {
-      return { stepIndex, status: TestStatus.FAILED, duration: Date.now() - startTime, error: error?.message };
+    } catch (error: unknown) {
+      return { stepIndex, status: TestStatus.FAILED, duration: Date.now() - startTime, error: error instanceof Error ? error.message : String(error) };
     }
   }
 
