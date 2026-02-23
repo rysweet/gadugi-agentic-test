@@ -2,21 +2,23 @@
  * ScenarioRouter
  *
  * Routes OrchestratorScenarios to the correct agent by interface type.
- * Handles parallel execution of CLI/TUI scenarios and sequential UI scenarios.
+ * Handles parallel execution of CLI/TUI/API scenarios and sequential UI scenarios.
+ *
+ * Uses an IAgent registry (Partial<Record<TestInterface, IAgent>>) so that
+ * adding new interface types (e.g. WEBSOCKET) only requires registering a new
+ * entry in TestOrchestrator — this class needs no changes.
+ *
+ * Previously used concrete union type `CLIAgent | ElectronUIAgent | TUIAgent`
+ * which forced code changes here whenever a new agent type was introduced and
+ * left TestInterface.API silently unrouted.
  */
 
-import { CLIAgent } from '../agents/CLIAgent';
-import { ElectronUIAgent } from '../agents/ElectronUIAgent';
-import { TUIAgent } from '../agents/TUIAgent';
+import { IAgent } from '../agents';
 import { OrchestratorScenario, TestResult, TestStatus, TestInterface } from '../models/TestModels';
 import { logger } from '../utils/logger';
 
-type AnyAgent = CLIAgent | ElectronUIAgent | TUIAgent;
-
 export class ScenarioRouter {
-  private cliAgent: CLIAgent;
-  private tuiAgent: TUIAgent;
-  private uiAgent: ElectronUIAgent | null;
+  private agentRegistry: Partial<Record<TestInterface, IAgent>>;
   private maxParallel: number;
   private failFast: boolean;
   private abortController: AbortController;
@@ -28,17 +30,13 @@ export class ScenarioRouter {
   onFailure?: (scenarioId: string, message: string) => void;
 
   constructor(options: {
-    cliAgent: CLIAgent;
-    tuiAgent: TUIAgent;
-    uiAgent: ElectronUIAgent | null;
+    agentRegistry: Partial<Record<TestInterface, IAgent>>;
     maxParallel: number;
     failFast: boolean;
     retryCount: number;
     abortController: AbortController;
   }) {
-    this.cliAgent = options.cliAgent;
-    this.tuiAgent = options.tuiAgent;
-    this.uiAgent = options.uiAgent;
+    this.agentRegistry = options.agentRegistry;
     this.maxParallel = options.maxParallel;
     this.failFast = options.failFast;
     this.retryCount = options.retryCount;
@@ -46,36 +44,73 @@ export class ScenarioRouter {
   }
 
   /**
-   * Dispatch all scenarios to their respective agents
+   * Dispatch all scenarios to their respective agents.
+   *
+   * CLI, TUI, and API scenarios are run in parallel batches.
+   * GUI scenarios are run sequentially after agent initialization/cleanup.
+   * MIXED scenarios are dispatched one at a time with per-scenario agent selection.
+   * Unregistered interface types are reported as failures (never silently dropped).
    */
   async route(scenarios: OrchestratorScenario[]): Promise<void> {
-    const cli = scenarios.filter(s => s.interface === TestInterface.CLI);
-    const tui = scenarios.filter(s => s.interface === TestInterface.TUI);
-    const ui = scenarios.filter(s => s.interface === TestInterface.GUI);
-    const mixed = scenarios.filter(s => s.interface === TestInterface.MIXED);
+    const byInterface = this.groupByInterface(scenarios);
 
-    if (cli.length > 0) {
-      logger.info(`Executing ${cli.length} CLI scenarios`);
-      await this.executeParallelBatch(cli, this.cliAgent);
+    // Parallel execution groups
+    for (const iface of [TestInterface.CLI, TestInterface.TUI, TestInterface.API] as TestInterface[]) {
+      const group = byInterface.get(iface) ?? [];
+      if (group.length === 0) continue;
+
+      const agent = this.agentRegistry[iface];
+      if (!agent) {
+        logger.warn(`No agent registered for interface ${iface}; reporting ${group.length} scenario(s) as failed`);
+        for (const s of group) {
+          this.onFailure?.(s.id, `No agent registered for interface ${iface}`);
+        }
+        continue;
+      }
+
+      logger.info(`Executing ${group.length} ${iface} scenario(s)`);
+      await this.executeParallelBatch(group, agent);
     }
 
-    if (tui.length > 0) {
-      logger.info(`Executing ${tui.length} TUI scenarios`);
-      await this.executeParallelBatch(tui, this.tuiAgent);
+    // GUI: sequential with initialize/cleanup lifecycle
+    const guiScenarios = byInterface.get(TestInterface.GUI) ?? [];
+    if (guiScenarios.length > 0) {
+      await this.executeUIScenarios(guiScenarios);
     }
 
-    if (ui.length > 0) {
-      logger.info(`Executing ${ui.length} UI scenarios`);
-      await this.executeUIScenarios(ui);
+    // MIXED: per-scenario agent selection
+    const mixedScenarios = byInterface.get(TestInterface.MIXED) ?? [];
+    if (mixedScenarios.length > 0) {
+      logger.info(`Executing ${mixedScenarios.length} mixed scenario(s)`);
+      await this.executeMixed(mixedScenarios);
     }
 
-    if (mixed.length > 0) {
-      logger.info(`Executing ${mixed.length} mixed scenarios`);
-      await this.executeMixed(mixed);
+    // Unknown interface types: report failures rather than silently dropping
+    for (const [iface, group] of byInterface.entries()) {
+      const isKnown = [
+        TestInterface.CLI, TestInterface.TUI, TestInterface.API,
+        TestInterface.GUI, TestInterface.MIXED
+      ].includes(iface);
+
+      if (!isKnown) {
+        for (const s of group) {
+          this.onFailure?.(s.id, `Unknown interface type '${iface}' — no routing branch`);
+        }
+      }
     }
   }
 
-  private async executeParallelBatch(scenarios: OrchestratorScenario[], agent: AnyAgent): Promise<void> {
+  private groupByInterface(scenarios: OrchestratorScenario[]): Map<TestInterface, OrchestratorScenario[]> {
+    const map = new Map<TestInterface, OrchestratorScenario[]>();
+    for (const s of scenarios) {
+      const existing = map.get(s.interface) ?? [];
+      existing.push(s);
+      map.set(s.interface, existing);
+    }
+    return map;
+  }
+
+  private async executeParallelBatch(scenarios: OrchestratorScenario[], agent: IAgent): Promise<void> {
     const results = await this.executeParallel(scenarios, s => this.executeSingle(s, agent));
     for (let i = 0; i < scenarios.length; i++) {
       const r = results[i];
@@ -93,23 +128,24 @@ export class ScenarioRouter {
   }
 
   private async executeUIScenarios(scenarios: OrchestratorScenario[]): Promise<void> {
-    if (!this.uiAgent) {
+    const agent = this.agentRegistry[TestInterface.GUI];
+    if (!agent) {
       for (const s of scenarios) {
-        this.onFailure?.(s.id, 'UI testing unavailable - Electron agent not configured');
+        this.onFailure?.(s.id, 'No agent registered for GUI interface');
       }
       return;
     }
 
-    await this.uiAgent.initialize();
+    await agent.initialize();
     try {
       for (const s of scenarios) {
         if (this.abortController.signal.aborted) break;
-        const result = await this.executeSingle(s, this.uiAgent);
+        const result = await this.executeSingle(s, agent);
         this.onResult?.(result);
         if (this.failFast && result.status === TestStatus.FAILED) break;
       }
     } finally {
-      await this.uiAgent.cleanup();
+      await agent.cleanup();
     }
   }
 
@@ -123,18 +159,31 @@ export class ScenarioRouter {
     }
   }
 
-  private selectForMixed(scenario: OrchestratorScenario): CLIAgent | ElectronUIAgent {
+  private selectForMixed(scenario: OrchestratorScenario): IAgent {
     const cliSteps = scenario.steps.filter(s =>
       s.action === 'execute' || s.action === 'runCommand'
     ).length;
     const uiSteps = scenario.steps.filter(s =>
       ['click', 'type', 'navigate', 'screenshot'].includes(s.action)
     ).length;
-    if (uiSteps > cliSteps && this.uiAgent) return this.uiAgent;
-    return this.cliAgent;
+
+    const guiAgent = this.agentRegistry[TestInterface.GUI];
+    const cliAgent = this.agentRegistry[TestInterface.CLI];
+
+    if (uiSteps > cliSteps && guiAgent) return guiAgent;
+
+    // Fall back to CLI agent; if also missing, report error
+    if (cliAgent) return cliAgent;
+
+    // Last resort: use any registered agent
+    const fallback = Object.values(this.agentRegistry)[0];
+    if (fallback) return fallback as IAgent;
+
+    // Nothing registered — this scenario cannot be executed
+    throw new Error(`No agent available for MIXED scenario '${scenario.id}'`);
   }
 
-  async executeSingle(scenario: OrchestratorScenario, agent: AnyAgent): Promise<TestResult> {
+  async executeSingle(scenario: OrchestratorScenario, agent: IAgent): Promise<TestResult> {
     logger.info(`Executing scenario: ${scenario.id} - ${scenario.name}`);
     const startTime = Date.now();
     let attempt = 0;
