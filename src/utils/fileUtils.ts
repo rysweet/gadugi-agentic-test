@@ -40,15 +40,17 @@ import {
 export async function validateDirectory(dirPath: string): Promise<void> {
   try {
     await fsPromises.access(dirPath);
-    const stats = await fsPromises.stat(dirPath);
-    if (!stats.isDirectory()) {
-      throw new Error(`Working directory is not a directory: ${dirPath}`);
-    }
   } catch (error: unknown) {
-    if (error instanceof Error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+    // In some environments (e.g. Jest/ts-jest sandboxed VM) Node's native
+    // errors fail `instanceof Error`, so check `.code` directly.
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(`Working directory does not exist: ${dirPath}`);
     }
     throw error;
+  }
+  const stats = await fsPromises.stat(dirPath);
+  if (!stats.isDirectory()) {
+    throw new Error(`Working directory is not a directory: ${dirPath}`);
   }
 }
 import { readJsonFile, exists, getMetadata } from './files/FileReader';

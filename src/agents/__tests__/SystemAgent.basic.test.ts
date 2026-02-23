@@ -321,22 +321,26 @@ describe('SystemAgent - Basic Tests', () => {
       expect(Object.keys(metrics1.system).sort()).toEqual(Object.keys(metrics2.system).sort());
     });
 
-    it('should maintain metrics history correctly', async () => {
-      await agent.startMonitoring();
-      
-      // Wait for some metrics to be collected
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
-      const history = agent.getMetricsHistory();
-      expect(history.length).toBeGreaterThan(0);
-      
-      // Each entry should have timestamp
-      history.forEach(metrics => {
-        expect(metrics.timestamp).toBeInstanceOf(Date);
+    it('should maintain metrics history correctly', (done) => {
+      // Use event-driven approach: captureMetrics() can be slow (process
+      // enumeration via pidusage), so a fixed-duration wait is unreliable.
+      // Instead wait for the 'metrics' event which fires after each successful
+      // collection cycle.
+      agent.on('metrics', async () => {
+        const history = agent.getMetricsHistory();
+        expect(history.length).toBeGreaterThan(0);
+
+        // Each entry should have timestamp
+        history.forEach(entry => {
+          expect(entry.timestamp).toBeInstanceOf(Date);
+        });
+
+        await agent.stopMonitoring();
+        done();
       });
-      
-      await agent.stopMonitoring();
-    }, 10000);
+
+      agent.startMonitoring();
+    }, 15000);
   });
 
   describe('Configuration Handling', () => {
