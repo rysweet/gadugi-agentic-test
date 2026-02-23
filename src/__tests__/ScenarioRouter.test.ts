@@ -92,10 +92,16 @@ function makeRouter(options: {
   const ui =
     options.uiAgent !== undefined ? options.uiAgent : makeAgent(options.uiExecute);
 
+  const agentRegistry: Record<string, ReturnType<typeof makeAgent>> = {
+    [TestInterface.CLI]: cli,
+    [TestInterface.TUI]: tui,
+  };
+  if (ui !== null) {
+    agentRegistry[TestInterface.GUI] = ui;
+  }
+
   const router = new ScenarioRouter({
-    cliAgent: cli as any,
-    tuiAgent: tui as any,
-    uiAgent: ui as any,
+    agentRegistry: agentRegistry as any,
     maxParallel: options.maxParallel ?? 4,
     failFast: options.failFast ?? false,
     retryCount: options.retryCount ?? 0,
@@ -266,9 +272,11 @@ describe('ScenarioRouter.route()', () => {
   it('GUI scenarios fail gracefully when uiAgent is null', async () => {
     const failures: Array<{ id: string; msg: string }> = [];
     const router = new ScenarioRouter({
-      cliAgent: makeAgent() as any,
-      tuiAgent: makeAgent() as any,
-      uiAgent: null,
+      agentRegistry: {
+        [TestInterface.CLI]: makeAgent() as any,
+        [TestInterface.TUI]: makeAgent() as any,
+        // no GUI agent registered — simulates null/unavailable
+      },
       maxParallel: 4,
       failFast: false,
       retryCount: 0,
@@ -280,7 +288,7 @@ describe('ScenarioRouter.route()', () => {
 
     expect(failures).toHaveLength(1);
     expect(failures[0].id).toBe('gui-null');
-    expect(failures[0].msg).toContain('unavailable');
+    expect(failures[0].msg).toContain('No agent registered for GUI interface');
   });
 
   it('executeSingle returns FAILED result when agent.execute throws', async () => {
@@ -289,9 +297,10 @@ describe('ScenarioRouter.route()', () => {
     );
 
     const router = new ScenarioRouter({
-      cliAgent: throwingAgent as any,
-      tuiAgent: makeAgent() as any,
-      uiAgent: null,
+      agentRegistry: {
+        [TestInterface.CLI]: throwingAgent as any,
+        [TestInterface.TUI]: makeAgent() as any,
+      },
       maxParallel: 1,
       failFast: false,
       retryCount: 0,
