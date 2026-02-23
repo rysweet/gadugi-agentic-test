@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TUIAgent Snapshot Testing should capture colored output snapshots 1`] = `
+exports[`TUIAgent execute and menu navigation Snapshot Testing should capture colored output snapshots 1`] = `
 [
   {
     "fg": "red",
@@ -33,7 +33,7 @@ exports[`TUIAgent Snapshot Testing should capture colored output snapshots 1`] =
 ]
 `;
 
-exports[`TUIAgent Snapshot Testing should capture output snapshots for comparison 1`] = `
+exports[`TUIAgent execute and menu navigation Snapshot Testing should capture output snapshots for comparison 1`] = `
 {
   "colors": [
     {

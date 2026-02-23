@@ -166,8 +166,10 @@ describe('ResourceOptimizer', () => {
       const terminal = await resourceOptimizer.acquireTerminal(config);
       await resourceOptimizer.releaseTerminal(terminal);
 
-      // Manually set last used time to simulate idle timeout
-      const resource = (resourceOptimizer as any).findResourceByAgent(terminal);
+      // Manually set last used time to simulate idle timeout.
+      // findResourceByAgent is a public method on ResourceOptimizer exposed for
+      // testing internal pool state without requiring private member access.
+      const resource = resourceOptimizer.findResourceByAgent(terminal);
       if (resource) {
         resource.lastUsed = new Date(Date.now() - 2000); // 2 seconds ago
       }
@@ -428,8 +430,10 @@ describe('ResourceOptimizer', () => {
 
       await resourceOptimizer.releaseTerminal(terminal);
 
-      // Manually set last used time to simulate idle timeout
-      const resource = (resourceOptimizer as any).findResourceByAgent(terminal);
+      // Manually set last used time to simulate idle timeout.
+      // findResourceByAgent is a public method on ResourceOptimizer exposed for
+      // testing internal pool state without requiring private member access.
+      const resource = resourceOptimizer.findResourceByAgent(terminal);
       if (resource) {
         resource.lastUsed = new Date(Date.now() - 2000); // 2 seconds ago
       }
@@ -451,9 +455,11 @@ describe('ResourceOptimizer', () => {
         resourceOptimizer.createBuffer(`Buffer ${i}`);
       }
 
-      // Manually trigger rotation after short delay
+      // Manually trigger rotation after short delay.
+      // rotateBuffers is a public method on ResourceOptimizer exposed for
+      // testing buffer rotation behavior without requiring private member access.
       setTimeout(() => {
-        (resourceOptimizer as any).rotateBuffers(true);
+        resourceOptimizer.rotateBuffers(true);
       }, 100);
     });
 

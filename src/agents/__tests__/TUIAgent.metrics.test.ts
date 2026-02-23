@@ -5,9 +5,31 @@
  * and that getPerformanceMetrics() returns the stored history.
  *
  * Closes: #41
+ *
+ * Test approach: A local TUIAgentTestHarness subclass promotes the two private
+ * methods to public. This avoids (agent as any).privateMethod() casts that give
+ * no type safety and silently break when private methods are renamed.
  */
 
-import { TUIAgent, PerformanceMetrics } from '../TUIAgent';
+import { TUIAgent, TUIAgentConfig, PerformanceMetrics } from '../TUIAgent';
+
+// ---- Test harness: expose private methods without (x as any) casts -------
+
+class TUIAgentTestHarness extends TUIAgent {
+  /** Promote private collectPerformanceMetrics to public for testing. */
+  async triggerCollectMetrics(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this as any).collectPerformanceMetrics();
+  }
+
+  /** Promote private getPerformanceMetrics to public for testing. */
+  readMetricsHistory(): PerformanceMetrics[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this as any).getPerformanceMetrics();
+  }
+}
+
+// --------------------------------------------------------------------------
 
 // Mock pidusage so tests don't depend on OS process stats
 jest.mock('pidusage', () =>
@@ -38,13 +60,16 @@ jest.mock('../../utils/logger', () => ({
 }));
 
 describe('TUIAgent performance metrics (#41)', () => {
-  let agent: TUIAgent;
+  let agent: TUIAgentTestHarness;
 
   beforeEach(() => {
-    // Disable automatic performance monitoring in tests so we can trigger manually
-    agent = new TUIAgent({
+    // Disable automatic performance monitoring in tests so we can trigger manually.
+    // Using TUIAgentTestHarness so we can call triggerCollectMetrics() and
+    // readMetricsHistory() instead of (agent as any) casts.
+    const config: TUIAgentConfig = {
       performance: { enabled: false, sampleRate: 1000, memoryThreshold: 100, cpuThreshold: 80 },
-    });
+    };
+    agent = new TUIAgentTestHarness(config);
   });
 
   afterEach(() => {
@@ -56,8 +81,7 @@ describe('TUIAgent performance metrics (#41)', () => {
       const events: any[] = [];
       agent.on('performanceMetrics', (m) => events.push(m));
 
-      // Access private method via cast
-      await (agent as any).collectPerformanceMetrics();
+      await agent.triggerCollectMetrics();
 
       expect(events).toHaveLength(1);
     });
@@ -66,7 +90,7 @@ describe('TUIAgent performance metrics (#41)', () => {
       const events: any[] = [];
       agent.on('performanceMetrics', (m) => events.push(m));
 
-      await (agent as any).collectPerformanceMetrics();
+      await agent.triggerCollectMetrics();
 
       const metric = events[0];
       expect(typeof metric.cpuUsage).toBe('number');
@@ -79,7 +103,7 @@ describe('TUIAgent performance metrics (#41)', () => {
       const events: any[] = [];
       agent.on('performanceMetrics', (m) => events.push(m));
 
-      await (agent as any).collectPerformanceMetrics();
+      await agent.triggerCollectMetrics();
 
       const metric = events[0];
       expect(typeof metric.memoryUsage).toBe('number');
@@ -87,48 +111,48 @@ describe('TUIAgent performance metrics (#41)', () => {
     });
 
     it('stores collected metrics in history', async () => {
-      await (agent as any).collectPerformanceMetrics();
-      await (agent as any).collectPerformanceMetrics();
+      await agent.triggerCollectMetrics();
+      await agent.triggerCollectMetrics();
 
-      const history: PerformanceMetrics[] = (agent as any).getPerformanceMetrics();
+      const history: PerformanceMetrics[] = agent.readMetricsHistory();
       expect(history).toHaveLength(2);
     });
 
     it('caps history at 100 entries', async () => {
       // Collect 105 metrics
       for (let i = 0; i < 105; i++) {
-        await (agent as any).collectPerformanceMetrics();
+        await agent.triggerCollectMetrics();
       }
 
-      const history: PerformanceMetrics[] = (agent as any).getPerformanceMetrics();
+      const history: PerformanceMetrics[] = agent.readMetricsHistory();
       expect(history.length).toBeLessThanOrEqual(100);
     });
   });
 
   describe('getPerformanceMetrics()', () => {
     it('returns empty array before any collection', () => {
-      const history = (agent as any).getPerformanceMetrics();
+      const history = agent.readMetricsHistory();
       expect(Array.isArray(history)).toBe(true);
       expect(history).toHaveLength(0);
     });
 
     it('returns a copy so mutations do not affect internal state', async () => {
-      await (agent as any).collectPerformanceMetrics();
+      await agent.triggerCollectMetrics();
 
-      const history = (agent as any).getPerformanceMetrics() as PerformanceMetrics[];
+      const history = agent.readMetricsHistory();
       const originalLength = history.length;
 
       // Mutate the returned array
       history.push({ memoryUsage: 999, cpuUsage: 999, responseTime: 0, renderTime: 0 });
 
-      const historyAfter = (agent as any).getPerformanceMetrics() as PerformanceMetrics[];
+      const historyAfter = agent.readMetricsHistory();
       expect(historyAfter).toHaveLength(originalLength);
     });
 
     it('returned metrics have the expected PerformanceMetrics shape', async () => {
-      await (agent as any).collectPerformanceMetrics();
+      await agent.triggerCollectMetrics();
 
-      const history: PerformanceMetrics[] = (agent as any).getPerformanceMetrics();
+      const history: PerformanceMetrics[] = agent.readMetricsHistory();
       const metric = history[0];
 
       expect(metric).toHaveProperty('memoryUsage');
