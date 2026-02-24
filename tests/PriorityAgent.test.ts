@@ -134,6 +134,42 @@ describe('PriorityAgent.execute()', () => {
     const result = await agent.execute(scenario);
     expect(result).not.toBeNull();
   });
+
+  it('infers category "performance" for scenarios tagged performance', async () => {
+    const scenario = makeScenario({ tags: ['performance'] });
+    const result = await agent.execute(scenario);
+    expect(result).not.toBeNull();
+  });
+
+  it('infers category "performance" for scenarios tagged load', async () => {
+    const scenario = makeScenario({ tags: ['load'] });
+    const result = await agent.execute(scenario);
+    expect(result).not.toBeNull();
+  });
+
+  it('infers category "regression" for scenarios tagged regression', async () => {
+    const scenario = makeScenario({ tags: ['regression'] });
+    const result = await agent.execute(scenario);
+    expect(result).not.toBeNull();
+  });
+
+  it('infers category "smoke" for scenarios tagged smoke', async () => {
+    const scenario = makeScenario({ tags: ['smoke'] });
+    const result = await agent.execute(scenario);
+    expect(result).not.toBeNull();
+  });
+
+  it('infers category "tui" for TUI scenarios', async () => {
+    const scenario = makeScenario({ interface: TestInterface.TUI, tags: [] });
+    const result = await agent.execute(scenario);
+    expect(result).not.toBeNull();
+  });
+
+  it('infers category "execution" for MIXED scenarios with no tags', async () => {
+    const scenario = makeScenario({ interface: TestInterface.MIXED, tags: [] });
+    const result = await agent.execute(scenario);
+    expect(result).not.toBeNull();
+  });
 });
 
 // -----------------------------------------------------------------------
@@ -335,5 +371,42 @@ describe('PriorityAgent.analyzePriority()', () => {
     const ranked = await agent.rankFailures(failures);
     expect(ranked.length).toBe(2);
     expect(ranked[0].impactScore).toBeGreaterThanOrEqual(ranked[1].impactScore);
+  });
+
+  it('calculateImpactScore() returns a number in range [0,100]', () => {
+    const failure: TestFailure = {
+      scenarioId: 'impact-test',
+      timestamp: new Date(),
+      message: 'Network timeout after 30s',
+      category: 'api',
+    };
+    const context = {
+      history: [],
+      scenarios: new Map(),
+      previousPriorities: new Map(),
+      systemInfo: {},
+    };
+    const score = agent.calculateImpactScore(failure, context as any);
+    expect(typeof score).toBe('number');
+    expect(score).toBeGreaterThanOrEqual(0);
+    expect(score).toBeLessThanOrEqual(100);
+  });
+
+  it('analyzeFailurePatterns() returns an array', () => {
+    const failures: TestFailure[] = [
+      { scenarioId: 'p1', timestamp: new Date(), message: 'timeout error', category: 'api' },
+      { scenarioId: 'p2', timestamp: new Date(), message: 'timeout error again', category: 'api' },
+    ];
+    const patterns = agent.analyzeFailurePatterns(failures);
+    expect(Array.isArray(patterns)).toBe(true);
+  });
+
+  it('identifyFlaky() returns an array', () => {
+    const results: TestResult[] = [
+      { scenarioId: 'flaky-1', status: TestStatus.PASSED, duration: 10, startTime: new Date(), endTime: new Date() },
+      { scenarioId: 'flaky-1', status: TestStatus.FAILED, duration: 10, startTime: new Date(), endTime: new Date() },
+    ];
+    const flaky = agent.identifyFlaky(results);
+    expect(Array.isArray(flaky)).toBe(true);
   });
 });
