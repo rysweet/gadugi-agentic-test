@@ -1,0 +1,2607 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Intelligent multi-agent testing framework for Electron, CLI, and web applications">
+      
+      
+      
+        <link rel="canonical" href="https://rysweet.github.io/gadugi-agentic-test/ARCHITECTURE/">
+      
+      
+        <link rel="prev" href="../GETTING_STARTED/">
+      
+      
+        <link rel="next" href="../API_REFERENCE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Architecture - Gadugi Agentic Test</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#architecture-gadugiagentic-test" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Gadugi Agentic Test" class="md-header__button md-logo" aria-label="Gadugi Agentic Test" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Gadugi Agentic Test
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rysweet/gadugi-agentic-test" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rysweet/gadugi-agentic-test
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../GETTING_STARTED/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../API_REFERENCE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../TROUBLESHOOTING/" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Gadugi Agentic Test" class="md-nav__button md-logo" aria-label="Gadugi Agentic Test" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Gadugi Agentic Test
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rysweet/gadugi-agentic-test" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rysweet/gadugi-agentic-test
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GETTING_STARTED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tuiagent-srcagentstuiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TUIAgent — src/agents/TUIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cliagent-srcagentscliagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLIAgent — src/agents/CLIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apiagent-srcagentsapiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APIAgent — src/agents/APIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#websocketagent-srcagentswebsocketagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebSocketAgent — src/agents/WebSocketAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#electronuiagent-srcagentselectronuiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElectronUIAgent — src/agents/ElectronUIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensionagent-srcagentscomprehensionagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ComprehensionAgent — src/agents/ComprehensionAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issuereporter-srcagentsissuereporterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IssueReporter — src/agents/IssueReporter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priorityagent-srcagentspriorityagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PriorityAgent — src/agents/PriorityAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#systemagent-srcagentssystemagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SystemAgent — src/agents/SystemAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ptyterminal-srccoreptyterminalts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PtyTerminal — src/core/PtyTerminal.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptivewaiter-srccoreadaptivewaiterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveWaiter — src/core/AdaptiveWaiter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processlifecyclemanager-srccoreprocesslifecyclemanagerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ProcessLifecycleManager — src/core/ProcessLifecycleManager.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resourceoptimizer-srccoreresourceoptimizerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResourceOptimizer — src/core/ResourceOptimizer.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runners
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runners">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#smartuitestrunner-srcrunnerssmartuitestrunnerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SmartUITestRunner — src/runners/SmartUITestRunner.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensiveuitestrunner-srcrunnerscomprehensiveuitestrunnerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ComprehensiveUITestRunner — src/runners/ComprehensiveUITestRunner.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orchestrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenariorouter-srcorchestratorscenariorouterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScenarioRouter — src/orchestrator/ScenarioRouter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionmanager-srcorchestratorsessionmanagerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SessionManager — src/orchestrator/SessionManager.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultaggregator-srcorchestratorresultaggregatorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultAggregator — src/orchestrator/ResultAggregator.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#orchestrator-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestrator Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utils
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Models
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseagent-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseAgent Pattern
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module Philosophy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module Philosophy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#300-loc-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        300 LOC limit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brick-and-stud-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brick and stud pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-responsibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single responsibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API_REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scenarios-README/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screenshot-diff-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Screenshot Diffing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ResourceOptimizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tuiagent-srcagentstuiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TUIAgent — src/agents/TUIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cliagent-srcagentscliagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLIAgent — src/agents/CLIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apiagent-srcagentsapiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APIAgent — src/agents/APIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#websocketagent-srcagentswebsocketagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebSocketAgent — src/agents/WebSocketAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#electronuiagent-srcagentselectronuiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElectronUIAgent — src/agents/ElectronUIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensionagent-srcagentscomprehensionagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ComprehensionAgent — src/agents/ComprehensionAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issuereporter-srcagentsissuereporterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IssueReporter — src/agents/IssueReporter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priorityagent-srcagentspriorityagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PriorityAgent — src/agents/PriorityAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#systemagent-srcagentssystemagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SystemAgent — src/agents/SystemAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ptyterminal-srccoreptyterminalts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PtyTerminal — src/core/PtyTerminal.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptivewaiter-srccoreadaptivewaiterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveWaiter — src/core/AdaptiveWaiter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processlifecyclemanager-srccoreprocesslifecyclemanagerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ProcessLifecycleManager — src/core/ProcessLifecycleManager.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resourceoptimizer-srccoreresourceoptimizerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResourceOptimizer — src/core/ResourceOptimizer.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runners
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runners">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#smartuitestrunner-srcrunnerssmartuitestrunnerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SmartUITestRunner — src/runners/SmartUITestRunner.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensiveuitestrunner-srcrunnerscomprehensiveuitestrunnerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ComprehensiveUITestRunner — src/runners/ComprehensiveUITestRunner.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orchestrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenariorouter-srcorchestratorscenariorouterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScenarioRouter — src/orchestrator/ScenarioRouter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionmanager-srcorchestratorsessionmanagerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SessionManager — src/orchestrator/SessionManager.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultaggregator-srcorchestratorresultaggregatorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultAggregator — src/orchestrator/ResultAggregator.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#orchestrator-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestrator Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utils
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Models
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseagent-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseAgent Pattern
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module Philosophy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module Philosophy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#300-loc-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        300 LOC limit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brick-and-stud-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brick and stud pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-responsibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single responsibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="architecture-gadugiagentic-test">Architecture — @gadugi/agentic-test<a class="headerlink" href="#architecture-gadugiagentic-test" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Type:</strong> Explanation (Diataxis)
+<strong>Updated:</strong> 2026-02-22</p>
+</blockquote>
+<h2 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#directory-structure">Directory Structure</a></li>
+<li><a href="#agent-layer">Agent Layer</a></li>
+<li><a href="#core-layer">Core Layer</a></li>
+<li><a href="#runners">Runners</a></li>
+<li><a href="#orchestrator">Orchestrator</a></li>
+<li><a href="#utils">Utils</a></li>
+<li><a href="#models">Models</a></li>
+<li><a href="#programmatic-api">Programmatic API</a></li>
+<li><a href="#cli">CLI</a></li>
+<li><a href="#baseagent-pattern">BaseAgent Pattern</a></li>
+<li><a href="#module-philosophy">Module Philosophy</a></li>
+<li><a href="#data-flow">Data Flow</a></li>
+</ul>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p><code>@gadugi/agentic-test</code> is a layered, multi-agent testing framework for Electron and
+TUI applications. Each layer has a single responsibility and depends only on layers
+below it.</p>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────┐
+│  CLI  (src/cli.ts + src/cli/)           │  Entry point, Commander commands
+├─────────────────────────────────────────┤
+│  Programmatic API  (src/lib.ts)         │  Signal-handler-free runTests()
+├─────────────────────────────────────────┤
+│  Orchestrator  (src/orchestrator/)      │  Scenario routing, session, results
+├─────────────────────────────────────────┤
+│  Agents  (src/agents/)                  │  9 specialised test executors
+├─────────────────────────────────────────┤
+│  Runners  (src/runners/)                │  UI test runners (Electron/Playwright)
+├─────────────────────────────────────────┤
+│  Core  (src/core/)                      │  PTY, processes, waiting, resources
+├─────────────────────────────────────────┤
+│  Utils  (src/utils/)                    │  Logging, config, retry, screenshots
+├─────────────────────────────────────────┤
+│  Models  (src/models/)                  │  Data types shared across all layers
+└─────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>src/
+├── index.ts                   # Full public API re-export
+├── lib.ts                     # Programmatic API (no process side-effects)
+├── lib/
+│   ├── ConfigurationLoader.ts # Default config factory + file loading
+│   ├── ScenarioLoader.ts      # YAML scenario discovery + suite filtering
+│   └── ResultsHandler.ts      # Result persistence + display + dry-run
+├── cli.ts                     # CLI entry point (Commander)
+├── cli-path-utils.ts          # Path traversal guard for CLI flags
+├── cli/
+│   ├── output.ts              # Shared print helpers (logSuccess, logError…)
+│   └── commands/
+│       ├── run.ts             # agentic-test run
+│       ├── watch.ts           # agentic-test watch
+│       ├── validate.ts        # agentic-test validate
+│       ├── list.ts            # agentic-test list
+│       ├── init.ts            # agentic-test init
+│       ├── init-templates.ts  # Scenario template generator
+│       └── help.ts            # agentic-test help
+├── agents/
+│   ├── index.ts               # IAgent interface, AgentType enum, all exports
+│   ├── BaseAgent.ts           # Abstract base — shared execute() loop
+│   ├── TUIAgent.ts            # Terminal-UI test execution
+│   ├── CLIAgent.ts            # CLI subprocess testing
+│   ├── APIAgent.ts            # HTTP/REST API testing
+│   ├── WebSocketAgent.ts      # WebSocket protocol testing
+│   ├── ElectronUIAgent.ts     # Electron app UI testing
+│   ├── ComprehensionAgent.ts  # LLM-powered feature discovery
+│   ├── IssueReporter.ts       # GitHub issue creation
+│   ├── PriorityAgent.ts       # Test prioritisation
+│   ├── SystemAgent.ts         # System resource monitoring
+│   ├── tui/                   # TUIAgent sub-modules
+│   │   ├── TUIInputSimulator.ts
+│   │   ├── TUIMenuNavigator.ts
+│   │   ├── TUIOutputParser.ts
+│   │   ├── TUISessionManager.ts
+│   │   ├── TUIStepDispatcher.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── cli/                   # CLIAgent sub-modules
+│   │   ├── CLICommandRunner.ts
+│   │   ├── CLIOutputParser.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── api/                   # APIAgent sub-modules
+│   │   ├── APIAuthHandler.ts
+│   │   ├── APIRequestExecutor.ts
+│   │   ├── APIResponseValidator.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── websocket/             # WebSocketAgent sub-modules
+│   │   ├── WebSocketConnection.ts
+│   │   ├── WebSocketEventRecorder.ts
+│   │   ├── WebSocketMessageHandler.ts
+│   │   ├── WebSocketStepExecutor.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── electron/              # ElectronUIAgent sub-modules
+│   │   ├── ElectronLauncher.ts
+│   │   ├── ElectronPageInteractor.ts
+│   │   ├── ElectronPerformanceMonitor.ts
+│   │   ├── ElectronWebSocketMonitor.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── comprehension/         # ComprehensionAgent sub-modules
+│   │   ├── DocumentationLoader.ts
+│   │   ├── OutputComprehender.ts
+│   │   ├── ScenarioComprehender.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── issue/                 # IssueReporter sub-modules
+│   │   ├── IssueDeduplicator.ts
+│   │   ├── IssueFormatter.ts
+│   │   ├── IssueSubmitter.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── priority/              # PriorityAgent sub-modules
+│   │   ├── PriorityAnalyzer.ts
+│   │   ├── PriorityPatternExtractor.ts
+│   │   ├── PriorityQueue.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   ├── system/                # SystemAgent sub-modules
+│   │   ├── MetricsCollector.ts
+│   │   ├── DockerMonitor.ts
+│   │   ├── FileSystemWatcher.ts
+│   │   ├── SystemAnalyzer.ts
+│   │   ├── types.ts
+│   │   └── index.ts
+│   └── examples/              # Runnable usage examples per agent
+├── core/
+│   ├── PtyTerminal.ts         # PTY process wrapper (node-pty)
+│   ├── AdaptiveWaiter.ts      # Condition-based waiting + backoff
+│   ├── ProcessLifecycleManager.ts  # Zombie-process prevention
+│   ├── ResourceOptimizer.ts   # CPU/memory/concurrency optimisation
+│   └── optimizer/             # ResourceOptimizer sub-modules
+│       ├── ConcurrencyOptimizer.ts
+│       ├── CpuOptimizer.ts
+│       ├── MemoryOptimizer.ts
+│       ├── types.ts
+│       └── index.ts
+├── orchestrator/
+│   ├── TestOrchestrator.ts    # Thin facade: routes + sessions + results
+│   ├── ScenarioRouter.ts      # Dispatches scenarios to agents (parallel)
+│   ├── SessionManager.ts      # Session lifecycle and persistence
+│   ├── ResultAggregator.ts    # Collects results, triggers analysis/reporting
+│   ├── agentAdapters.ts       # Config shape adapters (UI/TUI/priority)
+│   └── index.ts
+├── runners/
+│   ├── SmartUITestRunner.ts      # Playwright-based adaptive UI runner
+│   ├── ComprehensiveUITestRunner.ts  # Exhaustive UI flow runner
+│   ├── smart/
+│   │   ├── SmartElementFinder.ts
+│   │   ├── SmartInteractionExecutor.ts
+│   │   └── index.ts
+│   ├── comprehensive/
+│   │   ├── UIFlowTester.ts
+│   │   └── index.ts
+│   └── index.ts
+├── scenarios/
+│   └── index.ts               # ScenarioDefinition schema + ScenarioLoader
+├── adapters/
+│   └── scenarioAdapter.ts     # ScenarioDefinition → OrchestratorScenario
+├── models/
+│   ├── TestModels.ts          # OrchestratorScenario, TestSession, TestResult
+│   ├── Config.ts              # TestConfig (top-level config shape)
+│   ├── AppState.ts            # Runtime application state
+│   ├── TUIModels.ts           # TUI-specific model facade
+│   ├── tui/
+│   │   ├── TUIConfig.ts
+│   │   ├── TUIResults.ts
+│   │   ├── TUISession.ts
+│   │   └── index.ts
+│   └── index.ts
+└── utils/
+    ├── logger.ts              # Logger facade
+    ├── config.ts              # Config utilities facade
+    ├── fileUtils.ts           # File utilities facade
+    ├── yamlParser.ts          # YAML parser facade
+    ├── retry.ts               # Retry facade
+    ├── async.ts               # delay() and async helpers
+    ├── comparison.ts          # deepEqual() utility
+    ├── colors.ts              # Terminal color helpers
+    ├── ids.ts                 # ID generation
+    ├── agentUtils.ts          # Shared agent utility functions
+    ├── index.ts
+    ├── logging/
+    │   ├── LogFormatter.ts
+    │   ├── LogTransport.ts
+    │   └── index.ts
+    ├── config/
+    │   ├── ConfigLoader.ts
+    │   ├── ConfigManager.ts
+    │   ├── ConfigValidator.ts
+    │   ├── types.ts
+    │   └── index.ts
+    ├── files/
+    │   ├── FileArchiver.ts
+    │   ├── FileReader.ts
+    │   ├── FileSearch.ts
+    │   ├── FileWriter.ts
+    │   ├── types.ts
+    │   └── index.ts
+    ├── retry/
+    │   ├── CircuitBreaker.ts
+    │   ├── RetryExecutor.ts
+    │   ├── types.ts
+    │   └── index.ts
+    ├── screenshot/
+    │   ├── ScreenshotCapture.ts
+    │   ├── ImageComparator.ts
+    │   ├── DiffRenderer.ts
+    │   ├── ScreenshotReporter.ts
+    │   ├── types.ts
+    │   └── index.ts
+    └── yaml/
+        ├── YamlLoader.ts
+        ├── YamlValidator.ts
+        ├── YamlVariableSubstitution.ts
+        ├── types.ts
+        └── index.ts
+</code></pre></div>
+<hr />
+<h2 id="agent-layer">Agent Layer<a class="headerlink" href="#agent-layer" title="Permanent link">&para;</a></h2>
+<p>All nine agents implement the <code>IAgent&lt;TScenario, TResult&gt;</code> interface and extend
+<code>BaseAgent</code>. Each agent is responsible for one execution domain.</p>
+<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="nx">IAgent</span><span class="o">&lt;</span><span class="nx">TScenario</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">unknown</span><span class="p">,</span><span class="w"> </span><span class="nx">TResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">unknown</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">initialize</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="ow">void</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">execute</span><span class="p">(</span><span class="nx">scenario</span><span class="o">:</span><span class="w"> </span><span class="kt">TScenario</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">TResult</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">cleanup</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="ow">void</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">enum</span><span class="w"> </span><span class="nx">AgentType</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">UI</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;ui&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">CLI</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;cli&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">TUI</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tui&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">API</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;api&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">WEBSOCKET</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;websocket&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">GITHUB</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;github&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">SYSTEM</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;system&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">COMPREHENSION</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;comprehension&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">PRIORITY</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;priority&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="tuiagent-srcagentstuiagentts">TUIAgent — <code>src/agents/TUIAgent.ts</code><a class="headerlink" href="#tuiagent-srcagentstuiagentts" title="Permanent link">&para;</a></h3>
+<p>Executes test scenarios against terminal-based (TUI) applications via a PTY session.
+Uses <code>PtyTerminal</code> for PTY management, delegating input simulation, menu navigation,
+output parsing, and step dispatch to focused sub-modules.</p>
+<p>Sub-modules: <code>TUIInputSimulator</code>, <code>TUIMenuNavigator</code>, <code>TUIOutputParser</code>,
+<code>TUISessionManager</code>, <code>TUIStepDispatcher</code>.</p>
+<h3 id="cliagent-srcagentscliagentts">CLIAgent — <code>src/agents/CLIAgent.ts</code><a class="headerlink" href="#cliagent-srcagentscliagentts" title="Permanent link">&para;</a></h3>
+<p>Spawns CLI subprocesses and validates their output and exit codes. Handles streaming
+stdout/stderr, environment variable injection (into the child process only — never
+mutating <code>process.env</code>), and command history.</p>
+<p>Sub-modules: <code>CLICommandRunner</code>, <code>CLIOutputParser</code>.</p>
+<h3 id="apiagent-srcagentsapiagentts">APIAgent — <code>src/agents/APIAgent.ts</code><a class="headerlink" href="#apiagent-srcagentsapiagentts" title="Permanent link">&para;</a></h3>
+<p>Tests HTTP/REST APIs. Supports authentication (Bearer, Basic, API key), request and
+response interceptors, JSON Schema validation, and performance measurement.</p>
+<p>Sub-modules: <code>APIAuthHandler</code>, <code>APIRequestExecutor</code>, <code>APIResponseValidator</code>.</p>
+<h3 id="websocketagent-srcagentswebsocketagentts">WebSocketAgent — <code>src/agents/WebSocketAgent.ts</code><a class="headerlink" href="#websocketagent-srcagentswebsocketagentts" title="Permanent link">&para;</a></h3>
+<p>Tests WebSocket connections: connection lifecycle, message send/receive, event
+recording, and reconnection with configurable backoff.</p>
+<p>Sub-modules: <code>WebSocketConnection</code>, <code>WebSocketEventRecorder</code>,
+<code>WebSocketMessageHandler</code>, <code>WebSocketStepExecutor</code>.</p>
+<h3 id="electronuiagent-srcagentselectronuiagentts">ElectronUIAgent — <code>src/agents/ElectronUIAgent.ts</code><a class="headerlink" href="#electronuiagent-srcagentselectronuiagentts" title="Permanent link">&para;</a></h3>
+<p>Drives Electron applications via Playwright. Handles app launch, page interaction,
+performance sampling, and WebSocket monitoring (delegated to <code>WebSocketAgent</code>).</p>
+<p>Sub-modules: <code>ElectronLauncher</code>, <code>ElectronPageInteractor</code>,
+<code>ElectronPerformanceMonitor</code>, <code>ElectronWebSocketMonitor</code>.</p>
+<h3 id="comprehensionagent-srcagentscomprehensionagentts">ComprehensionAgent — <code>src/agents/ComprehensionAgent.ts</code><a class="headerlink" href="#comprehensionagent-srcagentscomprehensionagentts" title="Permanent link">&para;</a></h3>
+<p>Uses an LLM (OpenAI-compatible) to discover and understand application features from
+documentation and runtime output. Converts discoveries into structured <code>FeatureSpec</code>
+objects.</p>
+<p>Sub-modules: <code>DocumentationLoader</code>, <code>OutputComprehender</code>, <code>ScenarioComprehender</code>.</p>
+<h3 id="issuereporter-srcagentsissuereporterts">IssueReporter — <code>src/agents/IssueReporter.ts</code><a class="headerlink" href="#issuereporter-srcagentsissuereporterts" title="Permanent link">&para;</a></h3>
+<p>Creates, deduplicates, and updates GitHub issues for test failures. Uses SHA-256
+fingerprinting for deduplication. Applies an allowlist (<code>getSafeEnvironment()</code>) when
+embedding environment data in issue bodies to prevent secret exposure.</p>
+<p>Sub-modules: <code>IssueDeduplicator</code>, <code>IssueFormatter</code>, <code>IssueSubmitter</code>.</p>
+<h3 id="priorityagent-srcagentspriorityagentts">PriorityAgent — <code>src/agents/PriorityAgent.ts</code><a class="headerlink" href="#priorityagent-srcagentspriorityagentts" title="Permanent link">&para;</a></h3>
+<p>Assigns priority scores to test scenarios based on configurable rules, historical
+failure patterns, and flaky-test detection. Feeds scores back to the orchestrator's
+scheduling decisions.</p>
+<p>Sub-modules: <code>PriorityAnalyzer</code>, <code>PriorityPatternExtractor</code>, <code>PriorityQueue</code>.</p>
+<h3 id="systemagent-srcagentssystemagentts">SystemAgent — <code>src/agents/SystemAgent.ts</code><a class="headerlink" href="#systemagent-srcagentssystemagentts" title="Permanent link">&para;</a></h3>
+<p>Monitors system resources (CPU, memory, disk, network) and Docker containers during
+test runs. Detects resource leaks and performance regressions against stored baselines.</p>
+<p>Sub-modules: <code>MetricsCollector</code>, <code>DockerMonitor</code>, <code>FileSystemWatcher</code>,
+<code>SystemAnalyzer</code>.</p>
+<hr />
+<h2 id="core-layer">Core Layer<a class="headerlink" href="#core-layer" title="Permanent link">&para;</a></h2>
+<h3 id="ptyterminal-srccoreptyterminalts">PtyTerminal — <code>src/core/PtyTerminal.ts</code><a class="headerlink" href="#ptyterminal-srccoreptyterminalts" title="Permanent link">&para;</a></h3>
+<p>PTY-based terminal manager wrapping <code>node-pty-prebuilt-multiarch</code>. Maintains an
+output buffer, emits typed events (<code>data</code>, <code>exit</code>, <code>error</code>, <code>ready</code>, <code>destroyed</code>),
+and integrates with <code>ProcessLifecycleManager</code> to prevent zombie processes.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">terminal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">PtyTerminal</span><span class="p">({</span><span class="w"> </span><span class="nx">shell</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/bin/bash&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">cwd</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;/tmp&#39;</span><span class="w"> </span><span class="p">});</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">terminal</span><span class="p">.</span><span class="nx">spawn</span><span class="p">();</span>
+<span class="nx">terminal</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;ls -la\n&#39;</span><span class="p">);</span>
+<span class="nx">terminal</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">chunk</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">chunk</span><span class="p">));</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">terminal</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</code></pre></div>
+<h3 id="adaptivewaiter-srccoreadaptivewaiterts">AdaptiveWaiter — <code>src/core/AdaptiveWaiter.ts</code><a class="headerlink" href="#adaptivewaiter-srccoreadaptivewaiterts" title="Permanent link">&para;</a></h3>
+<p>Condition-based waiting with configurable backoff strategies. Replaces hard-coded
+<code>setTimeout</code> calls throughout the codebase.</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">waitForOutput</span><span class="p">,</span><span class="w"> </span><span class="nx">delay</span><span class="p">,</span><span class="w"> </span><span class="nx">BackoffStrategy</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./core/AdaptiveWaiter&#39;</span><span class="p">;</span>
+
+<span class="c1">// Wait until the terminal buffer contains &#39;ready&#39;</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">waitForOutput</span><span class="p">(</span><span class="nx">terminal</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;ready&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">timeout</span><span class="o">:</span><span class="w"> </span><span class="kt">10_000</span><span class="w"> </span><span class="p">});</span>
+
+<span class="c1">// Pause for 500 ms</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">delay</span><span class="p">(</span><span class="mf">500</span><span class="p">);</span>
+</code></pre></div>
+<p>Exported strategies: <code>LINEAR</code>, <code>EXPONENTIAL</code>, <code>FIXED</code>.</p>
+<h3 id="processlifecyclemanager-srccoreprocesslifecyclemanagerts">ProcessLifecycleManager — <code>src/core/ProcessLifecycleManager.ts</code><a class="headerlink" href="#processlifecyclemanager-srccoreprocesslifecyclemanagerts" title="Permanent link">&para;</a></h3>
+<p>Tracks spawned child processes and ensures they are terminated (with escalating
+signals) on test completion or process exit. Prevents zombie processes that would
+accumulate across long test runs.</p>
+<h3 id="resourceoptimizer-srccoreresourceoptimizerts">ResourceOptimizer — <code>src/core/ResourceOptimizer.ts</code><a class="headerlink" href="#resourceoptimizer-srccoreresourceoptimizerts" title="Permanent link">&para;</a></h3>
+<p>Monitors and adjusts concurrency, CPU usage, and memory pressure during test runs.
+Provides a resource pool abstraction consumed by <code>ScenarioRouter</code>.</p>
+<p>Sub-modules: <code>ConcurrencyOptimizer</code>, <code>CpuOptimizer</code>, <code>MemoryOptimizer</code>.</p>
+<hr />
+<h2 id="runners">Runners<a class="headerlink" href="#runners" title="Permanent link">&para;</a></h2>
+<p>Runners are higher-level test execution strategies built on top of Playwright.
+They are used by <code>ElectronUIAgent</code> for complex UI interaction flows.</p>
+<h3 id="smartuitestrunner-srcrunnerssmartuitestrunnerts">SmartUITestRunner — <code>src/runners/SmartUITestRunner.ts</code><a class="headerlink" href="#smartuitestrunner-srcrunnerssmartuitestrunnerts" title="Permanent link">&para;</a></h3>
+<p>Adaptive runner that locates UI elements dynamically using multiple selector
+strategies. Falls back gracefully when preferred selectors are absent.</p>
+<p>Sub-modules: <code>SmartElementFinder</code>, <code>SmartInteractionExecutor</code>.</p>
+<h3 id="comprehensiveuitestrunner-srcrunnerscomprehensiveuitestrunnerts">ComprehensiveUITestRunner — <code>src/runners/ComprehensiveUITestRunner.ts</code><a class="headerlink" href="#comprehensiveuitestrunner-srcrunnerscomprehensiveuitestrunnerts" title="Permanent link">&para;</a></h3>
+<p>Exhaustive runner that walks complete UI flows: every control in every view.
+Used for regression passes, not smoke tests.</p>
+<p>Sub-modules: <code>UIFlowTester</code>.</p>
+<hr />
+<h2 id="orchestrator">Orchestrator<a class="headerlink" href="#orchestrator" title="Permanent link">&para;</a></h2>
+<p><code>TestOrchestrator</code> is a thin facade that coordinates three focused sub-systems.</p>
+<div class="highlight"><pre><span></span><code>graph TD
+    CLI[&quot;CLI / runTests()&quot;] --&gt; Orchestrator
+    Orchestrator --&gt; ScenarioRouter
+    Orchestrator --&gt; SessionManager
+    Orchestrator --&gt; ResultAggregator
+
+    ScenarioRouter --&gt; Registry[&quot;agentRegistry: Partial&amp;lt;Record&amp;lt;TestInterface, IAgent&amp;gt;&amp;gt;&quot;]
+    Registry --&gt; TUIAgent
+    Registry --&gt; CLIAgent
+    Registry --&gt; ElectronUIAgent
+    Registry --&gt; APIAgent
+
+    ResultAggregator --&gt; PriorityAgent
+    ResultAggregator --&gt; IssueReporter
+</code></pre></div>
+<h3 id="scenariorouter-srcorchestratorscenariorouterts">ScenarioRouter — <code>src/orchestrator/ScenarioRouter.ts</code><a class="headerlink" href="#scenariorouter-srcorchestratorscenariorouterts" title="Permanent link">&para;</a></h3>
+<p>Dispatches scenarios to the correct agent based on the scenario's <code>interface</code> field
+using an <strong>IAgent registry</strong> (<code>Partial&lt;Record&lt;TestInterface, IAgent&gt;&gt;</code>).</p>
+<p>The registry is built by <code>TestOrchestrator</code> in its constructor and passed to
+<code>ScenarioRouter</code>. This decoupling means:</p>
+<ul>
+<li><code>ScenarioRouter</code> has no imports of concrete agent classes</li>
+<li>Adding support for a new <code>TestInterface</code> value (e.g. <code>WEBSOCKET</code>) only requires
+  registering an entry in <code>TestOrchestrator</code> — <code>ScenarioRouter</code> needs no changes</li>
+<li>All five interface types route correctly: <code>CLI</code>, <code>TUI</code>, <code>API</code> (parallel), <code>GUI</code>
+  (sequential with initialize/cleanup), and <code>MIXED</code> (per-scenario selection)</li>
+<li>Unregistered interface types are reported as explicit failures, never silently dropped</li>
+</ul>
+<p>Enforces the <code>maxParallel</code> concurrency limit. Aborts remaining scenarios when
+<code>failFast</code> is set and a scenario fails.</p>
+<h3 id="sessionmanager-srcorchestratorsessionmanagerts">SessionManager — <code>src/orchestrator/SessionManager.ts</code><a class="headerlink" href="#sessionmanager-srcorchestratorsessionmanagerts" title="Permanent link">&para;</a></h3>
+<p>Creates and persists <code>TestSession</code> records. Accumulates <code>TestResult</code> entries as
+scenarios complete. Marks the session <code>complete</code> in the finally block of every run.</p>
+<h3 id="resultaggregator-srcorchestratorresultaggregatorts">ResultAggregator — <code>src/orchestrator/ResultAggregator.ts</code><a class="headerlink" href="#resultaggregator-srcorchestratorresultaggregatorts" title="Permanent link">&para;</a></h3>
+<p>Collects <code>TestResult</code> objects, invokes <code>PriorityAgent.analyze()</code> to score failures,
+and calls <code>IssueReporter</code> when <code>createIssuesOnFailure</code> is enabled.</p>
+<h3 id="orchestrator-events">Orchestrator Events<a class="headerlink" href="#orchestrator-events" title="Permanent link">&para;</a></h3>
+<p><code>TestOrchestrator</code> extends <code>EventEmitter</code> and emits:</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session:start</code></td>
+<td><code>TestSession</code></td>
+</tr>
+<tr>
+<td><code>session:end</code></td>
+<td><code>TestSession</code></td>
+</tr>
+<tr>
+<td><code>scenario:start</code></td>
+<td><code>OrchestratorScenario</code></td>
+</tr>
+<tr>
+<td><code>scenario:end</code></td>
+<td><code>OrchestratorScenario, TestResult</code></td>
+</tr>
+<tr>
+<td><code>phase:start</code></td>
+<td><code>string</code> (phase name)</td>
+</tr>
+<tr>
+<td><code>phase:end</code></td>
+<td><code>string</code> (phase name)</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td><code>Error</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="utils">Utils<a class="headerlink" href="#utils" title="Permanent link">&para;</a></h2>
+<p>All utility modules follow the facade pattern: a top-level file (e.g. <code>logger.ts</code>)
+re-exports from a focused sub-directory (<code>logging/</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Facade</th>
+<th>Sub-directory</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>utils/logger.ts</code></td>
+<td><code>logging/</code></td>
+<td>Structured logging, log levels, transports</td>
+</tr>
+<tr>
+<td><code>utils/config.ts</code></td>
+<td><code>config/</code></td>
+<td>Config loading, validation, management</td>
+</tr>
+<tr>
+<td><code>utils/fileUtils.ts</code></td>
+<td><code>files/</code></td>
+<td>File read, write, search, archive</td>
+</tr>
+<tr>
+<td><code>utils/yamlParser.ts</code></td>
+<td><code>yaml/</code></td>
+<td>Safe YAML load (<code>JSON_SCHEMA</code>), variable substitution</td>
+</tr>
+<tr>
+<td><code>utils/retry.ts</code></td>
+<td><code>retry/</code></td>
+<td>Retry executor, circuit breaker</td>
+</tr>
+<tr>
+<td>—</td>
+<td><code>screenshot/</code></td>
+<td>Capture, compare, diff, report</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Shared helpers</strong> (no sub-directory):</p>
+<ul>
+<li><code>utils/async.ts</code> — <code>delay(ms)</code>: single canonical async sleep</li>
+<li><code>utils/comparison.ts</code> — <code>deepEqual(a, b)</code>: single canonical deep equality check</li>
+<li><code>utils/agentUtils.ts</code> — agent utility functions shared by <code>BaseAgent</code> sub-classes</li>
+</ul>
+<hr />
+<h2 id="models">Models<a class="headerlink" href="#models" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>models/
+├── Config.ts        # TestConfig — top-level configuration shape
+├── TestModels.ts    # OrchestratorScenario, TestSession, TestResult,
+│                    # TestStatus, TestFailure, StepResult
+├── AppState.ts      # Runtime state for the running application under test
+├── TUIModels.ts     # TUI-specific model facade
+└── tui/
+    ├── TUIConfig.ts
+    ├── TUIResults.ts
+    └── TUISession.ts
+</code></pre></div>
+<p><strong>Type naming convention:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ScenarioDefinition</code></td>
+<td><code>src/scenarios/</code></td>
+<td>YAML schema type (what users write)</td>
+</tr>
+<tr>
+<td><code>OrchestratorScenario</code></td>
+<td><code>src/models/TestModels</code></td>
+<td>Internal execution type (post-adapter)</td>
+</tr>
+<tr>
+<td><code>TestConfig</code></td>
+<td><code>src/models/Config</code></td>
+<td>Full runtime configuration</td>
+</tr>
+<tr>
+<td><code>TestSession</code></td>
+<td><code>src/models/TestModels</code></td>
+<td>A single test run with all results</td>
+</tr>
+<tr>
+<td><code>TestResult</code></td>
+<td><code>src/models/TestModels</code></td>
+<td>Result of one scenario execution</td>
+</tr>
+</tbody>
+</table>
+<p><code>ScenarioDefinition</code> is adapted to <code>OrchestratorScenario</code> by
+<code>src/adapters/scenarioAdapter.ts</code> before dispatch.</p>
+<hr />
+<h2 id="programmatic-api">Programmatic API<a class="headerlink" href="#programmatic-api" title="Permanent link">&para;</a></h2>
+<p><code>src/lib.ts</code> is the side-effect-free programmatic entry point. It does not install
+signal handlers, process listeners, or Commander — those belong exclusively in
+<code>src/cli.ts</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">runTests</span><span class="p">,</span><span class="w"> </span><span class="nx">createDefaultConfig</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@gadugi/agentic-test&#39;</span><span class="p">;</span>
+
+<span class="c1">// Minimal: run smoke suite with default config</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">runTests</span><span class="p">({</span><span class="w"> </span><span class="nx">suite</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;smoke&#39;</span><span class="w"> </span><span class="p">});</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Passed: </span><span class="si">${</span><span class="nx">session</span><span class="p">.</span><span class="nx">summary</span><span class="p">.</span><span class="nx">passed</span><span class="si">}</span><span class="sb">/</span><span class="si">${</span><span class="nx">session</span><span class="p">.</span><span class="nx">summary</span><span class="p">.</span><span class="nx">total</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+
+<span class="c1">// Full options</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">runTests</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">configPath</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;./config/test-config.yaml&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">suite</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;regression&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">scenarioFiles</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;scenarios/login.yaml&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;scenarios/dashboard.yaml&#39;</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">outputFile</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;results/run.json&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">dryRun</span><span class="o">:</span><span class="w"> </span><span class="kt">false</span><span class="p">,</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>For callers that need graceful shutdown (signal handling), call
+<code>setupGracefulShutdown(orchestrator)</code> explicitly — it is not called inside
+<code>runTests()</code>.</p>
+<p><strong><code>src/lib/</code> sub-modules:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ConfigurationLoader</code></td>
+<td><code>createDefaultConfig()</code>, <code>loadConfiguration(path)</code></td>
+</tr>
+<tr>
+<td><code>ScenarioLoader</code></td>
+<td><code>loadTestScenarios(files)</code>, <code>filterScenariosForSuite()</code>, <code>TEST_SUITES</code></td>
+</tr>
+<tr>
+<td><code>ResultsHandler</code></td>
+<td><code>saveResults()</code>, <code>displayResults()</code>, <code>performDryRun()</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h2>
+<p><code>src/cli.ts</code> is the only Commander entry point. All command logic lives in
+<code>src/cli/commands/</code>.</p>
+<div class="highlight"><pre><span></span><code>agentic-test run       # Run test scenarios
+agentic-test watch     # Watch for scenario file changes and re-run
+agentic-test validate  # Validate scenario YAML files
+agentic-test list      # List discovered scenarios
+agentic-test init      # Scaffold a new scenario file
+agentic-test help      # Show help
+</code></pre></div>
+<p><strong>Global flags</strong> (available on every command):</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--verbose</code></td>
+<td>Enable verbose logging</td>
+</tr>
+<tr>
+<td><code>--debug</code></td>
+<td>Enable debug logging</td>
+</tr>
+<tr>
+<td><code>--no-color</code></td>
+<td>Disable coloured output</td>
+</tr>
+<tr>
+<td><code>--env &lt;file&gt;</code></td>
+<td>Load environment variables from file</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>run</code> command flags:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-s, --scenario &lt;name&gt;</code></td>
+<td>—</td>
+<td>Run a specific scenario by name</td>
+</tr>
+<tr>
+<td><code>-d, --directory &lt;path&gt;</code></td>
+<td><code>./scenarios</code></td>
+<td>Scenarios directory</td>
+</tr>
+<tr>
+<td><code>-c, --config &lt;file&gt;</code></td>
+<td>auto-detected</td>
+<td>Configuration file</td>
+</tr>
+<tr>
+<td><code>--parallel</code></td>
+<td>false</td>
+<td>Run scenarios in parallel</td>
+</tr>
+<tr>
+<td><code>--timeout &lt;ms&gt;</code></td>
+<td><code>300000</code></td>
+<td>Global timeout</td>
+</tr>
+</tbody>
+</table>
+<p>All path flags (<code>--directory</code>, <code>--file</code>, <code>--config</code>, <code>--env</code>) are validated through
+<code>src/cli-path-utils.ts</code> to prevent path traversal attacks.</p>
+<hr />
+<h2 id="baseagent-pattern">BaseAgent Pattern<a class="headerlink" href="#baseagent-pattern" title="Permanent link">&para;</a></h2>
+<p><code>BaseAgent</code> (template-method pattern) eliminates the ~200 lines of duplicated
+<code>execute()</code> boilerplate that previously existed across all five test-executing agents.</p>
+<div class="highlight"><pre><span></span><code>BaseAgent (abstract)
+├── execute()           ← concrete: shared step loop, status tracking, timing
+├── executeStep()       ← abstract: each agent dispatches its own actions
+├── buildResult()       ← abstract: each agent assembles its own result shape
+├── applyEnvironment()  ← optional hook: per-agent env setup
+├── onBeforeExecute()   ← optional hook: called before the step loop
+└── onAfterExecute()    ← optional hook: cleanup after step loop (finally block)
+</code></pre></div>
+<p><strong>Example: implementing a custom agent</strong></p>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">BaseAgent</span><span class="p">,</span><span class="w"> </span><span class="nx">AgentType</span><span class="p">,</span><span class="w"> </span><span class="nx">ExecutionContext</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@gadugi/agentic-test&#39;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">OrchestratorScenario</span><span class="p">,</span><span class="w"> </span><span class="nx">StepResult</span><span class="p">,</span><span class="w"> </span><span class="nx">TestStatus</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@gadugi/agentic-test&#39;</span><span class="p">;</span>
+
+<span class="k">export</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nx">MyDatabaseAgent</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">BaseAgent</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">readonly</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;database-agent&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">readonly</span><span class="w"> </span><span class="kr">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">AgentType</span><span class="p">.</span><span class="nx">CLI</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">async</span><span class="w"> </span><span class="nx">initialize</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="ow">void</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Connect to DB, run migrations, etc.</span>
+<span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">isInitialized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">async</span><span class="w"> </span><span class="nx">cleanup</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="ow">void</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Close connections</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">async</span><span class="w"> </span><span class="nx">executeStep</span><span class="p">(</span><span class="nx">step</span><span class="o">:</span><span class="w"> </span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="nx">_index</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nb">Promise</span><span class="o">&lt;</span><span class="nx">StepResult</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">runQuery</span><span class="p">(</span><span class="nx">step</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">sql</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">stepId</span><span class="o">:</span><span class="w"> </span><span class="kt">step.name</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="kt">result.rows.length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">TestStatus.PASSED</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">TestStatus.FAILED</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">duration</span><span class="o">:</span><span class="w"> </span><span class="kt">result.duration</span><span class="p">,</span>
+<span class="w">    </span><span class="p">};</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">protected</span><span class="w"> </span><span class="nx">buildResult</span><span class="p">(</span><span class="nx">ctx</span><span class="o">:</span><span class="w"> </span><span class="kt">ExecutionContext</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">queryCount</span><span class="o">:</span><span class="w"> </span><span class="kt">this.queries.length</span><span class="w"> </span><span class="p">};</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>BaseAgent</code> guarantees:
+- <code>execute()</code> throws if <code>initialize()</code> was not called first
+- The step loop stops at the first <code>FAILED</code> or <code>ERROR</code> step
+- <code>onAfterExecute()</code> always runs in the <code>finally</code> block (even on error)
+- <code>ExecutionContext</code> captures timing, status, and step results for <code>buildResult()</code></p>
+<hr />
+<h2 id="module-philosophy">Module Philosophy<a class="headerlink" href="#module-philosophy" title="Permanent link">&para;</a></h2>
+<h3 id="300-loc-limit">300 LOC limit<a class="headerlink" href="#300-loc-limit" title="Permanent link">&para;</a></h3>
+<p>Every source file is kept under ~300 lines. Files that grew beyond this were split
+into focused sub-modules during the refactor:</p>
+<table>
+<thead>
+<tr>
+<th>Original file</th>
+<th>Original LOC</th>
+<th>Replaced by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TUIAgent.ts</code></td>
+<td>1,311</td>
+<td>5 sub-modules in <code>agents/tui/</code></td>
+</tr>
+<tr>
+<td><code>ElectronUIAgent.ts</code></td>
+<td>1,101</td>
+<td>4 sub-modules in <code>agents/electron/</code></td>
+</tr>
+<tr>
+<td><code>PriorityAgent.ts</code></td>
+<td>1,129</td>
+<td>3 sub-modules in <code>agents/priority/</code></td>
+</tr>
+<tr>
+<td><code>WebSocketAgent.ts</code></td>
+<td>1,094</td>
+<td>4 sub-modules in <code>agents/websocket/</code></td>
+</tr>
+<tr>
+<td><code>cli.ts</code></td>
+<td>1,141</td>
+<td>7 command modules in <code>cli/commands/</code></td>
+</tr>
+<tr>
+<td><code>TestOrchestrator</code></td>
+<td>887</td>
+<td>3 sub-modules in <code>orchestrator/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="brick-and-stud-pattern">Brick and stud pattern<a class="headerlink" href="#brick-and-stud-pattern" title="Permanent link">&para;</a></h3>
+<p>Each module is a "brick" with a clear surface ("stud"): an <code>index.ts</code> that exports
+only the public interface. Internal helpers are not exported. Consumers always import
+from the directory, never from individual files:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// Correct</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">TUIInputSimulator</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./agents/tui&#39;</span><span class="p">;</span>
+
+<span class="c1">// Incorrect — bypasses the public surface</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">TUIInputSimulator</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./agents/tui/TUIInputSimulator&#39;</span><span class="p">;</span>
+</code></pre></div>
+<h3 id="single-responsibility">Single responsibility<a class="headerlink" href="#single-responsibility" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One class or function group per file</li>
+<li>No two modules share a responsibility</li>
+<li>Shared utilities (<code>delay</code>, <code>deepEqual</code>) live in one place and are imported
+  everywhere else</li>
+</ul>
+<hr />
+<h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
+<p>How a test scenario travels from YAML file to recorded result:</p>
+<div class="highlight"><pre><span></span><code>sequenceDiagram
+    participant User
+    participant CLI
+    participant lib.ts
+    participant ScenarioLoader
+    participant Orchestrator
+    participant ScenarioRouter
+    participant Agent
+    participant ResultAggregator
+
+    User-&gt;&gt;CLI: agentic-test run --scenario login
+    CLI-&gt;&gt;lib.ts: runTests({ suite: &#39;smoke&#39; })
+    lib.ts-&gt;&gt;ScenarioLoader: loadTestScenarios([&#39;scenarios/login.yaml&#39;])
+    ScenarioLoader--&gt;&gt;lib.ts: ScenarioDefinition[]
+    lib.ts-&gt;&gt;Orchestrator: orchestrator.run(suite, files)
+    Orchestrator-&gt;&gt;ScenarioLoader: load + filter for suite
+    Orchestrator-&gt;&gt;ScenarioRouter: route(OrchestratorScenario[])
+    ScenarioRouter-&gt;&gt;Agent: agent.initialize()
+    ScenarioRouter-&gt;&gt;Agent: agent.execute(scenario)
+    Agent--&gt;&gt;ScenarioRouter: TestResult
+    ScenarioRouter-&gt;&gt;ResultAggregator: record(result)
+    ResultAggregator-&gt;&gt;Orchestrator: session complete
+    Orchestrator--&gt;&gt;lib.ts: TestSession
+    lib.ts--&gt;&gt;CLI: TestSession
+    CLI--&gt;&gt;User: summary output + exit code
+</code></pre></div>
+<p><strong>Adapter step:</strong> <code>ScenarioDefinition</code> (the YAML schema type) is converted to
+<code>OrchestratorScenario</code> (the internal execution type) by <code>adaptScenarioToComplex()</code>
+in <code>src/adapters/scenarioAdapter.ts</code> before being passed to <code>ScenarioRouter</code>.</p>
+<p><strong>Suite filtering:</strong> <code>filterScenariosForSuite()</code> from <code>src/lib/ScenarioLoader.ts</code>
+selects scenarios by tag prefix (<code>smoke:</code>, <code>critical:</code>, <code>auth:</code>) for the <code>smoke</code>
+suite, or passes all scenarios for <code>full</code> and <code>regression</code> suites. <code>TestOrchestrator</code>
+imports and delegates to this canonical function; there is no private duplicate.</p>
+<p><strong>Type naming disambiguation:</strong>
+- <code>TestModels.TestSuite</code> — a named collection of <code>OrchestratorScenario[]</code> for execution
+- <code>SuiteFilterConfig</code> (formerly <code>TestSuite</code> in <code>TestOrchestrator</code>) — pattern-based
+  suite selector <code>{ name, patterns: string[], tags?: string[] }</code> used to decide which
+  scenarios belong to a named run; exported as <code>OrchestratorTestSuite</code> from the public API</p>
+<hr />
+<p>See also:</p>
+<ul>
+<li><a href="../">docs/index.md</a> — documentation home</li>
+<li><a href="../ResourceOptimizer/">docs/ResourceOptimizer.md</a> — ResourceOptimizer deep-dive</li>
+<li><a href="../screenshot-diff-guide/">docs/screenshot-diff-guide.md</a> — screenshot comparison guide</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/rysweet/gadugi-agentic-test" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

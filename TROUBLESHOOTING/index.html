@@ -1,0 +1,3547 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Intelligent multi-agent testing framework for Electron, CLI, and web applications">
+      
+      
+      
+        <link rel="canonical" href="https://rysweet.github.io/gadugi-agentic-test/TROUBLESHOOTING/">
+      
+      
+        <link rel="prev" href="../ResourceOptimizer/">
+      
+      
+        <link rel="next" href="../CHANGELOG/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Troubleshooting - Gadugi Agentic Test</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#troubleshooting-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Gadugi Agentic Test" class="md-header__button md-logo" aria-label="Gadugi Agentic Test" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Gadugi Agentic Test
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Troubleshooting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rysweet/gadugi-agentic-test" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rysweet/gadugi-agentic-test
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../GETTING_STARTED/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../ARCHITECTURE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../API_REFERENCE/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
+          
+  
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Gadugi Agentic Test" class="md-nav__button md-logo" aria-label="Gadugi Agentic Test" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Gadugi Agentic Test
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rysweet/gadugi-agentic-test" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rysweet/gadugi-agentic-test
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GETTING_STARTED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API_REFERENCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scenarios-README/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screenshot-diff-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Screenshot Diffing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ResourceOptimizer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource Optimization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#log-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-npm-install-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: NPM Install Fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-playwright-browser-installation-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Playwright Browser Installation Fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-python-dependencies-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Python Dependencies Missing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Problems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-environment-variables-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Environment Variables Not Found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-invalid-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Invalid Configuration File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-path-resolution-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Path Resolution Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#electronuiagent-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElectronUIAgent Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ElectronUIAgent Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-electron-app-wont-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Electron App Won't Launch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-element-selectors-not-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Element Selectors Not Working
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-screenshot-capture-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Screenshot Capture Failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cliagent-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLIAgent Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CLIAgent Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-command-execution-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Command Execution Timeouts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-environment-variable-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Environment Variable Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-execution-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Execution Problems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Execution Problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-tests-pass-locally-but-fail-in-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Tests Pass Locally but Fail in CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-flaky-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Flaky Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-memory-leaks-during-long-test-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Memory Leaks During Long Test Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-slow-test-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Slow Test Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-high-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: High Memory Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-github-integration-not-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: GitHub Integration Not Working
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-websocket-connection-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: WebSocket Connection Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-specific-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment-Specific Problems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment-Specific Problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-path-separator-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Path Separator Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-powershell-execution-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: PowerShell Execution Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macos-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        macOS-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="macOS-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-gatekeeper-blocking-electron-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Gatekeeper Blocking Electron App
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-permission-denied-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Permission Denied Errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linux-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linux-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Linux-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-missing-display-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Missing Display Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-browser-dependencies-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Browser Dependencies Missing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docker-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-container-crashes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Container Crashes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Debugging
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Debugging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-debug-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable Debug Logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-debug-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture Debug Information
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-agent-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual Agent Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Profiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Help
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#self-help-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Help Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-effective-bug-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating Effective Bug Reports
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-bug-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template Bug Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps-to-reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps to Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expected-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actual-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actual Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preventive-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preventive Measures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preventive Measures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#best-practices-for-stability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices for Stability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Diagnostics
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Diagnostics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#system-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#health-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Health Check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#log-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-npm-install-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: NPM Install Fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-playwright-browser-installation-fails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Playwright Browser Installation Fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-python-dependencies-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Python Dependencies Missing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Problems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-environment-variables-not-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Environment Variables Not Found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-invalid-configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Invalid Configuration File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-path-resolution-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Path Resolution Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#electronuiagent-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElectronUIAgent Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ElectronUIAgent Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-electron-app-wont-launch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Electron App Won't Launch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-element-selectors-not-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Element Selectors Not Working
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-screenshot-capture-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Screenshot Capture Failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cliagent-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLIAgent Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CLIAgent Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-command-execution-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Command Execution Timeouts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-environment-variable-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Environment Variable Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-execution-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Execution Problems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Execution Problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-tests-pass-locally-but-fail-in-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Tests Pass Locally but Fail in CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-flaky-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Flaky Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-memory-leaks-during-long-test-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Memory Leaks During Long Test Runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-slow-test-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Slow Test Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-high-memory-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: High Memory Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-github-integration-not-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: GitHub Integration Not Working
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-websocket-connection-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: WebSocket Connection Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-specific-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment-Specific Problems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment-Specific Problems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Windows-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-path-separator-problems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Path Separator Problems
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-powershell-execution-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: PowerShell Execution Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macos-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        macOS-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="macOS-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-gatekeeper-blocking-electron-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Gatekeeper Blocking Electron App
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-permission-denied-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Permission Denied Errors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linux-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linux-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Linux-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-missing-display-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Missing Display Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-browser-dependencies-missing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Browser Dependencies Missing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docker-specific-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker-Specific Issues
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker-Specific Issues">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-container-crashes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Container Crashes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Debugging
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Debugging">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-debug-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable Debug Logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-debug-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture Debug Information
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-agent-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual Agent Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Profiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting Help
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Help">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#self-help-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-Help Resources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#creating-effective-bug-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating Effective Bug Reports
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-bug-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Template Bug Report
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#steps-to-reproduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps to Reproduce
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expected-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Expected Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actual-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actual Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preventive-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preventive Measures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preventive Measures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#best-practices-for-stability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices for Stability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="troubleshooting-guide">Troubleshooting Guide<a class="headerlink" href="#troubleshooting-guide" title="Permanent link">&para;</a></h1>
+<p>This guide covers common issues you might encounter when using Gadugi Agentic Test and their solutions. The troubleshooting sections are organized by category with practical solutions and prevention tips.</p>
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ol>
+<li><a href="#quick-diagnostics">Quick Diagnostics</a></li>
+<li><a href="#installation-issues">Installation Issues</a></li>
+<li><a href="#configuration-problems">Configuration Problems</a></li>
+<li><a href="#agent-specific-issues">Agent-Specific Issues</a></li>
+<li><a href="#test-execution-problems">Test Execution Problems</a></li>
+<li><a href="#performance-issues">Performance Issues</a></li>
+<li><a href="#integration-issues">Integration Issues</a></li>
+<li><a href="#environment-specific-problems">Environment-Specific Problems</a></li>
+<li><a href="#advanced-debugging">Advanced Debugging</a></li>
+<li><a href="#getting-help">Getting Help</a></li>
+</ol>
+<hr />
+<h2 id="quick-diagnostics">Quick Diagnostics<a class="headerlink" href="#quick-diagnostics" title="Permanent link">&para;</a></h2>
+<p>Before diving into specific issues, run these quick diagnostic commands:</p>
+<h3 id="system-check">System Check<a class="headerlink" href="#system-check" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check Node.js version (requires 18+)</span>
+node<span class="w"> </span>--version
+
+<span class="c1"># Check npm version</span>
+npm<span class="w"> </span>--version
+
+<span class="c1"># Verify Gadugi installation</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>--version
+
+<span class="c1"># Environment validation</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>--check-env
+</code></pre></div>
+<h3 id="health-check">Health Check<a class="headerlink" href="#health-check" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run basic health check</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>health-check
+
+<span class="c1"># Validate configuration</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>validate-config<span class="w"> </span>./gadugi.config.js
+
+<span class="c1"># Test agent connectivity</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>test-agents<span class="w"> </span>--dry-run
+</code></pre></div>
+<h3 id="log-analysis">Log Analysis<a class="headerlink" href="#log-analysis" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check recent logs</span>
+tail<span class="w"> </span>-f<span class="w"> </span>./logs/gadugi.log
+
+<span class="c1"># View specific session logs</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>logs<span class="w"> </span>--session<span class="w"> </span>&lt;session-id&gt;
+
+<span class="c1"># Debug mode execution</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--log-level<span class="w"> </span>debug<span class="w"> </span>./tests/simple.yaml
+</code></pre></div>
+<hr />
+<h2 id="installation-issues">Installation Issues<a class="headerlink" href="#installation-issues" title="Permanent link">&para;</a></h2>
+<h3 id="issue-npm-install-fails">Issue: NPM Install Fails<a class="headerlink" href="#issue-npm-install-fails" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Permission errors during <code>npm install</code>
+- Missing dependencies
+- Node-gyp compilation failures</p>
+<p><strong>Solutions:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fix permission issues (Unix/Mac)</span>
+sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="k">$(</span>whoami<span class="k">)</span><span class="w"> </span>~/.npm
+sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="k">$(</span>whoami<span class="k">)</span><span class="w"> </span>/usr/local/lib/node_modules
+
+<span class="c1"># Clear npm cache</span>
+npm<span class="w"> </span>cache<span class="w"> </span>clean<span class="w"> </span>--force
+
+<span class="c1"># Install with legacy peer deps</span>
+npm<span class="w"> </span>install<span class="w"> </span>--legacy-peer-deps
+
+<span class="c1"># Use yarn as alternative</span>
+yarn<span class="w"> </span>install
+</code></pre></div>
+<p><strong>Prevention:</strong>
+- Use Node Version Manager (nvm/fnm)
+- Avoid global npm installations with sudo
+- Keep npm updated: <code>npm install -g npm@latest</code></p>
+<h3 id="issue-playwright-browser-installation-fails">Issue: Playwright Browser Installation Fails<a class="headerlink" href="#issue-playwright-browser-installation-fails" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Browser download timeouts
+- "Executable doesn't exist" errors
+- Headless browser crashes</p>
+<p><strong>Solutions:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Manual browser installation</span>
+npx<span class="w"> </span>playwright<span class="w"> </span>install
+
+<span class="c1"># Install specific browsers only</span>
+npx<span class="w"> </span>playwright<span class="w"> </span>install<span class="w"> </span>chromium
+
+<span class="c1"># Force reinstall</span>
+npx<span class="w"> </span>playwright<span class="w"> </span>install<span class="w"> </span>--force
+
+<span class="c1"># Check browser status</span>
+npx<span class="w"> </span>playwright<span class="w"> </span>install<span class="w"> </span>--dry-run
+
+<span class="c1"># Alternative: Use system browsers</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD</span><span class="o">=</span><span class="m">1</span>
+npx<span class="w"> </span>playwright<span class="w"> </span>install-deps
+</code></pre></div>
+<p><strong>For Corporate Networks:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set proxy for downloads</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">HTTPS_PROXY</span><span class="o">=</span>http://your-proxy:port
+<span class="nb">export</span><span class="w"> </span><span class="nv">HTTP_PROXY</span><span class="o">=</span>http://your-proxy:port
+npx<span class="w"> </span>playwright<span class="w"> </span>install
+</code></pre></div></p>
+<h3 id="issue-python-dependencies-missing">Issue: Python Dependencies Missing<a class="headerlink" href="#issue-python-dependencies-missing" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- "Python 3.11+ required" errors
+- pexpect import failures
+- CLI agent initialization errors</p>
+<p><strong>Solutions:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install Python dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>pexpect<span class="w"> </span>psutil
+
+<span class="c1"># For virtual environments</span>
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>gadugi-env
+<span class="nb">source</span><span class="w"> </span>gadugi-env/bin/activate<span class="w">  </span><span class="c1"># Unix/Mac</span>
+<span class="c1"># gadugi-env\Scripts\activate   # Windows</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c1"># Verify Python path</span>
+which<span class="w"> </span>python3
+python3<span class="w"> </span>--version
+</code></pre></div>
+<hr />
+<h2 id="configuration-problems">Configuration Problems<a class="headerlink" href="#configuration-problems" title="Permanent link">&para;</a></h2>
+<h3 id="issue-environment-variables-not-found">Issue: Environment Variables Not Found<a class="headerlink" href="#issue-environment-variables-not-found" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- "ELECTRON_APP_PATH not set" errors
+- Missing configuration values
+- Agent initialization failures</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Check .env file location:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Ensure .env is in project root</span>
+ls<span class="w"> </span>-la<span class="w"> </span>.env
+
+<span class="c1"># Check .env content</span>
+cat<span class="w"> </span>.env
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Verify environment loading:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Test environment</span>
+node<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;require(&#39;dotenv&#39;).config(); console.log(process.env.ELECTRON_APP_PATH)&quot;</span>
+
+<span class="c1"># Check all Gadugi env vars</span>
+env<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>GADUGI
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Common .env template:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Required</span>
+<span class="nv">ELECTRON_APP_PATH</span><span class="o">=</span>/path/to/your/app.exe
+
+<span class="c1"># Optional but recommended</span>
+<span class="nv">GITHUB_TOKEN</span><span class="o">=</span>your_token_here
+<span class="nv">GADUGI_LOG_LEVEL</span><span class="o">=</span>info
+<span class="nv">GADUGI_HEADLESS</span><span class="o">=</span><span class="nb">false</span>
+
+<span class="c1"># AI Integration (optional)</span>
+<span class="nv">AZURE_OPENAI_ENDPOINT</span><span class="o">=</span>https://your-endpoint.openai.azure.com/
+<span class="nv">AZURE_OPENAI_KEY</span><span class="o">=</span>your_key_here
+</code></pre></div></p>
+</li>
+</ol>
+<p><strong>Windows-specific paths:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Use forward slashes or double backslashes</span>
+<span class="nv">ELECTRON_APP_PATH</span><span class="o">=</span>C:/Program<span class="w"> </span>Files/YourApp/app.exe
+<span class="c1"># OR</span>
+<span class="nv">ELECTRON_APP_PATH</span><span class="o">=</span>C:<span class="se">\\</span>Program<span class="w"> </span>Files<span class="se">\\</span>YourApp<span class="se">\\</span>app.exe
+</code></pre></div></p>
+<h3 id="issue-invalid-configuration-file">Issue: Invalid Configuration File<a class="headerlink" href="#issue-invalid-configuration-file" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- "Configuration validation failed" errors
+- Type errors in gadugi.config.js
+- Unknown configuration options</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Validate configuration syntax:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// gadugi.config.js - Valid example</span>
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">execution</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">maxConcurrentAgents</span><span class="o">:</span><span class="w"> </span><span class="mf">3</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">retryAttempts</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">timeoutMultiplier</span><span class="o">:</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="w">  </span><span class="p">},</span>
+
+<span class="w">  </span><span class="c1">// Avoid common mistakes:</span>
+<span class="w">  </span><span class="c1">// ❌ maxParallel: &quot;3&quot;        (string instead of number)</span>
+<span class="w">  </span><span class="c1">// ❌ undefined: values       (undefined properties)</span>
+<span class="w">  </span><span class="c1">// ❌ typos: &#39;maxParralel&#39;    (typos in property names)</span>
+
+<span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;info&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// ✅ Valid: &#39;error&#39;, &#39;warn&#39;, &#39;info&#39;, &#39;debug&#39;</span>
+
+<span class="w">  </span><span class="nx">ui</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">executablePath</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">ELECTRON_APP_PATH</span><span class="p">,</span><span class="w"> </span><span class="c1">// ✅ Dynamic values OK</span>
+<span class="w">    </span><span class="nx">headless</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CI</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;true&#39;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Test configuration:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Validate config file</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>validate-config
+
+<span class="c1"># Show resolved configuration</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>show-config
+</code></pre></div></p>
+</li>
+</ol>
+<h3 id="issue-path-resolution-problems">Issue: Path Resolution Problems<a class="headerlink" href="#issue-path-resolution-problems" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- "File not found" errors
+- Scenario loading failures
+- Screenshot directory creation errors</p>
+<p><strong>Solutions:</strong></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Use absolute paths in configuration</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">ELECTRON_APP_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">/dist/app.exe&quot;</span>
+
+<span class="c1"># Verify file exists</span>
+ls<span class="w"> </span>-la<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ELECTRON_APP_PATH</span><span class="s2">&quot;</span>
+
+<span class="c1"># Check directory permissions</span>
+ls<span class="w"> </span>-ld<span class="w"> </span>./scenarios/
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>./scenarios/
+
+<span class="c1"># Create missing directories</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span>./screenshots<span class="w"> </span>./logs<span class="w"> </span>./reports
+</code></pre></div>
+<hr />
+<h2 id="agent-specific-issues">Agent-Specific Issues<a class="headerlink" href="#agent-specific-issues" title="Permanent link">&para;</a></h2>
+<h3 id="electronuiagent-issues">ElectronUIAgent Issues<a class="headerlink" href="#electronuiagent-issues" title="Permanent link">&para;</a></h3>
+<h4 id="issue-electron-app-wont-launch">Issue: Electron App Won't Launch<a class="headerlink" href="#issue-electron-app-wont-launch" title="Permanent link">&para;</a></h4>
+<p><strong>Symptoms:</strong>
+- Timeout during app launch
+- "Failed to launch Electron application" errors
+- Process starts but no UI appears</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Check executable path:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verify file exists and is executable</span>
+ls<span class="w"> </span>-la<span class="w"> </span><span class="s2">&quot;/path/to/your/app.exe&quot;</span>
+file<span class="w"> </span><span class="s2">&quot;/path/to/your/app.exe&quot;</span>
+
+<span class="c1"># Test manual launch</span>
+<span class="s2">&quot;/path/to/your/app.exe&quot;</span><span class="w"> </span>--no-sandbox<span class="w"> </span>--disable-dev-shm-usage
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Common launch arguments:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># In your scenario YAML</span>
+<span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">executablePath</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${ELECTRON_APP_PATH}&quot;</span>
+<span class="w">      </span><span class="nt">args</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;--no-sandbox&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;--disable-dev-shm-usage&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;--disable-gpu&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;--disable-web-security&quot;</span><span class="w">  </span><span class="c1"># Only for testing</span>
+<span class="w">      </span><span class="nt">launchTimeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Debug launch issues:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Enable Playwright debug logs</span>
+<span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DEBUG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;pw:*&#39;</span><span class="p">;</span>
+
+<span class="c1">// Capture launch errors</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ElectronUIAgent</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">executablePath</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">ELECTRON_APP_PATH</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">args</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;--enable-logging&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;--log-level=1&#39;</span><span class="p">]</span>
+<span class="p">});</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">launch</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Launch failed:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// Check error.message for specific failure reasons</span>
+<span class="p">}</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h4 id="issue-element-selectors-not-working">Issue: Element Selectors Not Working<a class="headerlink" href="#issue-element-selectors-not-working" title="Permanent link">&para;</a></h4>
+<p><strong>Symptoms:</strong>
+- "Element not found" errors
+- Selectors work manually but fail in tests
+- Intermittent selector failures</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li><strong>Use multiple selector strategies:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Instead of relying on one selector:</span>
+<span class="c1"># ❌ selector: &quot;#submit-btn&quot;</span>
+
+<span class="c1"># Use data-testid (recommended):</span>
+<span class="c1"># ✅ selector: &quot;[data-testid=&#39;submit-btn&#39;]&quot;</span>
+
+<span class="c1"># Or use text-based selectors:</span>
+<span class="c1"># ✅ selector: &quot;button:has-text(&#39;Submit&#39;)&quot;</span>
+
+<span class="c1"># Or use multiple fallback strategies in code:</span>
+</code></pre></div></li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">robustClick</span><span class="p">(</span><span class="nx">page</span><span class="p">,</span><span class="w"> </span><span class="nx">selectors</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">selector</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">selectors</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">await</span><span class="w"> </span><span class="nx">page</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">selector</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">timeout</span><span class="o">:</span><span class="w"> </span><span class="mf">2000</span><span class="w"> </span><span class="p">});</span>
+<span class="w">      </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">// Success</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">continue</span><span class="p">;</span><span class="w"> </span><span class="c1">// Try next selector</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="sb">`None of the selectors worked: </span><span class="si">${</span><span class="nx">selectors</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Usage</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">robustClick</span><span class="p">(</span><span class="nx">page</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="s1">&#39;[data-testid=&quot;submit-btn&quot;]&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;#submit-btn&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;button:has-text(&quot;Submit&quot;)&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;.submit-button&#39;</span>
+<span class="p">]);</span>
+</code></pre></div>
+<ol>
+<li>
+<p><strong>Add explicit waits:</strong>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Wait</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">Element</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">Load&quot;</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;wait_for_element&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[data-testid=&#39;submit-btn&#39;]&quot;</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;visible&quot;</span>
+<span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Click</span><span class="nv"> </span><span class="s">Submit&quot;</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;click&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[data-testid=&#39;submit-btn&#39;]&quot;</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Debug selectors:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Add to your test scenarios</span>
+<span class="o">-</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Debug Available Elements&quot;</span>
+<span class="w">  </span><span class="nx">agent</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;ui-agent&quot;</span>
+<span class="w">  </span><span class="nx">action</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;evaluate&quot;</span>
+<span class="w">  </span><span class="nx">params</span><span class="o">:</span>
+<span class="w">    </span><span class="nx">expression</span><span class="o">:</span><span class="w"> </span><span class="o">|</span>
+<span class="w">      </span><span class="nb">Array</span><span class="p">.</span><span class="kr">from</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelectorAll</span><span class="p">(</span><span class="s1">&#39;button&#39;</span><span class="p">)).</span><span class="nx">map</span><span class="p">(</span><span class="nx">btn</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
+<span class="w">        </span><span class="nx">text</span><span class="o">:</span><span class="w"> </span><span class="nx">btn</span><span class="p">.</span><span class="nx">textContent</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">btn</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">classes</span><span class="o">:</span><span class="w"> </span><span class="nx">btn</span><span class="p">.</span><span class="nx">className</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">testId</span><span class="o">:</span><span class="w"> </span><span class="nx">btn</span><span class="p">.</span><span class="nx">getAttribute</span><span class="p">(</span><span class="s1">&#39;data-testid&#39;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">}))</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h4 id="issue-screenshot-capture-failures">Issue: Screenshot Capture Failures<a class="headerlink" href="#issue-screenshot-capture-failures" title="Permanent link">&para;</a></h4>
+<p><strong>Symptoms:</strong>
+- Screenshot files not created
+- Empty or corrupted screenshots
+- Permission errors writing screenshots</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Check directory permissions:</strong>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>-p<span class="w"> </span>./screenshots
+chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>./screenshots
+
+<span class="c1"># Check disk space</span>
+df<span class="w"> </span>-h<span class="w"> </span>.
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Configure screenshot settings:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">screenshotConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;on&quot;</span><span class="w">  </span><span class="c1"># or &quot;only-on-failure&quot;, &quot;off&quot;</span>
+<span class="w">        </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./screenshots&quot;</span>
+<span class="w">        </span><span class="nt">fullPage</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Debug screenshot capture:</strong>
+<div class="highlight"><pre><span></span><code><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">screenshot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">screenshot</span><span class="p">(</span><span class="s1">&#39;debug-capture&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Screenshot saved:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">screenshot</span><span class="p">.</span><span class="nx">filePath</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Verify file exists</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">fs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fs</span><span class="p">.</span><span class="nx">statSync</span><span class="p">(</span><span class="nx">screenshot</span><span class="p">.</span><span class="nx">filePath</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;File size:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">stats</span><span class="p">.</span><span class="nx">size</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;bytes&#39;</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Screenshot failed:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h3 id="cliagent-issues">CLIAgent Issues<a class="headerlink" href="#cliagent-issues" title="Permanent link">&para;</a></h3>
+<h4 id="issue-command-execution-timeouts">Issue: Command Execution Timeouts<a class="headerlink" href="#issue-command-execution-timeouts" title="Permanent link">&para;</a></h4>
+<p><strong>Symptoms:</strong>
+- Commands hang indefinitely
+- Timeout errors on long-running processes
+- Interactive prompts not handled</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Adjust timeouts:</strong>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Long</span><span class="nv"> </span><span class="s">Running</span><span class="nv"> </span><span class="s">Command&quot;</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cli-agent&quot;</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;npm</span><span class="nv"> </span><span class="s">run</span><span class="nv"> </span><span class="s">build&quot;</span>
+<span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300000</span><span class="w">  </span><span class="c1"># 5 minutes</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Handle interactive prompts:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// For interactive commands</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">session</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">cliAgent</span><span class="p">.</span><span class="nx">startInteractiveSession</span><span class="p">(</span><span class="s1">&#39;npm init&#39;</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">session</span><span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="s1">&#39;package name:&#39;</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">session</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;my-package&#39;</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">session</span><span class="p">.</span><span class="nx">expect</span><span class="p">(</span><span class="s1">&#39;version:&#39;</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">session</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;1.0.0&#39;</span><span class="p">);</span>
+<span class="k">await</span><span class="w"> </span><span class="nx">session</span><span class="p">.</span><span class="nx">close</span><span class="p">();</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Use non-interactive modes:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add non-interactive flags</span>
+npm<span class="w"> </span>install<span class="w"> </span>--silent
+git<span class="w"> </span>clone<span class="w"> </span>--quiet
+kubectl<span class="w"> </span>apply<span class="w"> </span>--wait<span class="o">=</span><span class="nb">false</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h4 id="issue-environment-variable-problems">Issue: Environment Variable Problems<a class="headerlink" href="#issue-environment-variable-problems" title="Permanent link">&para;</a></h4>
+<p><strong>Symptoms:</strong>
+- Commands work manually but fail in tests
+- PATH not found errors
+- Permission denied errors</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Explicit environment setup:</strong>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Command</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">Environment&quot;</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cli-agent&quot;</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;node</span><span class="nv"> </span><span class="s">--version&quot;</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">PATH</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${PATH}:/usr/local/bin&quot;</span>
+<span class="w">      </span><span class="nt">NODE_ENV</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test&quot;</span>
+<span class="w">    </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./my-project&quot;</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Debug environment:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check current environment</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--log-level<span class="w"> </span>debug
+
+<span class="c1"># Compare with manual execution</span>
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$PATH</span>
+which<span class="w"> </span>node
+</code></pre></div></p>
+</li>
+</ol>
+<hr />
+<h2 id="test-execution-problems">Test Execution Problems<a class="headerlink" href="#test-execution-problems" title="Permanent link">&para;</a></h2>
+<h3 id="issue-tests-pass-locally-but-fail-in-ci">Issue: Tests Pass Locally but Fail in CI<a class="headerlink" href="#issue-tests-pass-locally-but-fail-in-ci" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Green tests locally, red in CI
+- Timing-related failures
+- Resource availability issues</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>CI-specific configuration:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># .github/workflows/test.yml</span>
+<span class="nt">env</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">GADUGI_HEADLESS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;true&quot;</span>
+<span class="w">  </span><span class="nt">GADUGI_TIMEOUT_MULTIPLIER</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.0&quot;</span>
+<span class="w">  </span><span class="nt">GADUGI_PARALLEL_AGENTS</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="w">  </span><span class="c1"># Reduce for CI</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Robust wait strategies:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Instead of fixed waits:</span>
+<span class="c1"># ❌ action: &quot;wait&quot;</span>
+<span class="c1">#    params: { duration: 1000 }</span>
+
+<span class="c1"># Use condition-based waits:</span>
+<span class="c1"># ✅ action: &quot;wait_for_element&quot;</span>
+<span class="c1">#    params:</span>
+<span class="c1">#      selector: &quot;[data-testid=&#39;loaded&#39;]&quot;</span>
+<span class="c1">#      timeout: 30000</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>CI-specific timeouts:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// gadugi.config.js</span>
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">timeoutMultiplier</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CI</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">execution</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">maxParallel</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">CI</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">4</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h3 id="issue-flaky-tests">Issue: Flaky Tests<a class="headerlink" href="#issue-flaky-tests" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Tests sometimes pass, sometimes fail
+- Timing-dependent failures
+- Race conditions</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Add stability checks:</strong>
+<div class="highlight"><pre><span></span><code><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Wait</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">Stability&quot;</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;wait_for_element&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[data-testid=&#39;content&#39;]&quot;</span>
+<span class="w">    </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;visible&quot;</span>
+
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Verify</span><span class="nv"> </span><span class="s">Content</span><span class="nv"> </span><span class="s">Loaded&quot;</span>
+<span class="w">  </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;wait_for_function&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;document.querySelectorAll(&#39;[data-loading]&#39;).length</span><span class="nv"> </span><span class="s">===</span><span class="nv"> </span><span class="s">0&quot;</span>
+<span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Retry failed steps:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Flaky</span><span class="nv"> </span><span class="s">Operation&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;click&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[data-testid=&#39;submit&#39;]&quot;</span>
+<span class="w">    </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="nt">continueOnFailure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Debug flaky tests:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run test multiple times</span>
+<span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">{</span><span class="m">1</span>..10<span class="o">}</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Run </span><span class="nv">$i</span><span class="s2">&quot;</span>
+<span class="w">  </span>npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>flaky-test.yaml
+<span class="k">done</span>
+
+<span class="c1"># Capture more screenshots</span>
+<span class="c1"># Set mode to &quot;on&quot; for flaky tests</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h3 id="issue-memory-leaks-during-long-test-runs">Issue: Memory Leaks During Long Test Runs<a class="headerlink" href="#issue-memory-leaks-during-long-test-runs" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Memory usage keeps growing
+- Tests slow down over time
+- Out of memory errors</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Enable cleanup:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">cleanup</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Close</span><span class="nv"> </span><span class="s">Application&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;close_app&quot;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Clear</span><span class="nv"> </span><span class="s">Cache&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ui-agent&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;evaluate&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;window.gc</span><span class="nv"> </span><span class="s">&amp;&amp;</span><span class="nv"> </span><span class="s">window.gc()&quot;</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Limit concurrent agents:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// gadugi.config.js</span>
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">execution</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">maxConcurrentAgents</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="c1">// Reduce if memory constrained</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Monitor memory usage:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Monitor during test execution</span>
+watch<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="s1">&#39;ps aux | grep gadugi&#39;</span>
+
+<span class="c1"># Or use built-in monitoring</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--monitor-memory<span class="w"> </span>./tests/
+</code></pre></div></p>
+</li>
+</ol>
+<hr />
+<h2 id="performance-issues">Performance Issues<a class="headerlink" href="#performance-issues" title="Permanent link">&para;</a></h2>
+<h3 id="issue-slow-test-execution">Issue: Slow Test Execution<a class="headerlink" href="#issue-slow-test-execution" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Tests take much longer than expected
+- UI operations are sluggish
+- High CPU usage</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Optimize selectors:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fast selectors (use these):</span>
+<span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;[data-testid=&#39;element&#39;]&quot;</span><span class="w">    </span><span class="c1"># ✅ Fast</span>
+<span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#unique-id&quot;</span><span class="w">                 </span><span class="c1"># ✅ Fast</span>
+
+<span class="c1"># Slow selectors (avoid these):</span>
+<span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;div</span><span class="nv"> </span><span class="s">&gt;</span><span class="nv"> </span><span class="s">span:nth-child(3)&quot;</span><span class="w">    </span><span class="c1"># ❌ Slow</span>
+<span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;//div[contains(@class,&#39;x&#39;)]&quot;</span><span class="w"> </span><span class="c1"># ❌ Very slow XPath</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Reduce screenshot frequency:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">screenshotConfig</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;only-on-failure&quot;</span><span class="w">  </span><span class="c1"># Instead of &quot;on&quot;</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Optimize wait strategies:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Don&#39;t use fixed delays</span>
+<span class="c1"># ❌ action: &quot;wait&quot;</span>
+<span class="c1">#    params: { duration: 5000 }</span>
+
+<span class="c1"># Use smart waits</span>
+<span class="c1"># ✅ action: &quot;wait_for_element&quot;</span>
+<span class="c1">#    params:</span>
+<span class="c1">#      selector: &quot;[data-loaded=&#39;true&#39;]&quot;</span>
+<span class="c1">#      timeout: 5000</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Parallel execution:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run independent tests in parallel</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>./tests/independent/
+</code></pre></div></p>
+</li>
+</ol>
+<h3 id="issue-high-memory-usage">Issue: High Memory Usage<a class="headerlink" href="#issue-high-memory-usage" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- System becomes unresponsive
+- Out of memory errors
+- Swap usage increases</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Limit browser instances:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// gadugi.config.js</span>
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">ui</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">maxInstances</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="c1">// Limit concurrent browsers</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">execution</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">maxConcurrentAgents</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Enable headless mode:</strong>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">GADUGI_HEADLESS</span><span class="o">=</span><span class="nb">true</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>./tests/
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Clear artifacts regularly:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Clean old screenshots and logs</span>
+find<span class="w"> </span>./screenshots<span class="w"> </span>-mtime<span class="w"> </span>+7<span class="w"> </span>-delete
+find<span class="w"> </span>./logs<span class="w"> </span>-mtime<span class="w"> </span>+3<span class="w"> </span>-delete
+</code></pre></div></p>
+</li>
+</ol>
+<hr />
+<h2 id="integration-issues">Integration Issues<a class="headerlink" href="#integration-issues" title="Permanent link">&para;</a></h2>
+<h3 id="issue-github-integration-not-working">Issue: GitHub Integration Not Working<a class="headerlink" href="#issue-github-integration-not-working" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Issues not created automatically
+- Authentication errors
+- API rate limiting</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Verify token permissions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Test GitHub token</span>
+curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: token </span><span class="nv">$GITHUB_TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">     </span>https://api.github.com/user
+
+<span class="c1"># Check required scopes: repo, issues</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Configure properly:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// gadugi.config.js</span>
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">github</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">repository</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;owner/repo&#39;</span><span class="p">,</span><span class="w">  </span><span class="c1">// ✅ Correct format</span>
+<span class="w">    </span><span class="c1">// repository: &#39;https://github.com/owner/repo&#39;, // ❌ Wrong</span>
+<span class="w">    </span><span class="nx">createIssues</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">token</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">GITHUB_TOKEN</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Handle rate limiting:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Reduce issue creation frequency</span>
+<span class="nx">github</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">createIssues</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;production&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">rateLimit</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">requestsPerHour</span><span class="o">:</span><span class="w"> </span><span class="mf">100</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></p>
+</li>
+</ol>
+<h3 id="issue-websocket-connection-problems">Issue: WebSocket Connection Problems<a class="headerlink" href="#issue-websocket-connection-problems" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- WebSocket timeouts
+- Connection refused errors
+- Events not received</p>
+<p><strong>Solutions:</strong></p>
+<ol>
+<li>
+<p><strong>Verify WebSocket server:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Test WebSocket manually</span>
+npx<span class="w"> </span>wscat<span class="w"> </span>-c<span class="w"> </span>ws://localhost:3001
+
+<span class="c1"># Check if server is running</span>
+netstat<span class="w"> </span>-an<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">3001</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Configure connection properly:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;websocket-agent&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;websocket&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ws://localhost:3001&quot;</span>
+<span class="w">      </span><span class="nt">reconnectAttempts</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">reconnectDelay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2000</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Debug connection issues:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Enable WebSocket debugging</span>
+<span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DEBUG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;socket.io-client:*&#39;</span><span class="p">;</span>
+
+<span class="c1">// Test connection programmatically</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">io</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;socket.io-client&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">io</span><span class="p">(</span><span class="s1">&#39;ws://localhost:3001&#39;</span><span class="p">);</span>
+
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Connected&#39;</span><span class="p">));</span>
+<span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connect_error&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Connection error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">));</span>
+</code></pre></div></p>
+</li>
+</ol>
+<hr />
+<h2 id="environment-specific-problems">Environment-Specific Problems<a class="headerlink" href="#environment-specific-problems" title="Permanent link">&para;</a></h2>
+<h3 id="windows-specific-issues">Windows-Specific Issues<a class="headerlink" href="#windows-specific-issues" title="Permanent link">&para;</a></h3>
+<h4 id="issue-path-separator-problems">Issue: Path Separator Problems<a class="headerlink" href="#issue-path-separator-problems" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1">// Use path.join() for cross-platform paths</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">configPath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;config&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;gadugi.config.js&#39;</span><span class="p">);</span>
+
+<span class="c1">// Or use forward slashes (works on Windows)</span>
+<span class="nx">ELECTRON_APP_PATH</span><span class="o">=</span><span class="nx">C</span><span class="o">:</span><span class="err">/Program Files/MyApp/app.exe</span>
+</code></pre></div></p>
+<h4 id="issue-powershell-execution-policy">Issue: PowerShell Execution Policy<a class="headerlink" href="#issue-powershell-execution-policy" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c"># Allow script execution</span>
+<span class="nb">Set-ExecutionPolicy</span> <span class="n">-ExecutionPolicy</span> <span class="n">RemoteSigned</span> <span class="n">-Scope</span> <span class="n">CurrentUser</span>
+
+<span class="c"># Or run specific command</span>
+<span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="n">script</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre></div></p>
+<h3 id="macos-specific-issues">macOS-Specific Issues<a class="headerlink" href="#macos-specific-issues" title="Permanent link">&para;</a></h3>
+<h4 id="issue-gatekeeper-blocking-electron-app">Issue: Gatekeeper Blocking Electron App<a class="headerlink" href="#issue-gatekeeper-blocking-electron-app" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Allow unsigned app to run</span>
+sudo<span class="w"> </span>spctl<span class="w"> </span>--master-disable
+
+<span class="c1"># Or add specific exception</span>
+sudo<span class="w"> </span>spctl<span class="w"> </span>--add<span class="w"> </span>/path/to/your/app.app
+</code></pre></div></p>
+<h4 id="issue-permission-denied-errors">Issue: Permission Denied Errors<a class="headerlink" href="#issue-permission-denied-errors" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Fix permissions</span>
+chmod<span class="w"> </span>+x<span class="w"> </span>/path/to/your/app
+sudo<span class="w"> </span>chown<span class="w"> </span>-R<span class="w"> </span><span class="k">$(</span>whoami<span class="k">)</span><span class="w"> </span>/path/to/project
+
+<span class="c1"># Add to PATH if needed</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+</code></pre></div></p>
+<h3 id="linux-specific-issues">Linux-Specific Issues<a class="headerlink" href="#linux-specific-issues" title="Permanent link">&para;</a></h3>
+<h4 id="issue-missing-display-server">Issue: Missing Display Server<a class="headerlink" href="#issue-missing-display-server" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install Xvfb for headless</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>xvfb
+
+<span class="c1"># Run with virtual display</span>
+xvfb-run<span class="w"> </span>-a<span class="w"> </span>npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>./tests/
+
+<span class="c1"># Or set headless mode</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">GADUGI_HEADLESS</span><span class="o">=</span><span class="nb">true</span>
+</code></pre></div></p>
+<h4 id="issue-browser-dependencies-missing">Issue: Browser Dependencies Missing<a class="headerlink" href="#issue-browser-dependencies-missing" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install browser dependencies</span>
+npx<span class="w"> </span>playwright<span class="w"> </span>install-deps
+
+<span class="c1"># For Ubuntu/Debian</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>update
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libnss3<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libatk-bridge2.0-0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libdrm2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libxcomposite1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libxdamage1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libxrandr2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libgbm1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libxss1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libasound2
+</code></pre></div></p>
+<h3 id="docker-specific-issues">Docker-Specific Issues<a class="headerlink" href="#docker-specific-issues" title="Permanent link">&para;</a></h3>
+<h4 id="issue-container-crashes">Issue: Container Crashes<a class="headerlink" href="#issue-container-crashes" title="Permanent link">&para;</a></h4>
+<p><strong>Solutions:</strong>
+<div class="highlight"><pre><span></span><code><span class="c"># Add necessary capabilities</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">node:18-alpine</span>
+
+<span class="c"># Install browser dependencies</span>
+<span class="k">RUN</span><span class="w"> </span>apk<span class="w"> </span>add<span class="w"> </span>--no-cache<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>chromium<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>nss<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>freetype<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>freetype-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>harfbuzz<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ca-certificates<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ttf-freefont
+
+<span class="c"># Set Chrome path</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">CHROME_BIN</span><span class="o">=</span><span class="s2">&quot;/usr/bin/chromium-browser&quot;</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">CHROME_PATH</span><span class="o">=</span><span class="s2">&quot;/usr/bin/chromium-browser&quot;</span>
+
+<span class="c"># Disable Chrome sandbox</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">GADUGI_HEADLESS</span><span class="o">=</span><span class="nb">true</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">CHROME_ARGS</span><span class="o">=</span><span class="s2">&quot;--no-sandbox --disable-dev-shm-usage&quot;</span>
+</code></pre></div></p>
+<hr />
+<h2 id="advanced-debugging">Advanced Debugging<a class="headerlink" href="#advanced-debugging" title="Permanent link">&para;</a></h2>
+<h3 id="enable-debug-logging">Enable Debug Logging<a class="headerlink" href="#enable-debug-logging" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Maximum verbosity</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span>gadugi:*,pw:*
+<span class="nb">export</span><span class="w"> </span><span class="nv">GADUGI_LOG_LEVEL</span><span class="o">=</span>debug
+
+<span class="c1"># Run with debug output</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--log-level<span class="w"> </span>debug<span class="w"> </span>./tests/
+</code></pre></div>
+<h3 id="capture-debug-information">Capture Debug Information<a class="headerlink" href="#capture-debug-information" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generate debug report</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>debug-report<span class="w"> </span>--output<span class="w"> </span>./debug-info.json
+
+<span class="c1"># Include system information</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>debug-report<span class="w"> </span>--include-system<span class="w"> </span>--output<span class="w"> </span>./debug-full.json
+</code></pre></div>
+<h3 id="manual-agent-testing">Manual Agent Testing<a class="headerlink" href="#manual-agent-testing" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// test-agent.js - Manual agent testing</span>
+<span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ElectronUIAgent</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;@gadugi/agentic-test&#39;</span><span class="p">);</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">testAgent</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">agent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ElectronUIAgent</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">executablePath</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">ELECTRON_APP_PATH</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">headless</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="p">});</span>
+
+<span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Initializing agent...&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Launching application...&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">launch</span><span class="p">();</span>
+
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Taking screenshot...&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">screenshot</span><span class="p">(</span><span class="s1">&#39;manual-test&#39;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Success!&#39;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Agent test failed:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="nx">agent</span><span class="p">.</span><span class="nx">cleanup</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">testAgent</span><span class="p">();</span>
+</code></pre></div>
+<h3 id="performance-profiling">Performance Profiling<a class="headerlink" href="#performance-profiling" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Profile test execution</span>
+node<span class="w"> </span>--prof<span class="w"> </span><span class="k">$(</span>which<span class="w"> </span>gadugi-test<span class="k">)</span><span class="w"> </span>run<span class="w"> </span>./tests/
+
+<span class="c1"># Analyze profile</span>
+node<span class="w"> </span>--prof-process<span class="w"> </span>isolate-*.log<span class="w"> </span>&gt;<span class="w"> </span>profile.txt
+
+<span class="c1"># Memory usage profiling</span>
+node<span class="w"> </span>--inspect<span class="w"> </span><span class="k">$(</span>which<span class="w"> </span>gadugi-test<span class="k">)</span><span class="w"> </span>run<span class="w"> </span>./tests/
+</code></pre></div>
+<h3 id="network-debugging">Network Debugging<a class="headerlink" href="#network-debugging" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Capture network traffic</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">DEBUG</span><span class="o">=</span>axios:*
+
+<span class="c1"># Monitor WebSocket connections</span>
+npx<span class="w"> </span>wscat<span class="w"> </span>-l<span class="w"> </span><span class="m">3001</span><span class="w">  </span><span class="c1"># Listen mode</span>
+</code></pre></div>
+<hr />
+<h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
+<h3 id="self-help-resources">Self-Help Resources<a class="headerlink" href="#self-help-resources" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Documentation:</strong></li>
+<li><a href="../GETTING_STARTED/">Getting Started Guide</a></li>
+<li><a href="../API_REFERENCE/">API Reference</a></li>
+<li>
+<p><a href="./scenarios/">Example Scenarios</a></p>
+</li>
+<li>
+<p><strong>Debug Tools:</strong>
+   <div class="highlight"><pre><span></span><code><span class="c1"># Built-in help</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>--help
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--help
+
+<span class="c1"># Health check</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>health-check
+
+<span class="c1"># Configuration validation</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>validate-config
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Community Resources:</strong></p>
+</li>
+<li><a href="https://github.com/rysweet/gadugi-agentic-test/discussions">GitHub Discussions</a></li>
+<li><a href="https://github.com/rysweet/gadugi-agentic-test/issues">Issue Tracker</a></li>
+</ol>
+<h3 id="creating-effective-bug-reports">Creating Effective Bug Reports<a class="headerlink" href="#creating-effective-bug-reports" title="Permanent link">&para;</a></h3>
+<p>When creating an issue, include:</p>
+<ol>
+<li>
+<p><strong>Environment Information:</strong>
+   <div class="highlight"><pre><span></span><code>npx<span class="w"> </span>gadugi-test<span class="w"> </span>--version
+node<span class="w"> </span>--version
+npm<span class="w"> </span>--version
+uname<span class="w"> </span>-a<span class="w">  </span><span class="c1"># Linux/Mac</span>
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Configuration:</strong>
+   <div class="highlight"><pre><span></span><code><span class="c1"># Share your configuration (remove sensitive data)</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>show-config<span class="w"> </span>--sanitized
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Logs:</strong>
+   <div class="highlight"><pre><span></span><code><span class="c1"># Recent logs</span>
+tail<span class="w"> </span>-n<span class="w"> </span><span class="m">100</span><span class="w"> </span>./logs/gadugi.log
+
+<span class="c1"># Debug run</span>
+npx<span class="w"> </span>gadugi-test<span class="w"> </span>run<span class="w"> </span>--log-level<span class="w"> </span>debug<span class="w"> </span>./failing-test.yaml
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Minimal Reproduction:</strong></p>
+</li>
+<li>Simplest scenario that reproduces the issue</li>
+<li>Steps to reproduce</li>
+<li>Expected vs actual behavior</li>
+</ol>
+<h3 id="template-bug-report">Template Bug Report<a class="headerlink" href="#template-bug-report" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="gu">## Bug Description</span>
+Brief description of the issue
+
+<span class="gu">## Environment</span>
+<span class="k">-</span><span class="w"> </span>Gadugi version: X.X.X
+<span class="k">-</span><span class="w"> </span>Node.js version: X.X.X
+<span class="k">-</span><span class="w"> </span>OS: [Windows/macOS/Linux]
+<span class="k">-</span><span class="w"> </span>Browser: [if UI testing]
+
+<span class="gu">## Configuration</span>
+```yaml
+<span class="gh"># Your gadugi config (sanitized)</span>
+</code></pre></div>
+<h2 id="steps-to-reproduce">Steps to Reproduce<a class="headerlink" href="#steps-to-reproduce" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Step 1</li>
+<li>Step 2</li>
+<li>Step 3</li>
+</ol>
+<h2 id="expected-behavior">Expected Behavior<a class="headerlink" href="#expected-behavior" title="Permanent link">&para;</a></h2>
+<p>What you expected to happen</p>
+<h2 id="actual-behavior">Actual Behavior<a class="headerlink" href="#actual-behavior" title="Permanent link">&para;</a></h2>
+<p>What actually happened</p>
+<h2 id="logs">Logs<a class="headerlink" href="#logs" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>Relevant log output
+</code></pre></div>
+<h2 id="additional-context">Additional Context<a class="headerlink" href="#additional-context" title="Permanent link">&para;</a></h2>
+<p>Any other relevant information
+```</p>
+<hr />
+<h2 id="preventive-measures">Preventive Measures<a class="headerlink" href="#preventive-measures" title="Permanent link">&para;</a></h2>
+<h3 id="best-practices-for-stability">Best Practices for Stability<a class="headerlink" href="#best-practices-for-stability" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Use stable selectors:</strong>
+   <code>html
+   &lt;button data-testid="submit-btn"&gt;Submit&lt;/button&gt;</code></p>
+</li>
+<li>
+<p><strong>Implement proper waits:</strong>
+   ```yaml</p>
+</li>
+<li>
+<p>action: "wait_for_element"
+     params:
+       selector: "[data-loaded='true']"
+   ```</p>
+</li>
+<li>
+<p><strong>Add cleanup steps:</strong>
+   ```yaml
+   cleanup:</p>
+<ul>
+<li>action: "close_app"
+   ```</li>
+</ul>
+</li>
+<li>
+<p><strong>Monitor resource usage:</strong>
+   <code>bash
+   # Regular cleanup
+   find ./logs -mtime +7 -delete
+   find ./screenshots -mtime +14 -delete</code></p>
+</li>
+<li>
+<p><strong>Version control configuration:</strong>
+   <code>bash
+   # Track config changes
+   git add gadugi.config.js .env.example</code></p>
+</li>
+</ol>
+<hr />
+<p>This troubleshooting guide covers the most common issues encountered when using Gadugi Agentic Test. If you encounter an issue not covered here, please <a href="https://github.com/rysweet/gadugi-agentic-test/issues">open an issue</a> on GitHub with detailed information, and we'll help you resolve it and update this guide.</p>
+<p>Remember: Most issues are configuration-related and can be resolved quickly with the right diagnostics. When in doubt, start with the <a href="#quick-diagnostics">Quick Diagnostics</a> section!</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/rysweet/gadugi-agentic-test" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
