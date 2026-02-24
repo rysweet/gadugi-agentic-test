@@ -2,11 +2,14 @@
  * APIResponseValidator - Response validation logic
  *
  * Validates API responses against expected status codes, headers,
- * JSON body content, and (stub) JSON schema.
+ * JSON body content, and JSON schema (via ajv).
  */
 
+import Ajv from 'ajv';
 import { deepEqual } from '../../utils/comparison';
 import { APIResponse, SchemaValidation } from './types';
+
+const ajv = new Ajv();
 
 export class APIResponseValidator {
   private validationConfig: SchemaValidation;
@@ -63,15 +66,36 @@ export class APIResponseValidator {
   }
 
   /**
-   * Validate response against a JSON Schema (requires ajv to be installed)
+   * Validate response body against a JSON Schema using ajv.
+   *
+   * @param schemaStr - JSON string representing the JSON Schema to validate against
+   * @param responseData - The response body data to validate (defaults to undefined when omitted)
+   * @returns true when validation passes, false when validation fails
+   * @throws Error when schema validation is disabled
+   * @throws Error when schemaStr is not valid JSON
    */
-  validateResponseSchema(_schemaStr: string): boolean {
+  validateResponseSchema(schemaStr: string, responseData?: unknown): boolean {
     if (!this.validationConfig.enabled) {
       throw new Error('Schema validation is disabled');
     }
-    throw new Error(
-      'Schema validation not implemented. Install ajv and implement, or remove validate_schema step action.'
-    );
+
+    let schema: unknown;
+    try {
+      schema = JSON.parse(schemaStr);
+    } catch (error) {
+      throw new Error(
+        `Invalid JSON schema: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    const validate = ajv.compile(schema as object);
+    const valid = validate(responseData);
+
+    if (!valid) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
