@@ -58,7 +58,8 @@ export class CLICommandRunner {
           const failedResult: CommandResult = {
             command: `${command} ${args.join(' ')}`.trim(), exitCode: -1, stdout: '',
             stderr: message || 'Unknown error', duration: Date.now() - startTime,
-            workingDirectory: context.cwd, environment: context.env
+            ...(context.cwd !== undefined ? { workingDirectory: context.cwd } : {}),
+            ...(context.env !== undefined ? { environment: context.env } : {}),
           };
           this.commandHistory.push(failedResult);
           throw error;
@@ -144,7 +145,9 @@ export class CLICommandRunner {
           const stderrStr = typeof stderrBuf === 'string' ? stderrBuf : stderrBuf?.toString(this.config.ioConfig.encoding) || '';
           const result: CommandResult = {
             command: fullCommand, exitCode, stdout: stdoutStr, stderr: stderrStr,
-            duration: Date.now() - startTime, workingDirectory: context.cwd, environment: context.env
+            duration: Date.now() - startTime,
+            ...(context.cwd !== undefined ? { workingDirectory: context.cwd } : {}),
+            ...(context.env !== undefined ? { environment: context.env } : {}),
           };
           if (context.expectedExitCodes!.includes(exitCode)) resolve(result);
           else reject(new Error(`Command failed with exit code ${exitCode}: ${stderrStr || error?.message}`));
@@ -158,7 +161,7 @@ export class CLICommandRunner {
           const output = data.toString(this.config.ioConfig.encoding);
           stdout += output;
           if (this.config.captureOutput) {
-            this.outputBuffer.push({ type: 'stdout', data: output, timestamp: new Date(), pid: childProcess.pid });
+            this.outputBuffer.push({ type: 'stdout', data: output, timestamp: new Date(), ...(childProcess.pid !== undefined ? { pid: childProcess.pid } : {}) });
           }
           this.handleInteractivePrompt(output, childProcess);
           if (this.config.logConfig.logOutput) this.logger.debug(`[STDOUT] ${output.trim()}`);
@@ -167,7 +170,7 @@ export class CLICommandRunner {
           const output = data.toString(this.config.ioConfig.encoding);
           stderr += output;
           if (this.config.captureOutput) {
-            this.outputBuffer.push({ type: 'stderr', data: output, timestamp: new Date(), pid: childProcess.pid });
+            this.outputBuffer.push({ type: 'stderr', data: output, timestamp: new Date(), ...(childProcess.pid !== undefined ? { pid: childProcess.pid } : {}) });
           }
           if (this.config.logConfig.logOutput) this.logger.debug(`[STDERR] ${output.trim()}`);
         });
@@ -177,7 +180,9 @@ export class CLICommandRunner {
           const exitCode = code ?? -1;
           const result: CommandResult = {
             command: fullCommand, exitCode, stdout, stderr,
-            duration: Date.now() - startTime, workingDirectory: context.cwd, environment: context.env
+            duration: Date.now() - startTime,
+            ...(context.cwd !== undefined ? { workingDirectory: context.cwd } : {}),
+            ...(context.env !== undefined ? { environment: context.env } : {}),
           };
           if (context.expectedExitCodes!.includes(exitCode)) resolve(result);
           else reject(new Error(`Command failed with exit code ${exitCode}: ${stderr}`));

@@ -72,7 +72,7 @@ export class ImageComparator {
         matches,
         differencePercentage: Math.round(differencePercentage * 100) / 100,
         similarityPercentage: Math.round(similarityPercentage * 100) / 100,
-        diffImagePath,
+        ...(diffImagePath !== undefined ? { diffImagePath } : {}),
         metadata: {
           baselineImage, actualImage, threshold, algorithm,
           pixelCount, differentPixels, baselineSize, actualSize, resized,

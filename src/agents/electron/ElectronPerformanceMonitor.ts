@@ -68,8 +68,8 @@ export class ElectronPerformanceMonitor {
       cpuUsage: latest.cpuUsage || 0,
       memoryUsage: latest.memoryUsage || 0,
       availableMemory: 0,
-      responseTime: latest.responseTime,
-      frameRate: latest.frameRate
+      ...(latest.responseTime !== undefined ? { responseTime: latest.responseTime } : {}),
+      ...(latest.frameRate !== undefined ? { frameRate: latest.frameRate } : {}),
     };
   }
 

@@ -15,7 +15,7 @@ import {
 } from './types';
 
 export class SystemAnalyzer {
-  constructor(private readonly logger: TestLogger) {}
+  constructor(_logger: TestLogger) {}
 
   /**
    * Analyze metrics for threshold-based issues

@@ -22,7 +22,7 @@ export function logInfo(message: string): void {
   console.log(chalk.blue('ℹ'), message);
 }
 
-export function createProgressBar(total: number, description: string): SingleBar {
+export function createProgressBar(_total: number, description: string): SingleBar {
   return new SingleBar({
     format: `${chalk.blue(description)  } |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s`,
     barCompleteChar: '\u2588',

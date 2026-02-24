@@ -71,25 +71,27 @@ export class WebSocketEventRecorder {
   setAuthentication(type: string, value?: string): void {
     switch (type.toLowerCase()) {
       case 'token':
-        this.config.auth = { type: 'token', token: value };
+        this.config.auth = { type: 'token', ...(value !== undefined ? { token: value } : {}) };
         break;
 
       case 'query': {
-        const [param, token] = (value || '').split(':');
+        const [param, tok] = (value || '').split(':');
+        const queryToken = tok || value;
         this.config.auth = {
           type: 'query',
           queryParam: param || 'token',
-          token: token || value
+          ...(queryToken !== undefined ? { token: queryToken } : {}),
         };
         break;
       }
 
       case 'header': {
         const [header, headerToken] = (value || '').split(':');
+        const hToken = headerToken || value;
         this.config.auth = {
           type: 'header',
           headerName: header || 'Authorization',
-          token: headerToken || value
+          ...(hToken !== undefined ? { token: hToken } : {}),
         };
         break;
       }

@@ -67,8 +67,8 @@ export class IssueReporter implements IAgent<OrchestratorScenario, { issueNumber
 
     this.octokit = new Octokit({
       auth: this.config.token,
-      baseUrl: this.config.baseUrl,
-      request: { timeout: this.config.timeout }
+      ...(this.config.baseUrl !== undefined ? { baseUrl: this.config.baseUrl } : {}),
+      request: { ...(this.config.timeout !== undefined ? { timeout: this.config.timeout } : {}) }
     });
 
     this.formatter = new IssueFormatter(this.config);

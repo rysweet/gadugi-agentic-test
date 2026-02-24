@@ -158,7 +158,7 @@ export class PtyTerminal extends EventEmitter {
     this.ptyProcess.onExit(({ exitCode, signal }) => {
       if (this.processInfo) {
         this.processInfo.status = 'exited';
-        this.processInfo.exitCode = exitCode || undefined;
+        if (exitCode !== null && exitCode !== undefined) { this.processInfo.exitCode = exitCode; }
       }
 
       this.emit('exit', exitCode, signal?.toString() || null);

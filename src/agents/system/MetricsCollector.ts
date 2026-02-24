@@ -35,7 +35,7 @@ export class MetricsCollector {
         usage: currentLoad.currentLoad,
         loadAverage: os.loadavg(),
         cores: os.cpus().length,
-        temperature: cpuTemperature.main,
+        ...(cpuTemperature.main !== undefined ? { temperature: cpuTemperature.main } : {}),
       };
     } catch (error) {
       this.logger.error('Failed to get CPU metrics', { error });
@@ -108,7 +108,7 @@ export class MetricsCollector {
           }
         : undefined;
 
-      return { usage, io };
+      return { usage, ...(io !== undefined ? { io } : {}) };
     } catch (error) {
       this.logger.error('Failed to get disk metrics', { error });
       return { usage: [] };
@@ -134,7 +134,6 @@ export class MetricsCollector {
         tx: stat.tx_sec,
         rxBytes: stat.rx_bytes,
         txBytes: stat.tx_bytes,
-        speed: undefined,
       }));
 
       return {
@@ -172,13 +171,10 @@ export class MetricsCollector {
             cpu: stats ? stats.cpu : proc.cpu,
             memory: stats ? stats.memory : proc.memRss || 0,
             state: proc.state,
-            ppid: proc.parentPid,
-            uid: undefined,
-            gid: undefined,
-            priority: proc.priority,
-            nice: proc.nice,
-            threads: undefined,
-            startTime: proc.started ? new Date(proc.started) : undefined,
+            ...(proc.parentPid !== undefined ? { ppid: proc.parentPid } : {}),
+            ...(proc.priority !== undefined ? { priority: proc.priority } : {}),
+            ...(proc.nice !== undefined ? { nice: proc.nice } : {}),
+            ...(proc.started ? { startTime: new Date(proc.started) } : {}),
             zombie: proc.state === 'zombie' || proc.state === 'Z',
           });
         } catch (procError) {

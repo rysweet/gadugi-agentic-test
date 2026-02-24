@@ -24,8 +24,8 @@ export async function findFiles(
 
     for (const pattern of globPatterns) {
       const matches = await glob(pattern, {
-        cwd: options?.cwd,
-        ignore: options?.ignore,
+        ...(options?.cwd !== undefined ? { cwd: options.cwd } : {}),
+        ...(options?.ignore !== undefined ? { ignore: options.ignore } : {}),
         absolute: options?.absolute ?? true
       });
       results.push(...matches);

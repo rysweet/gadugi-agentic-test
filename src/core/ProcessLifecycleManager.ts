@@ -138,7 +138,7 @@ export class ProcessLifecycleManager extends EventEmitter {
     // Handle process exit
     childProcess.on('exit', (code, signal) => {
       processInfo.status = 'exited';
-      processInfo.exitCode = code || undefined;
+      if (code !== null && code !== undefined) { processInfo.exitCode = code; }
 
       this.processes.set(processInfo.pid, processInfo);
       this.emit('processExited', processInfo, code, signal);

@@ -28,7 +28,6 @@ export class SessionManager {
     this.session = {
       id: uuidv4(),
       startTime: new Date(),
-      endTime: undefined,
       status: TestStatus.RUNNING,
       results: [],
       summary: { total: 0, passed: 0, failed: 0, skipped: 0 },

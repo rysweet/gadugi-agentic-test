@@ -41,8 +41,8 @@ export function adaptUIConfig(config: UIConfig): ElectronUIAgentConfig {
     defaultTimeout: config.defaultTimeout || 30000,
     headless: config.headless || false,
     recordVideo: config.recordVideo || false,
-    videoDir: config.videoDir,
-    slowMo: config.slowMo,
+    ...(config.videoDir !== undefined ? { videoDir: config.videoDir } : {}),
+    ...(config.slowMo !== undefined ? { slowMo: config.slowMo } : {}),
     screenshotConfig: {
       mode: 'on',
       directory: config.screenshotDir || './screenshots',

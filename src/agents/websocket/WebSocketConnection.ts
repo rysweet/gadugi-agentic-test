@@ -18,11 +18,11 @@ import {
 } from './types';
 
 export class WebSocketConnection extends EventEmitter {
-  private socket?: Socket;
-  private connectionInfo?: ConnectionInfo;
-  private connectionMetrics?: ConnectionMetrics;
-  private pingInterval?: NodeJS.Timeout;
-  private connectionPromise?: Promise<void>;
+  private socket: Socket | undefined;
+  private connectionInfo: ConnectionInfo | undefined;
+  private connectionMetrics: ConnectionMetrics | undefined;
+  private pingInterval: NodeJS.Timeout | undefined;
+  private connectionPromise: Promise<void> | undefined;
   private latencyHistory: LatencyMeasurement[] = [];
   private pendingMessages: Map<string, { timestamp: Date; event: string }> = new Map();
 

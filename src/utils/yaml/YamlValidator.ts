@@ -55,8 +55,8 @@ export class YamlValidator {
       estimatedDuration: raw.estimatedDuration || 60,
       tags: raw.tags || [],
       enabled: raw.enabled !== false,
-      environment: raw.environment,
-      cleanup: raw.cleanup ? this.validateSteps(raw.cleanup) : undefined
+      ...(raw.environment !== undefined ? { environment: raw.environment } : {}),
+      ...(raw.cleanup ? { cleanup: this.validateSteps(raw.cleanup) } : {}),
     };
   }
 

@@ -7,7 +7,6 @@
 
 import { ElectronUIAgent } from '../ElectronUIAgent';
 import { OrchestratorScenario, TestStep, Priority, TestInterface } from '../../models/TestModels';
-import { LogLevel } from '../../utils/logger';
 
 /**
  * Example 1: Basic Application SPA Test
@@ -57,7 +56,7 @@ async function basicSpaTest(): Promise<void> {
     await agent.waitForElement('[data-testid="build-progress"]', { timeout: 30000 });
     
     // Capture final state
-    const finalState = await agent.captureState();
+    await agent.captureState();
     console.log('Build completed, final state captured');
     
     // Take a success screenshot

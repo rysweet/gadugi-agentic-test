@@ -9,7 +9,7 @@ import { LogContext, LoggerConfig } from './LogTransport';
  * Build the console format for Winston, including colorization, timestamps, and context fields.
  */
 export function buildConsoleFormat(
-  config: LoggerConfig,
+  _config: LoggerConfig,
   getContext: () => LogContext
 ): winston.Logform.Format {
   return winston.format.combine(

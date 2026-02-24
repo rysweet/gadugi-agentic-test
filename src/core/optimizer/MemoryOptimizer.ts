@@ -9,9 +9,9 @@ import { MemoryConfig, ResourceMetrics } from './types';
 
 export class MemoryOptimizer extends EventEmitter {
   private config: Required<MemoryConfig>;
-  private monitorInterval?: NodeJS.Timeout;
+  private monitorInterval: NodeJS.Timeout | undefined;
   private gcCallCount = 0;
-  private lastGcTime?: Date;
+  private lastGcTime: Date | undefined;
   private enableGarbageCollection: boolean;
 
   /**
@@ -94,7 +94,7 @@ export class MemoryOptimizer extends EventEmitter {
       external: memoryUsage.external,
       rss: memoryUsage.rss,
       gcRuns: this.gcCallCount,
-      lastGcTime: this.lastGcTime
+      ...(this.lastGcTime !== undefined ? { lastGcTime: this.lastGcTime } : {}),
     };
   }
 }

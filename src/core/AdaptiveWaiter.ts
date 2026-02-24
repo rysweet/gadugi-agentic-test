@@ -111,7 +111,7 @@ export class AdaptiveWaiter {
       success: false,
       attempts,
       totalWaitTime: Date.now() - startTime,
-      lastError
+      ...(lastError !== undefined ? { lastError } : {}),
     };
   }
 
@@ -331,7 +331,7 @@ export class AdaptiveWaiter {
         return (attempt, baseDelay) => baseDelay * Math.pow(attempt, 2);
 
       default:
-        return (attempt, baseDelay) => baseDelay * 1.5; // Default exponential
+        return (_attempt, baseDelay) => baseDelay * 1.5; // Default exponential
     }
   }
 

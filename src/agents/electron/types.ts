@@ -115,7 +115,7 @@ export const DEFAULT_CONFIG: Partial<ElectronUIAgentConfig> = {
 export class TestError extends Error {
   public readonly type: string;
   public readonly timestamp: Date;
-  public readonly context?: Record<string, any>;
+  public readonly context: Record<string, any> | undefined;
 
   constructor(options: {
     type: string;

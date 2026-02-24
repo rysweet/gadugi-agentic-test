@@ -86,7 +86,7 @@ export class CLIAgent extends BaseAgent {
         result = await this.handleExecuteAction(step);
       } else if (action === 'execute_with_input') {
         const parts = step.target.split(' ');
-        result = await this.runner.executeCommand(parts[0], parts.slice(1), { input: step.value || '', timeout: step.timeout });
+        result = await this.runner.executeCommand(parts[0], parts.slice(1), { input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) });
       } else if (action === 'wait_for_output') {
         result = await this.parser.waitForOutput(step.target, () => this.getAllOutput(), step.timeout || this.config.defaultTimeout);
       } else if (action === 'validate_output') {

@@ -13,7 +13,7 @@ export class CpuOptimizer extends EventEmitter {
   private config: Required<BufferConfig>;
   private bufferPool = new Map<string, BufferEntry>();
   private totalBufferSize = 0;
-  private rotationInterval?: NodeJS.Timeout;
+  private rotationInterval: NodeJS.Timeout | undefined;
   private idCounter = 0;
 
   constructor(config: Required<BufferConfig>) {

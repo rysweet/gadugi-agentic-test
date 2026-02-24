@@ -38,7 +38,7 @@ export class ElectronUIAgent extends BaseAgent {
   private perfMonitor: ElectronPerformanceMonitor;
   private wsMonitor: ElectronWebSocketMonitor;
   private logger: TestLogger;
-  private currentScenarioId?: string;
+  private currentScenarioId: string | undefined;
 
   constructor(config: ElectronUIAgentConfig) {
     super();
@@ -66,7 +66,7 @@ export class ElectronUIAgent extends BaseAgent {
       throw new TestError({
         type: 'InitializationError',
         message: `Failed to initialize ElectronUIAgent: ${error instanceof Error ? error.message : String(error)}`,
-        stackTrace: error instanceof Error ? error.stack : undefined,
+        ...(error instanceof Error && error.stack !== undefined ? { stackTrace: error.stack } : {}),
         timestamp: new Date(),
         context: { config: this.sanitizeConfig() }
       });

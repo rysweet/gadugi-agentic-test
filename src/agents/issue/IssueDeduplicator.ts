@@ -39,7 +39,7 @@ export class IssueDeduplicator {
       .digest('hex')
       .substring(0, 16);
 
-    return { ...fingerprintData, stackTraceHash, hash };
+    return { ...fingerprintData, ...(stackTraceHash !== undefined ? { stackTraceHash } : {}), hash };
   }
 
   /**

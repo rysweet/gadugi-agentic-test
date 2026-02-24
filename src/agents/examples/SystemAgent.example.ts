@@ -5,7 +5,7 @@
  * system resource monitoring during test execution.
  */
 
-import { SystemAgent, createSystemAgent, SystemAgentConfig } from '../SystemAgent';
+import { createSystemAgent, SystemAgentConfig } from '../SystemAgent';
 
 async function basicSystemMonitoringExample() {
   console.log('=== Basic System Monitoring Example ===');

@@ -45,13 +45,11 @@ export class ComprehensionAgent implements IAgent, IPipelineAgent {
   /** @inheritdoc IPipelineAgent */
   readonly isPipelineAgent = true as const;
 
-  private config: ComprehensionAgentConfig;
   private docLoader: DocumentationLoader;
   private outputComprehender: OutputComprehender;
   private scenarioComprehender: ScenarioComprehender;
 
   constructor(config: ComprehensionAgentConfig) {
-    this.config = config;
     this.docLoader = new DocumentationLoader(
       config.docsDir,
       config.includePatterns,
