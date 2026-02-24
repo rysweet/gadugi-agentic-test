@@ -45,7 +45,7 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
 /**
  * Write an object to a JSON file
  */
-export async function writeJsonFile(filePath: string, data: any, pretty: boolean = true): Promise<void> {
+export async function writeJsonFile(filePath: string, data: unknown, pretty: boolean = true): Promise<void> {
   try {
     await ensureDirectory(path.dirname(filePath));
     const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);

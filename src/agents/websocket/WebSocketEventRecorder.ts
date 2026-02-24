@@ -14,7 +14,7 @@ import { WebSocketAgentConfig } from './types';
 export interface RecordedEvent {
   type: 'connection' | 'message' | 'error';
   event: string;
-  data?: any;
+  data?: unknown;
   timestamp: Date;
 }
 
@@ -27,7 +27,7 @@ export class WebSocketEventRecorder {
   ) {}
 
   /** Record an arbitrary event */
-  record(type: RecordedEvent['type'], event: string, data?: any): void {
+  record(type: RecordedEvent['type'], event: string, data?: unknown): void {
     this.recordedEvents.push({ type, event, data, timestamp: new Date() });
   }
 

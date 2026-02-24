@@ -8,6 +8,7 @@
 import { TestStep, TestStatus, StepResult } from '../../models/TestModels';
 import { delay } from '../../utils/async';
 import { ConnectionState } from './types';
+import type { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { WebSocketConnection } from './WebSocketConnection';
 import { WebSocketMessageHandler } from './WebSocketMessageHandler';
 import { WebSocketEventRecorder } from './WebSocketEventRecorder';
@@ -17,7 +18,7 @@ export class WebSocketStepExecutor {
     private readonly connection: WebSocketConnection,
     private readonly messageHandler: WebSocketMessageHandler,
     private readonly eventRecorder: WebSocketEventRecorder,
-    private readonly connectFn: (url?: string, options?: any) => Promise<void>,
+    private readonly connectFn: (url?: string, options?: Partial<ManagerOptions & SocketOptions>) => Promise<void>,
     private readonly disconnectFn: () => Promise<void>
   ) {}
 
@@ -42,7 +43,7 @@ export class WebSocketStepExecutor {
     }
   }
 
-  private async dispatch(step: TestStep): Promise<any> {
+  private async dispatch(step: TestStep): Promise<unknown> {
     switch (step.action.toLowerCase()) {
       case 'connect':
         await this.connectFn(step.target || undefined);

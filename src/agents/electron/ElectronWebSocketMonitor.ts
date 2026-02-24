@@ -43,7 +43,7 @@ export class ElectronWebSocketMonitor {
       const eventListeners: EventListener[] = wsConfig.events.map(eventType => ({
         event: eventType,
         enabled: true,
-        handler: (data: any) => {
+        handler: (data: unknown) => {
           const wsEvent: WebSocketEvent = {
             type: eventType,
             timestamp: new Date(),

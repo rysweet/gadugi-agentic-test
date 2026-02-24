@@ -144,9 +144,9 @@ export class ElectronLauncher extends EventEmitter {
    * to the given export directory.
    */
   async exportFinalData(exportData: {
-    performanceSamples: any[];
-    websocketEvents: any[];
-    stateSnapshots: any[];
+    performanceSamples: unknown[];
+    websocketEvents: unknown[];
+    stateSnapshots: unknown[];
     exportScreenshots: () => Promise<void>;
   }): Promise<void> {
     try {

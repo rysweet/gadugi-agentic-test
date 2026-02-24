@@ -13,7 +13,7 @@ export class YamlVariableSubstitution {
   /**
    * Recursively substitute variables in any value (string, object, or array).
    */
-  substitute(content: any, variables: VariableContext): any {
+  substitute(content: unknown, variables: VariableContext): unknown {
     if (typeof content === 'string') {
       return this.substituteString(content, variables);
     }
@@ -26,8 +26,8 @@ export class YamlVariableSubstitution {
       return content.map(item => this.substitute(item, variables));
     }
 
-    const result: any = {};
-    for (const [key, value] of Object.entries(content)) {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(content as Record<string, unknown>)) {
       result[key] = this.substitute(value, variables);
     }
 
@@ -42,11 +42,11 @@ export class YamlVariableSubstitution {
     return str.replace(/\$\{([^}]+)\}/g, (match, expression) => {
       try {
         const parts = expression.split('.');
-        let value: any = variables;
+        let value: unknown = variables;
 
         for (const part of parts) {
-          if (value && typeof value === 'object' && part in value) {
-            value = value[part];
+          if (value && typeof value === 'object' && part in (value as object)) {
+            value = (value as Record<string, unknown>)[part];
           } else {
             return match;
           }
@@ -66,10 +66,10 @@ export class YamlVariableSubstitution {
   /**
    * Extract all variable declarations from YAML content.
    */
-  extractVariables(content: any): Record<string, any> {
-    const variables: Record<string, any> = {};
+  extractVariables(content: unknown): Record<string, unknown> {
+    const variables: Record<string, unknown> = {};
 
-    const extract = (obj: any) => {
+    const extract = (obj: unknown) => {
       if (typeof obj !== 'object' || obj === null) return;
 
       if (Array.isArray(obj)) {

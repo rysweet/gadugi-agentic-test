@@ -28,15 +28,14 @@ export class ResourceOptimizer extends EventEmitter {
   private isDestroying = false;
 
   /**
-   * Used by tests that inspect internal pool state via (optimizer as any).findResourceByAgent(...)
+   * Used by tests that inspect internal pool state via findResourceByAgent(...)
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  findResourceByAgent(agent: PtyTerminal): any {
+  findResourceByAgent(agent: PtyTerminal): unknown {
     return this.concurrencyOpt.findResourceByAgent(agent);
   }
 
   /**
-   * Used by tests that call (optimizer as any).rotateBuffers(true)
+   * Used by tests that call rotateBuffers(true)
    */
   rotateBuffers(force: boolean) {
     this.cpuOpt.rotateBuffers(force);

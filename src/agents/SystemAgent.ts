@@ -68,7 +68,7 @@ export class SystemAgent extends EventEmitter implements IAgent {
     }
   }
 
-  async execute(scenario: any): Promise<SystemHealthReport> {
+  async execute(scenario: { name?: string; timeout?: number } | null): Promise<SystemHealthReport> {
     this.logger.info('Starting system monitoring for scenario', { scenario: scenario?.name });
     try {
       await this.startMonitoring();

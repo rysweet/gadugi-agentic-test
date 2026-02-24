@@ -23,8 +23,9 @@ import {
   WebSocketMessage,
   ConnectionMetrics,
   ConnectionInfo,
-  DEFAULT_CONFIG
+  DEFAULT_CONFIG,
 } from './websocket/types';
+import type { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { WebSocketConnection } from './websocket/WebSocketConnection';
 import { WebSocketMessageHandler } from './websocket/WebSocketMessageHandler';
 import { WebSocketEventRecorder } from './websocket/WebSocketEventRecorder';
@@ -110,18 +111,18 @@ export class WebSocketAgent extends BaseAgent {
     return this.stepExecutor.executeStep(step, stepIndex);
   }
 
-  async connect(url?: string, options?: any): Promise<void> {
+  async connect(url?: string, options?: Partial<ManagerOptions & SocketOptions>): Promise<void> {
     await this.connection.connect(url, options);
     this.messageHandler.setupCustomEventListeners();
   }
 
   async disconnect(): Promise<void> { await this.connection.disconnect(); }
 
-  async sendMessage(event: string, data?: any, ack?: boolean): Promise<WebSocketMessage> {
+  async sendMessage(event: string, data?: unknown, ack?: boolean): Promise<WebSocketMessage> {
     return this.messageHandler.sendMessage(event, data, ack);
   }
 
-  async waitForMessage(event: string, timeout = 10000, filter?: (d: any) => boolean): Promise<WebSocketMessage> {
+  async waitForMessage(event: string, timeout = 10000, filter?: (d: unknown) => boolean): Promise<WebSocketMessage> {
     return this.messageHandler.waitForMessage(event, timeout, filter);
   }
 

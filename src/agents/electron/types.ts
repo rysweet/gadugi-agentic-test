@@ -68,7 +68,7 @@ export interface ElectronUIAgentConfig {
 export interface WebSocketEvent {
   type: string;
   timestamp: Date;
-  data: any;
+  data: unknown;
   source?: string;
 }
 
@@ -115,14 +115,14 @@ export const DEFAULT_CONFIG: Partial<ElectronUIAgentConfig> = {
 export class TestError extends Error {
   public readonly type: string;
   public readonly timestamp: Date;
-  public readonly context: Record<string, any> | undefined;
+  public readonly context: Record<string, unknown> | undefined;
 
   constructor(options: {
     type: string;
     message: string;
     stackTrace?: string;
     timestamp: Date;
-    context?: Record<string, any>;
+    context?: Record<string, unknown>;
   }) {
     super(options.message);
     this.type = options.type;

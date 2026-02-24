@@ -140,7 +140,7 @@ export class CLICommandRunner {
         };
         childProcess = exec(fullCommand, execOptions, (error, stdoutBuf, stderrBuf) => {
           clearTimeout(timeoutHandle);
-          const exitCode = error ? (error as any).code || 1 : 0;
+          const exitCode = error ? (error as NodeJS.ErrnoException).code !== undefined ? Number((error as NodeJS.ErrnoException).code) || 1 : 1 : 0;
           const stdoutStr = typeof stdoutBuf === 'string' ? stdoutBuf : stdoutBuf?.toString(this.config.ioConfig.encoding) || '';
           const stderrStr = typeof stderrBuf === 'string' ? stderrBuf : stderrBuf?.toString(this.config.ioConfig.encoding) || '';
           const result: CommandResult = {

@@ -6,6 +6,7 @@
  */
 
 import * as fs from 'fs/promises';
+import { Stats } from 'fs';
 import * as path from 'path';
 import { EventEmitter } from 'events';
 import { watch as chokidarWatch, FSWatcher as ChokidarFSWatcher } from 'chokidar';
@@ -71,24 +72,24 @@ export class FileSystemWatcher {
             // Propagate other errors
             this.emitter.emit('error', error);
           })
-          .on('add', (filePath: string, stats: any) => {
+          .on('add', (filePath: string, stats: Stats | undefined) => {
             this.fileSystemChanges.push({
               path: filePath,
               type: 'created',
               timestamp: new Date(),
-              size: stats?.size,
+              ...(stats?.size !== undefined ? { size: stats.size } : {}),
             });
             this.emitter.emit('fileSystemChange', {
               path: filePath,
               type: 'created',
             });
           })
-          .on('change', (filePath: string, stats: any) => {
+          .on('change', (filePath: string, stats: Stats | undefined) => {
             this.fileSystemChanges.push({
               path: filePath,
               type: 'modified',
               timestamp: new Date(),
-              size: stats?.size,
+              ...(stats?.size !== undefined ? { size: stats.size } : {}),
             });
             this.emitter.emit('fileSystemChange', {
               path: filePath,

@@ -126,25 +126,38 @@ Extract and return ONLY valid JSON in this exact format:
 }`;
   }
 
-  private parseFeatureSpec(data: any): FeatureSpec {
+  private parseFeatureSpec(data: Record<string, unknown>): FeatureSpec {
+    const inputs = Array.isArray(data['inputs']) ? data['inputs'] : [];
+    const outputs = Array.isArray(data['outputs']) ? data['outputs'] : [];
     return {
-      name: data.name || 'Unknown Feature',
-      purpose: data.purpose || 'Purpose not specified',
-      inputs: (data.inputs || []).map((input: any): FeatureInput => ({
-        name: input.name || 'unknown',
-        type: input.type || 'any',
-        required: input.required !== false,
-        description: input.description || ''
-      })),
-      outputs: (data.outputs || []).map((output: any): FeatureOutput => ({
-        name: output.name || 'result',
-        type: output.type || 'any',
-        description: output.description || ''
-      })),
-      successCriteria: data.success_criteria || data.successCriteria || ['Feature executes successfully'],
-      failureModes: data.failure_modes || data.failureModes || ['Feature fails to execute'],
-      edgeCases: data.edge_cases || data.edgeCases || [],
-      dependencies: data.dependencies || []
+      name: typeof data['name'] === 'string' ? data['name'] : 'Unknown Feature',
+      purpose: typeof data['purpose'] === 'string' ? data['purpose'] : 'Purpose not specified',
+      inputs: inputs.map((input: unknown): FeatureInput => {
+        const i = input as Record<string, unknown>;
+        return {
+          name: typeof i['name'] === 'string' ? i['name'] : 'unknown',
+          type: typeof i['type'] === 'string' ? i['type'] : 'any',
+          required: i['required'] !== false,
+          description: typeof i['description'] === 'string' ? i['description'] : ''
+        };
+      }),
+      outputs: outputs.map((output: unknown): FeatureOutput => {
+        const o = output as Record<string, unknown>;
+        return {
+          name: typeof o['name'] === 'string' ? o['name'] : 'result',
+          type: typeof o['type'] === 'string' ? o['type'] : 'any',
+          description: typeof o['description'] === 'string' ? o['description'] : ''
+        };
+      }),
+      successCriteria: (Array.isArray(data['success_criteria']) ? data['success_criteria'] : null) ||
+        (Array.isArray(data['successCriteria']) ? data['successCriteria'] : null) ||
+        ['Feature executes successfully'],
+      failureModes: (Array.isArray(data['failure_modes']) ? data['failure_modes'] : null) ||
+        (Array.isArray(data['failureModes']) ? data['failureModes'] : null) ||
+        ['Feature fails to execute'],
+      edgeCases: Array.isArray(data['edge_cases']) ? data['edge_cases'] :
+        (Array.isArray(data['edgeCases']) ? data['edgeCases'] : []),
+      dependencies: Array.isArray(data['dependencies']) ? data['dependencies'] : []
     };
   }
 }

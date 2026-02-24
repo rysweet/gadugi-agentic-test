@@ -78,7 +78,7 @@ export class FileUtils {
     return readJsonFile<T>(filePath);
   }
 
-  static async writeJsonFile(filePath: string, data: any, pretty: boolean = true): Promise<void> {
+  static async writeJsonFile(filePath: string, data: unknown, pretty: boolean = true): Promise<void> {
     return writeJsonFile(filePath, data, pretty);
   }
 

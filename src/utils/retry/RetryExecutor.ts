@@ -194,7 +194,7 @@ export async function retryWithFixedDelay<T>(
  */
 export async function retryOnSpecificErrors<T>(
   fn: () => Promise<T>,
-  errorTypes: (new (...args: any[]) => Error)[],
+  errorTypes: (new (...args: unknown[]) => Error)[],
   options: Partial<RetryOptions> = {}
 ): Promise<T> {
   const retry = new RetryManager({

@@ -201,7 +201,7 @@ export class ElectronPageInteractor {
     this.logger.stepExecution(stepIndex, step.action, step.target);
 
     try {
-      let result: any;
+      let result: unknown;
 
       switch (step.action.toLowerCase()) {
         case 'launch': case 'launch_electron':

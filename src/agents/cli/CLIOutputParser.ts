@@ -19,7 +19,7 @@ export class CLIOutputParser {
   /**
    * Validate command output against an expected value or pattern
    */
-  async validateOutput(output: string, expected: any): Promise<boolean> {
+  async validateOutput(output: string, expected: unknown): Promise<boolean> {
     if (typeof expected === 'string') {
       if (expected.startsWith('regex:')) {
         const pattern = expected.substring(6);
@@ -33,39 +33,42 @@ export class CLIOutputParser {
       }
     }
 
-    if (typeof expected === 'object' && expected.type) {
-      switch (expected.type) {
-        case 'json':
-          try {
-            const parsed = JSON.parse(output);
-            return deepEqual(parsed, expected.value);
-          } catch {
-            return false;
-          }
+    if (typeof expected === 'object' && expected !== null) {
+      const exp = expected as { type?: string; value?: unknown };
+      if (exp.type) {
+        switch (exp.type) {
+          case 'json':
+            try {
+              const parsed = JSON.parse(output);
+              return deepEqual(parsed, exp.value);
+            } catch {
+              return false;
+            }
 
-        case 'contains':
-          return output.includes(expected.value);
+          case 'contains':
+            return output.includes(String(exp.value));
 
-        case 'not_contains':
-          return !output.includes(expected.value);
+          case 'not_contains':
+            return !output.includes(String(exp.value));
 
-        case 'starts_with':
-          return output.startsWith(expected.value);
+          case 'starts_with':
+            return output.startsWith(String(exp.value));
 
-        case 'ends_with':
-          return output.endsWith(expected.value);
+          case 'ends_with':
+            return output.endsWith(String(exp.value));
 
-        case 'length':
-          return output.length === expected.value;
+          case 'length':
+            return output.length === Number(exp.value);
 
-        case 'empty':
-          return output.trim().length === 0;
+          case 'empty':
+            return output.trim().length === 0;
 
-        case 'not_empty':
-          return output.trim().length > 0;
+          case 'not_empty':
+            return output.trim().length > 0;
 
-        default:
-          throw new Error(`Unsupported validation type: ${expected.type}`);
+          default:
+            throw new Error(`Unsupported validation type: ${exp.type}`);
+        }
       }
     }
 

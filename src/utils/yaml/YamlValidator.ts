@@ -98,32 +98,34 @@ export class YamlValidator {
     return Object.values(TestInterface).includes(upper as TestInterface) ? upper as TestInterface : null;
   }
 
-  private validateSteps(rawSteps: any[]): TestStep[] {
-    return rawSteps.map((step, index) => {
-      if (typeof step !== 'object' || !step.action || !step.target) {
+  private validateSteps(rawSteps: unknown[]): TestStep[] {
+    return rawSteps.map((step: unknown, index: number) => {
+      const s = step as Record<string, unknown>;
+      if (typeof s !== 'object' || !s['action'] || !s['target']) {
         throw new ValidationError(`Invalid step at index ${index}: action and target are required`);
       }
 
       return {
-        action: step.action,
-        target: step.target,
-        value: step.value,
-        waitFor: step.waitFor,
-        timeout: step.timeout,
-        description: step.description,
-        expected: step.expected
+        action: s['action'] as string,
+        target: s['target'] as string,
+        ...(s['value'] !== undefined ? { value: s['value'] as string } : {}),
+        ...(s['waitFor'] !== undefined ? { waitFor: s['waitFor'] as string } : {}),
+        ...(s['timeout'] !== undefined ? { timeout: s['timeout'] as number } : {}),
+        ...(s['description'] !== undefined ? { description: s['description'] as string } : {}),
+        ...(s['expected'] !== undefined ? { expected: s['expected'] as string } : {}),
       };
     });
   }
 
-  private validateVerifications(rawVerifications: any[]): VerificationStep[] {
-    return rawVerifications.map((verification, index) => {
+  private validateVerifications(rawVerifications: unknown[]): VerificationStep[] {
+    return rawVerifications.map((verification: unknown, index: number) => {
+      const v = verification as Record<string, unknown>;
       if (
-        typeof verification !== 'object' ||
-        !verification.type ||
-        !verification.target ||
-        !verification.expected ||
-        !verification.operator
+        typeof v !== 'object' ||
+        !v['type'] ||
+        !v['target'] ||
+        !v['expected'] ||
+        !v['operator']
       ) {
         throw new ValidationError(
           `Invalid verification at index ${index}: type, target, expected, and operator are required`
@@ -131,11 +133,11 @@ export class YamlValidator {
       }
 
       return {
-        type: verification.type,
-        target: verification.target,
-        expected: verification.expected,
-        operator: verification.operator,
-        description: verification.description
+        type: v['type'] as string,
+        target: v['target'] as string,
+        expected: v['expected'] as string,
+        operator: v['operator'] as string,
+        ...(v['description'] !== undefined ? { description: v['description'] as string } : {}),
       };
     });
   }

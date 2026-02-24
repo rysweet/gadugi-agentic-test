@@ -57,15 +57,18 @@ export class YamlParser {
       const substitutedContent = this.substitution.substitute(processedContent, variables);
 
       if (Array.isArray(substitutedContent)) {
-        return substitutedContent.map((scenario, index) =>
-          this.validator.validateAndConvert(scenario, `${filePath}[${index}]`)
-        );
-      } else if (substitutedContent.scenarios) {
-        return substitutedContent.scenarios.map((scenario: any, index: number) =>
-          this.validator.validateAndConvert(scenario, `${filePath}[scenarios][${index}]`)
+        return substitutedContent.map((scenario: unknown, index: number) =>
+          this.validator.validateAndConvert(scenario as RawScenario, `${filePath}[${index}]`)
         );
       } else {
-        return [this.validator.validateAndConvert(substitutedContent, filePath)];
+        const sc = substitutedContent as Record<string, unknown>;
+        if (sc['scenarios'] && Array.isArray(sc['scenarios'])) {
+          return (sc['scenarios'] as unknown[]).map((scenario: unknown, index: number) =>
+            this.validator.validateAndConvert(scenario as RawScenario, `${filePath}[scenarios][${index}]`)
+          );
+        } else {
+          return [this.validator.validateAndConvert(substitutedContent as RawScenario, filePath)];
+        }
       }
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
@@ -92,7 +95,7 @@ export class YamlParser {
       }
 
       const substituted = this.substitution.substitute(parsed, variables);
-      return this.validator.validateAndConvert(substituted, 'inline');
+      return this.validator.validateAndConvert(substituted as RawScenario, 'inline');
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
         throw error;
@@ -115,7 +118,7 @@ export class YamlParser {
     variables: VariableContext = this.substitution.createDefaultContext()
   ): Promise<OrchestratorScenario[]> {
     try {
-      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as any;
+      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA });
       if (!parsed) {
         throw new YamlParseError('Empty or invalid YAML content');
       }
@@ -123,15 +126,18 @@ export class YamlParser {
       const substituted = this.substitution.substitute(parsed, variables);
 
       if (Array.isArray(substituted)) {
-        return substituted.map((scenario, index) =>
-          this.validator.validateAndConvert(scenario, `inline[${index}]`)
-        );
-      } else if (substituted.scenarios) {
-        return substituted.scenarios.map((scenario: any, index: number) =>
-          this.validator.validateAndConvert(scenario, `inline[scenarios][${index}]`)
+        return substituted.map((scenario: unknown, index: number) =>
+          this.validator.validateAndConvert(scenario as RawScenario, `inline[${index}]`)
         );
       } else {
-        return [this.validator.validateAndConvert(substituted, 'inline')];
+        const sc = substituted as Record<string, unknown>;
+        if (sc['scenarios'] && Array.isArray(sc['scenarios'])) {
+          return (sc['scenarios'] as unknown[]).map((scenario: unknown, index: number) =>
+            this.validator.validateAndConvert(scenario as RawScenario, `inline[scenarios][${index}]`)
+          );
+        } else {
+          return [this.validator.validateAndConvert(substituted as RawScenario, 'inline')];
+        }
       }
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
@@ -153,7 +159,7 @@ export class YamlParser {
   /**
    * Extract variables from YAML content.
    */
-  extractVariables(content: any): Record<string, any> {
+  extractVariables(content: unknown): Record<string, unknown> {
     return this.substitution.extractVariables(content);
   }
 

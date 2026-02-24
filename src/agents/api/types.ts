@@ -27,7 +27,7 @@ export interface AuthConfig {
  */
 export interface RequestInterceptor {
   name: string;
-  handler: (config: any) => any | Promise<any>;
+  handler: (config: import('axios').InternalAxiosRequestConfig) => import('axios').InternalAxiosRequestConfig | Promise<import('axios').InternalAxiosRequestConfig>;
   enabled: boolean;
 }
 
@@ -46,8 +46,8 @@ export interface ResponseInterceptor {
  */
 export interface SchemaValidation {
   enabled: boolean;
-  requestSchema?: any;
-  responseSchema?: any;
+  requestSchema?: object;
+  responseSchema?: object;
   strictMode?: boolean;
 }
 
@@ -126,7 +126,7 @@ export interface APIRequest {
   method: HTTPMethod;
   url: string;
   headers?: Record<string, string>;
-  data?: any;
+  data?: unknown;
   timestamp: Date;
   timeout?: number;
 }
@@ -139,7 +139,7 @@ export interface APIResponse {
   status: number;
   statusText: string;
   headers: Record<string, string>;
-  data: any;
+  data: unknown;
   duration: number;
   timestamp: Date;
   size?: number;

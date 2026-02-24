@@ -65,7 +65,7 @@ export class APIRequestExecutor {
   async makeRequest(
     method: HTTPMethod,
     url: string,
-    data?: any,
+    data?: unknown,
     headers?: Record<string, string>,
     options?: Partial<AxiosRequestConfig>
   ): Promise<APIResponse> {
@@ -99,7 +99,7 @@ export class APIRequestExecutor {
     while (attempt < maxAttempts) {
       try {
         const axiosConfig: AxiosRequestConfig = {
-          method: method.toLowerCase() as any,
+          method: method.toLowerCase() as Lowercase<HTTPMethod>,
           url,
           data,
           ...(headers !== undefined ? { headers } : {}),
@@ -238,9 +238,10 @@ export class APIRequestExecutor {
     });
   }
 
-  private shouldRetry(error: any): boolean {
-    if (!error.response) return false;
-    return this.config.retry.retryOnStatus.includes(error.response.status);
+  private shouldRetry(error: unknown): boolean {
+    const e = error as { response?: { status?: number } };
+    if (!e.response) return false;
+    return typeof e.response.status === 'number' && this.config.retry.retryOnStatus.includes(e.response.status);
   }
 
   private calculateRetryDelay(attempt: number): number {
@@ -274,7 +275,7 @@ export class APIRequestExecutor {
     }
   }
 
-  private calculateResponseSize(data: any): number {
+  private calculateResponseSize(data: unknown): number {
     if (typeof data === 'string') return Buffer.byteLength(data, 'utf8');
     if (data instanceof Buffer) return data.length;
     return Buffer.byteLength(JSON.stringify(data), 'utf8');

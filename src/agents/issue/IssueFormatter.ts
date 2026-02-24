@@ -71,7 +71,7 @@ export class IssueFormatter {
             new RegExp(`{{#${key}}}([\\s\\S]*?){{/${key}}}`, 'g'),
             (_match, content) => {
               if (value.length === 0) return '';
-              return value.map((item: any) => content.replace(/{{this}}/g, item)).join('');
+              return value.map((item: unknown) => content.replace(/{{this}}/g, String(item))).join('');
             }
           );
         } else {

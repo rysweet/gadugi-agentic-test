@@ -5,7 +5,7 @@
  * authentication injection, and performance monitoring initialisation.
  */
 
-import { io, Socket } from 'socket.io-client';
+import { io, Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { TestLogger } from '../../utils/logger';
 import { generateId } from '../../utils/ids';
@@ -36,7 +36,7 @@ export class WebSocketConnection extends EventEmitter {
   /**
    * Connect to WebSocket server
    */
-  async connect(url?: string, options?: any): Promise<void> {
+  async connect(url?: string, options?: Partial<ManagerOptions & SocketOptions>): Promise<void> {
     const serverURL = url || this.config.serverURL;
     if (!serverURL) {
       throw new Error('Server URL is required for connection');
@@ -187,18 +187,20 @@ export class WebSocketConnection extends EventEmitter {
 
   // ---- Private helpers ----
 
-  private addAuthentication(socketOptions: any): void {
+  private addAuthentication(socketOptions: Partial<ManagerOptions & SocketOptions>): void {
+    // Use a mutable record to set auth properties without fighting socket.io's complex union types
+    const opts = socketOptions as Record<string, unknown>;
     switch (this.config.auth.type) {
       case 'token':
         if (this.config.auth.token) {
-          socketOptions.auth = { token: this.config.auth.token };
+          opts['auth'] = { token: this.config.auth.token };
         }
         break;
 
       case 'query':
         if (this.config.auth.token && this.config.auth.queryParam) {
-          socketOptions.query = {
-            ...socketOptions.query,
+          opts['query'] = {
+            ...(opts['query'] as Record<string, string> | undefined),
             [this.config.auth.queryParam]: this.config.auth.token
           };
         }
@@ -206,8 +208,8 @@ export class WebSocketConnection extends EventEmitter {
 
       case 'header':
         if (this.config.auth.token && this.config.auth.headerName) {
-          socketOptions.extraHeaders = {
-            ...socketOptions.extraHeaders,
+          opts['extraHeaders'] = {
+            ...(opts['extraHeaders'] as Record<string, string> | undefined),
             [this.config.auth.headerName]: this.config.auth.token
           };
         }
@@ -215,7 +217,7 @@ export class WebSocketConnection extends EventEmitter {
 
       case 'custom':
         if (this.config.auth.customAuth) {
-          Object.assign(socketOptions, this.config.auth.customAuth);
+          Object.assign(opts, this.config.auth.customAuth);
         }
         break;
     }
