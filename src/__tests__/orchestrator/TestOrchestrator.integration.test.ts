@@ -72,7 +72,7 @@ function makeAgent() {
   };
 }
 
-let mockSessionId = 'session-001';
+const mockSessionId = 'session-001';
 
 const mockSessionInstance = {
   create:      jest.fn(() => ({ id: mockSessionId, status: TestStatus.RUNNING, results: [], summary: {} } as unknown as TestSession)),

@@ -154,7 +154,7 @@ export class CpuOptimizer extends EventEmitter {
   }
 
   private compressBuffer(buffer: Buffer): Buffer {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const zlib = require('zlib') as typeof import('zlib');
     try {
       return zlib.gzipSync(buffer);
@@ -164,7 +164,7 @@ export class CpuOptimizer extends EventEmitter {
   }
 
   private decompressBuffer(buffer: Buffer): Buffer {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const zlib = require('zlib') as typeof import('zlib');
     try {
       return zlib.gunzipSync(buffer);
