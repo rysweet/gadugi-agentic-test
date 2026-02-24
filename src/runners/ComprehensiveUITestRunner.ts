@@ -42,7 +42,7 @@ export class ComprehensiveUITestRunner {
     await fs.mkdir(this.screenshotsDir, { recursive: true });
     this.tester.logInfo('Launching Electron application...');
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const electronPath = require('electron') as string;
     const appPath = path.resolve(process.cwd(), '..');
 

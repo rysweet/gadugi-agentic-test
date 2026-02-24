@@ -78,7 +78,7 @@ export class SmartUITestRunner {
     this.log('cyan', '🎯', 'Testing the UI by discovering and using actual features\n');
     this.log('blue', '🚀', 'Launching application...');
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const electronPath = require('electron') as string;
     const appPath = path.resolve(process.cwd(), '..');
 
