@@ -1,0 +1,15 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "categorizeByGroup": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/rysweet/gadugi-agentic-test",
+    "npm": "https://www.npmjs.com/package/@gadugi/agentic-test"
+  },
+  "titleLink": "../index.md"
+}
