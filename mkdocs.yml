@@ -39,15 +39,52 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: index.md
+  - Home: README.md
   - Getting Started: GETTING_STARTED.md
-  - Architecture: ARCHITECTURE.md
-  - API Reference: API_REFERENCE.md
+  - Architecture: docs/ARCHITECTURE.md
+  - API Reference:
+    - Overview: api/README.md
+    - Classes:
+      - AdaptiveWaiter: api/classes/AdaptiveWaiter.md
+      - APIAgent: api/classes/APIAgent.md
+      - CLIAgent: api/classes/CLIAgent.md
+      - ComprehensionAgent: api/classes/ComprehensionAgent.md
+      - ElectronUIAgent: api/classes/ElectronUIAgent.md
+      - IssueReporter: api/classes/IssueReporter.md
+      - PriorityAgent: api/classes/PriorityAgent.md
+      - ProcessLifecycleManager: api/classes/ProcessLifecycleManager.md
+      - PtyTerminal: api/classes/PtyTerminal.md
+      - ResourceOptimizer: api/classes/ResourceOptimizer.md
+      - SystemAgent: api/classes/SystemAgent.md
+      - TestOrchestrator: api/classes/TestOrchestrator.md
+      - TUIAgent: api/classes/TUIAgent.md
+      - WebSocketAgent: api/classes/WebSocketAgent.md
+    - Functions:
+      - createAPIAgent: api/functions/createAPIAgent.md
+      - createCLIAgent: api/functions/createCLIAgent.md
+      - createComprehensionAgent: api/functions/createComprehensionAgent.md
+      - createDefaultConfig: api/functions/createDefaultConfig.md
+      - createElectronUIAgent: api/functions/createElectronUIAgent.md
+      - createIssueReporter: api/functions/createIssueReporter.md
+      - createPriorityAgent: api/functions/createPriorityAgent.md
+      - createSystemAgent: api/functions/createSystemAgent.md
+      - createTestOrchestrator: api/functions/createTestOrchestrator.md
+      - createTUIAgent: api/functions/createTUIAgent.md
+      - createWebSocketAgent: api/functions/createWebSocketAgent.md
+      - displayResults: api/functions/displayResults.md
+      - filterScenariosForSuite: api/functions/filterScenariosForSuite.md
+      - isPipelineAgent: api/functions/isPipelineAgent.md
+      - loadConfiguration: api/functions/loadConfiguration.md
+      - loadTestScenarios: api/functions/loadTestScenarios.md
+      - performDryRun: api/functions/performDryRun.md
+      - runTests: api/functions/runTests.md
+      - saveResults: api/functions/saveResults.md
+      - setupLogger: api/functions/setupLogger.md
   - Guides:
     - Contributing: CONTRIBUTING.md
-    - Writing Scenarios: scenarios-README.md
-    - Screenshot Diffing: screenshot-diff-guide.md
-    - Resource Optimization: ResourceOptimizer.md
+    - Writing Scenarios: scenarios/README.md
+    - Screenshot Diffing: docs/screenshot-diff-guide.md
+    - Resource Optimization: docs/ResourceOptimizer.md
   - Reference:
     - Troubleshooting: TROUBLESHOOTING.md
     - Changelog: CHANGELOG.md

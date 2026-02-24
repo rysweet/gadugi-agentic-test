@@ -7,6 +7,8 @@ on:
       - '**.md'
       - 'docs/**'
       - 'mkdocs.yml'
+      - 'typedoc.json'
+      - 'src/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -29,13 +31,16 @@ jobs:
       - name: Install MkDocs
         run: pip install mkdocs-material
 
-      - name: Copy root docs into docs/
-        run: |
-          cp GETTING_STARTED.md docs/GETTING_STARTED.md
-          cp API_REFERENCE.md docs/API_REFERENCE.md
-          cp CONTRIBUTING.md docs/CONTRIBUTING.md
-          cp TROUBLESHOOTING.md docs/TROUBLESHOOTING.md
-          cp CHANGELOG.md docs/CHANGELOG.md
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Generate API reference
+        run: npx typedoc
 
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
