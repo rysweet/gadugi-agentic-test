@@ -1,0 +1,41 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install MkDocs
+        run: pip install mkdocs-material
+
+      - name: Copy root docs into docs/
+        run: |
+          cp GETTING_STARTED.md docs/GETTING_STARTED.md
+          cp API_REFERENCE.md docs/API_REFERENCE.md
+          cp CONTRIBUTING.md docs/CONTRIBUTING.md
+          cp TROUBLESHOOTING.md docs/TROUBLESHOOTING.md
+          cp CHANGELOG.md docs/CHANGELOG.md
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force

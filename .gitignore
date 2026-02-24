@@ -54,6 +54,16 @@ tmp/
 outputs/
 reports/
 
+# MkDocs build output
+site/
+
+# MkDocs CI-generated doc copies (generated at build time from root .md files)
+docs/GETTING_STARTED.md
+docs/API_REFERENCE.md
+docs/CONTRIBUTING.md
+docs/TROUBLESHOOTING.md
+docs/CHANGELOG.md
+
 # Amplihack runtime directories (auto-generated)
 .claude/logs/
 .claude/runtime/
