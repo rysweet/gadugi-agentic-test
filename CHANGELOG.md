@@ -10,7 +10,107 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [Unreleased]
 
 ### Added
-- `docs/ARCHITECTURE.md` — comprehensive architecture reference
+
+- `IPipelineAgent` interface in `src/agents/index.ts` — distinct marker interface
+  for non-execution agents (`ComprehensionAgent`, `PriorityAgent`, `IssueReporter`)
+  that participate in the pipeline without running test steps. Carries
+  `isPipelineAgent: true` to allow `ScenarioRouter` and tests to distinguish them
+  from execution agents (#131, PR #138)
+- `validate_schema` step action in `APIResponseValidator` — real ajv@8-based JSON
+  Schema validation replacing the previous `throw new Error('not implemented')`
+  stub. Accepts a schema string, compiles it on first use, and returns
+  `true`/`false` (#159, PR #159)
+- `src/cli/setup.ts` — `setupGracefulShutdown(orchestrator, proc?)` moved here
+  from `src/lib.ts`. Installs `SIGINT`, `SIGTERM`, `unhandledRejection`, and
+  `uncaughtException` handlers; accepts an optional `proc` for testability (#131,
+  PR #138)
+- `closeAfterEachScenario` option on `ElectronUIAgentConfig` — when `true`,
+  `onAfterExecute()` stops the performance monitor, disconnects the WebSocket
+  monitor, and closes the Electron launcher after every scenario, enabling safe
+  standalone use (#131, PR #138)
+- `docs/ARCHITECTURE.md` — comprehensive architecture reference (added in v1.0.0;
+  updated in Unreleased to document `IPipelineAgent`, IAgent registry, new
+  utilities, and `cli/setup.ts`)
+- `docs/index.md` updated to reflect new Architecture sections
+
+### Changed
+
+- `ScenarioRouter` now accepts an `Partial<Record<TestInterface, IAgent>>` registry
+  instead of concrete typed fields. `TestOrchestrator` builds and injects the
+  registry; `ScenarioRouter` has no imports of concrete agent classes. Unregistered
+  interface values produce explicit `FAILED` results instead of silent drops (#128,
+  PR #136)
+- `TestInterface.API` scenarios now correctly route to `APIAgent`; previously they
+  silently fell through to `CLIAgent` (#128, PR #136)
+- `filterScenariosForSuite()` deduplicated — private copy removed from
+  `TestOrchestrator`; both `run()` and `runWithScenarios()` delegate to the
+  canonical implementation in `src/lib/ScenarioLoader.ts` (#128, PR #136)
+- Internal `TestSuite` type in `TestOrchestrator` renamed to `SuiteFilterConfig`;
+  public alias `OrchestratorTestSuite` added to preserve existing API consumers
+  (#128, PR #136)
+- `setupGracefulShutdown` removed from `src/lib.ts` and `src/index.ts` public
+  exports; `@deprecated` re-export remains in `src/main.ts` for backward
+  compatibility (#131, PR #138)
+- `catch (error: any)` / `catch (err: any)` replaced with `catch (error: unknown)`
+  across 23 source files; messages extracted via
+  `error instanceof Error ? error.message : String(error)` (#127, PR #135)
+- `BaseAgent.executeStep(step: any)` tightened to `executeStep(step: TestStep)`
+  — all subclasses already used `TestStep`, so this is a contract tightening only
+  (#127, PR #135)
+- `any` type count reduced from 140 to ~120 in `src/` — updated in
+  `TUIAgent`, `TUIOutputParser`, `TUIStepDispatcher`, `TUIResults`,
+  `WebSocketMessage`, `EventListener`, and runner files (#157, PRs #135, #161)
+- Deprecated `.substr()` replaced with `.slice()` in `src/utils/ids.ts` (#129,
+  PR #134)
+- Dead exports (`LegacyConfigManager`, `TimeUtils`, `legacyLogger`,
+  `createLegacyLogger`, `StringUtils`) removed from `src/utils/index.ts`; the
+  side-effecting `loadFromEnv()` call on module import also removed (#129,
+  PR #134)
+- `@deprecated` annotations updated with `Will be removed in v2.0.` timelines
+  across 5 files (#129, PR #134)
+- `ConfigValidator` now requires `github.token` when `createIssuesOnFailure` is
+  `true`; clamps `execution.maxRetries` to 0–10 (#129, PR #134)
+- `console.log` calls in `SmartUITestRunner` and `ComprehensiveUITestRunner`
+  replaced with `process.stdout.write` to avoid polluting programmatic API callers
+  (#157, PR #161)
+- Coverage thresholds raised progressively across workstreams:
+  orchestrator layer thresholds 25%→44%+ (PR #141), global statements 44→46,
+  branches 38→40, functions 43→45, lines 45→47 (PR #160)
+
+### Fixed
+
+- Event listener leaks in `ResourceOptimizer`, `PtyTerminal`, and `TUIAgent` —
+  `destroy()` and `cleanup()` now call `removeAllListeners()` on all registered
+  event handlers (#126, PR #140)
+- `ResultsHandler` in programmatic API no longer calls `console.log`; uses
+  `logger` instead (#126, PR #140)
+- `gadugi-smart-test` bin entry broken after module split — resolved (#126,
+  PR #140)
+- `ZombieProcessPrevention` test flakiness in parallel mode — process lifecycle
+  assertions scoped to test-spawned processes only (#144, PR #145)
+- Three post-workstream test regressions resolved after orchestrator refactor
+  (#142, PR #143)
+- Brittle private-member access removed from `TUIAgent.test.ts`; integration
+  fragility in `TUIAgent` integration test fixed; test file split for clarity
+  (#132, PR #137)
+
+### Tests
+
+- 700+ new tests added across 14 workstream PRs (total: ~1,500+)
+- New test files: `ScenarioRouter.test.ts`, `SessionManager.test.ts`,
+  `ResultAggregator.test.ts`, `agentAdapters.test.ts` (PR #141)
+- `WebSocketConnection.test.ts`, `WebSocketMessageHandler.test.ts`,
+  `WebSocketEventRecorder.test.ts`, `WebSocketStepExecutor.test.ts` — 126 new
+  cases bringing WebSocket sub-module coverage from ~53% to 80%+ (PR #155)
+- CLI command tests: `run.command.test.ts`, `validate.command.test.ts`,
+  `list.command.test.ts`, `init.command.test.ts` (PR #154)
+- `ElectronLauncher.test.ts`, `ElectronPageInteractor.test.ts`,
+  `ElectronPerformanceMonitor.test.ts` — 73 new cases, electron coverage 23%→86%
+  (PR #160)
+- `FileWriter.test.ts`, `FileReader.test.ts`, `FileSearch.test.ts`,
+  `FileArchiver.test.ts` — 75 new cases (PR #151)
+- Runner and TUI model coverage expanded (PR #153)
+- CLI API and Issue agent sub-module tests added (PR #139)
 
 ---
 

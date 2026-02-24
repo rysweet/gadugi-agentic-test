@@ -1,7 +1,7 @@
 # Architecture — @gadugi/agentic-test
 
 > **Type:** Explanation (Diataxis)
-> **Updated:** 2026-02-22
+> **Updated:** 2026-02-24
 
 ## Contents
 
@@ -16,6 +16,7 @@
 - [Programmatic API](#programmatic-api)
 - [CLI](#cli)
 - [BaseAgent Pattern](#baseagent-pattern)
+- [IPipelineAgent Pattern](#ipipeline-agent-pattern)
 - [Module Philosophy](#module-philosophy)
 - [Data Flow](#data-flow)
 
@@ -239,8 +240,12 @@ src/
 
 ## Agent Layer
 
-All nine agents implement the `IAgent<TScenario, TResult>` interface and extend
-`BaseAgent`. Each agent is responsible for one execution domain.
+All nine agents implement either `IAgent<TScenario, TResult>` or `IPipelineAgent`.
+The five test-executing agents (`TUIAgent`, `CLIAgent`, `APIAgent`,
+`WebSocketAgent`, `ElectronUIAgent`) extend `BaseAgent` and implement `IAgent`.
+The three pipeline agents (`ComprehensionAgent`, `PriorityAgent`, `IssueReporter`)
+implement `IPipelineAgent` — they participate in the pipeline but do not run test
+steps directly. See [IPipelineAgent Pattern](#ipipeline-agent-pattern).
 
 ```typescript
 export interface IAgent<TScenario = unknown, TResult = unknown> {
@@ -251,16 +256,24 @@ export interface IAgent<TScenario = unknown, TResult = unknown> {
   cleanup(): Promise<void>;
 }
 
+export interface IPipelineAgent {
+  name: string;
+  type: string;
+  isPipelineAgent: true;
+  initialize(): Promise<void>;
+  cleanup(): Promise<void>;
+}
+
 export enum AgentType {
-  UI          = 'ui',
-  CLI         = 'cli',
-  TUI         = 'tui',
-  API         = 'api',
-  WEBSOCKET   = 'websocket',
-  GITHUB      = 'github',
-  SYSTEM      = 'system',
+  UI            = 'ui',
+  CLI           = 'cli',
+  TUI           = 'tui',
+  API           = 'api',
+  WEBSOCKET     = 'websocket',
+  GITHUB        = 'github',
+  SYSTEM        = 'system',
   COMPREHENSION = 'comprehension',
-  PRIORITY    = 'priority',
+  PRIORITY      = 'priority',
 }
 ```
 
@@ -433,15 +446,19 @@ graph TD
 Dispatches scenarios to the correct agent based on the scenario's `interface` field
 using an **IAgent registry** (`Partial<Record<TestInterface, IAgent>>`).
 
-The registry is built by `TestOrchestrator` in its constructor and passed to
+The registry is built by `TestOrchestrator` in its constructor and injected into
 `ScenarioRouter`. This decoupling means:
 
-- `ScenarioRouter` has no imports of concrete agent classes
-- Adding support for a new `TestInterface` value (e.g. `WEBSOCKET`) only requires
-  registering an entry in `TestOrchestrator` — `ScenarioRouter` needs no changes
-- All five interface types route correctly: `CLI`, `TUI`, `API` (parallel), `GUI`
-  (sequential with initialize/cleanup), and `MIXED` (per-scenario selection)
-- Unregistered interface types are reported as explicit failures, never silently dropped
+- `ScenarioRouter` has no imports of concrete agent classes — no coupling to
+  `CLIAgent`, `TUIAgent`, etc.
+- Adding support for a new `TestInterface` value only requires registering an entry
+  in `TestOrchestrator`; `ScenarioRouter` needs no changes
+- All five interface types route correctly: `CLI`, `TUI`, `API`, `GUI` (sequential
+  with initialize/cleanup), and `MIXED` (per-scenario selection)
+- `TestInterface.API` scenarios route to `APIAgent`; the previous silent drop to
+  `CLIAgent` was fixed in PR #136
+- Unregistered interface types produce explicit `FAILED` results — they are never
+  silently dropped
 
 Enforces the `maxParallel` concurrency limit. Aborts remaining scenarios when
 `failFast` is set and a scenario fails.
@@ -491,6 +508,11 @@ re-exports from a focused sub-directory (`logging/`).
 - `utils/async.ts` — `delay(ms)`: single canonical async sleep
 - `utils/comparison.ts` — `deepEqual(a, b)`: single canonical deep equality check
 - `utils/agentUtils.ts` — agent utility functions shared by `BaseAgent` sub-classes
+- `utils/ids.ts` — deterministic ID generation (`generateId()`, `generateScenarioId()`); ensures
+  scenario IDs do not change across YAML reloads
+- `utils/colors.ts` — terminal colour helpers (`bold`, `green`, `red`, `yellow`,
+  `cyan`) used by CLI output modules; wraps ANSI sequences with a `NO_COLOR`
+  environment variable check
 
 ---
 
@@ -547,9 +569,9 @@ const session = await runTests({
 });
 ```
 
-For callers that need graceful shutdown (signal handling), call
-`setupGracefulShutdown(orchestrator)` explicitly — it is not called inside
-`runTests()`.
+For callers that need graceful shutdown (signal handling), import and call
+`setupGracefulShutdown(orchestrator)` from `src/cli/setup.ts` — it is not part
+of the public lib API and is not called inside `runTests()`.
 
 **`src/lib/` sub-modules:**
 
@@ -596,6 +618,13 @@ agentic-test help      # Show help
 
 All path flags (`--directory`, `--file`, `--config`, `--env`) are validated through
 `src/cli-path-utils.ts` to prevent path traversal attacks.
+
+`src/cli/setup.ts` contains `setupGracefulShutdown(orchestrator, proc?)`, which
+installs `SIGINT`, `SIGTERM`, `unhandledRejection`, and `uncaughtException`
+handlers. It was moved here from `src/lib.ts` in PR #138 because global
+process-level side effects must not be triggered by a library import. Callers
+that need graceful shutdown must call it explicitly after constructing an
+orchestrator.
 
 ---
 
@@ -653,6 +682,44 @@ export class MyDatabaseAgent extends BaseAgent {
 - The step loop stops at the first `FAILED` or `ERROR` step
 - `onAfterExecute()` always runs in the `finally` block (even on error)
 - `ExecutionContext` captures timing, status, and step results for `buildResult()`
+
+---
+
+## IPipelineAgent Pattern
+
+Three agents — `ComprehensionAgent`, `PriorityAgent`, and `IssueReporter` — do not
+run test steps directly. They participate in the pipeline in support roles:
+
+| Agent              | Role                                                       |
+| ------------------ | ---------------------------------------------------------- |
+| `ComprehensionAgent` | Discovers features via LLM; generates `ScenarioDefinition` objects |
+| `PriorityAgent`    | Scores scenarios; feeds priority decisions to `ScenarioRouter` |
+| `IssueReporter`    | Creates and deduplicates GitHub issues for test failures   |
+
+These agents implement `IPipelineAgent` rather than `IAgent`. The distinguishing
+marker is `isPipelineAgent: true`, which allows `ScenarioRouter` and test code to
+detect them without relying on `instanceof` checks.
+
+```typescript
+import { IPipelineAgent, AgentType } from '@gadugi/agentic-test';
+
+class MyAnalysisAgent implements IPipelineAgent {
+  readonly name = 'my-analysis-agent';
+  readonly type = AgentType.COMPREHENSION;
+  readonly isPipelineAgent = true as const;
+
+  async initialize(): Promise<void> { /* connect to analysis service */ }
+  async cleanup(): Promise<void>    { /* disconnect */ }
+
+  async analyze(scenarios: ScenarioDefinition[]): Promise<AnalysisReport> {
+    // domain-specific method — not part of IPipelineAgent contract
+  }
+}
+```
+
+Pipeline agents are instantiated by `TestOrchestrator` and passed directly to
+`ResultAggregator` (for `IssueReporter` and `PriorityAgent`). They are never placed
+in the `ScenarioRouter` registry.
 
 ---
 
