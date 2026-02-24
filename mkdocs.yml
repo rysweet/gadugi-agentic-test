@@ -1,0 +1,58 @@
+site_name: Gadugi Agentic Test
+site_description: Intelligent multi-agent testing framework for Electron, CLI, and web applications
+site_url: https://rysweet.github.io/gadugi-agentic-test/
+repo_url: https://github.com/rysweet/gadugi-agentic-test
+repo_name: rysweet/gadugi-agentic-test
+edit_uri: edit/main/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: GETTING_STARTED.md
+  - Architecture: ARCHITECTURE.md
+  - API Reference: API_REFERENCE.md
+  - Guides:
+    - Contributing: CONTRIBUTING.md
+    - Writing Scenarios: scenarios-README.md
+    - Screenshot Diffing: screenshot-diff-guide.md
+    - Resource Optimization: ResourceOptimizer.md
+  - Reference:
+    - Troubleshooting: TROUBLESHOOTING.md
+    - Changelog: CHANGELOG.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rysweet/gadugi-agentic-test

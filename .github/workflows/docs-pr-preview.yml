@@ -1,0 +1,26 @@
+name: Validate Docs Build
+
+on:
+  pull_request:
+    paths:
+      - '**.md'
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install mkdocs-material
+      - name: Copy root docs into docs/
+        run: |
+          cp GETTING_STARTED.md docs/GETTING_STARTED.md
+          cp API_REFERENCE.md docs/API_REFERENCE.md
+          cp CONTRIBUTING.md docs/CONTRIBUTING.md
+          cp TROUBLESHOOTING.md docs/TROUBLESHOOTING.md
+          cp CHANGELOG.md docs/CHANGELOG.md
+      - run: mkdocs build
