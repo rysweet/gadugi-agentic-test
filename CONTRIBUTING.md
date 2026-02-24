@@ -61,7 +61,7 @@ Copy `.env.example` to `.env` and fill in values. The `.env` file is git-ignored
 
 ## Project Structure
 
-The project follows a split-module architecture where each agent and utility is decomposed into single-responsibility sub-modules. See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full breakdown.
+The project follows a split-module architecture where each agent and utility is decomposed into single-responsibility sub-modules. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full breakdown.
 
 High-level layout:
 

@@ -42,5 +42,23 @@ jobs:
       - name: Generate API reference
         run: npx typedoc
 
+      - name: Copy root docs to docs/
+        run: |
+          cp GETTING_STARTED.md docs/GETTING_STARTED.md
+          cp API_REFERENCE.md docs/API_REFERENCE.md
+          cp CONTRIBUTING.md docs/CONTRIBUTING.md
+          cp TROUBLESHOOTING.md docs/TROUBLESHOOTING.md
+          cp CHANGELOG.md docs/CHANGELOG.md
+          cp E2E_TESTS_README.md docs/E2E_TESTS_README.md
+          cp E2E_QUICK_REFERENCE.md docs/E2E_QUICK_REFERENCE.md
+          cp TEST_APPROACH_COMPARISON.md docs/TEST_APPROACH_COMPARISON.md
+          mkdir -p docs/scenarios
+          cp scenarios/README.md docs/scenarios/README.md
+          cp scenarios/cli-tests.yaml docs/scenarios/cli-tests.yaml
+          cp scenarios/ui-navigation.yaml docs/scenarios/ui-navigation.yaml
+          cp scenarios/ui-workflows.yaml docs/scenarios/ui-workflows.yaml
+          cp scenarios/error-handling.yaml docs/scenarios/error-handling.yaml
+          cp scenarios/integration-tests.yaml docs/scenarios/integration-tests.yaml
+
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
