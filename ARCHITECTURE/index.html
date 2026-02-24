@@ -13,6 +13,10 @@
         <link rel="canonical" href="https://rysweet.github.io/gadugi-agentic-test/ARCHITECTURE/">
       
       
+        <link rel="prev" href="../GETTING_STARTED/">
+      
+      
+        <link rel="next" href="../api/">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>Architecture — @gadugi/agentic-test - Gadugi Agentic Test</title>
+        <title>Architecture - Gadugi Agentic Test</title>
       
     
     
@@ -108,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture — @gadugi/agentic-test
+              Architecture
             
           </span>
         </div>
@@ -221,7 +225,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../README.md" class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -240,7 +244,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../GETTING_STARTED.md" class="md-tabs__link">
+      <a href="../GETTING_STARTED/" class="md-tabs__link">
         
   
   
@@ -257,9 +261,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../docs/ARCHITECTURE.md" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -300,7 +306,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../CONTRIBUTING.md" class="md-tabs__link">
+        <a href="../CONTRIBUTING/" class="md-tabs__link">
           
   
   
@@ -320,7 +326,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../TROUBLESHOOTING.md" class="md-tabs__link">
+        <a href="../TROUBLESHOOTING/" class="md-tabs__link">
           
   
   
@@ -384,7 +390,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../README.md" class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -411,7 +417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../GETTING_STARTED.md" class="md-nav__link">
+      <a href="../GETTING_STARTED/" class="md-nav__link">
         
   
   
@@ -435,10 +441,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../docs/ARCHITECTURE.md" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -454,6 +487,452 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tuiagent-srcagentstuiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TUIAgent — src/agents/TUIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cliagent-srcagentscliagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLIAgent — src/agents/CLIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apiagent-srcagentsapiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        APIAgent — src/agents/APIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#websocketagent-srcagentswebsocketagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebSocketAgent — src/agents/WebSocketAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#electronuiagent-srcagentselectronuiagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElectronUIAgent — src/agents/ElectronUIAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensionagent-srcagentscomprehensionagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ComprehensionAgent — src/agents/ComprehensionAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issuereporter-srcagentsissuereporterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IssueReporter — src/agents/IssueReporter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#priorityagent-srcagentspriorityagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PriorityAgent — src/agents/PriorityAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#systemagent-srcagentssystemagentts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SystemAgent — src/agents/SystemAgent.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Layer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Layer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ptyterminal-srccoreptyterminalts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PtyTerminal — src/core/PtyTerminal.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptivewaiter-srccoreadaptivewaiterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveWaiter — src/core/AdaptiveWaiter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#processlifecyclemanager-srccoreprocesslifecyclemanagerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ProcessLifecycleManager — src/core/ProcessLifecycleManager.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resourceoptimizer-srccoreresourceoptimizerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResourceOptimizer — src/core/ResourceOptimizer.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runners
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runners">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#smartuitestrunner-srcrunnerssmartuitestrunnerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SmartUITestRunner — src/runners/SmartUITestRunner.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensiveuitestrunner-srcrunnerscomprehensiveuitestrunnerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ComprehensiveUITestRunner — src/runners/ComprehensiveUITestRunner.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#orchestrator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestrator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orchestrator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scenariorouter-srcorchestratorscenariorouterts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScenarioRouter — src/orchestrator/ScenarioRouter.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sessionmanager-srcorchestratorsessionmanagerts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SessionManager — src/orchestrator/SessionManager.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultaggregator-srcorchestratorresultaggregatorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultAggregator — src/orchestrator/ResultAggregator.ts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#orchestrator-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orchestrator Events
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utils
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Models
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#baseagent-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseAgent Pattern
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module Philosophy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Module Philosophy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#300-loc-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        300 LOC limit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#brick-and-stud-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brick and stud pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-responsibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single responsibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1676,7 +2155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CONTRIBUTING.md" class="md-nav__link">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
         
   
   
@@ -1704,7 +2183,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../scenarios/README.md" class="md-nav__link">
+      <a href="../scenarios/" class="md-nav__link">
         
   
   
@@ -1732,7 +2211,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../docs/screenshot-diff-guide.md" class="md-nav__link">
+      <a href="../screenshot-diff-guide/" class="md-nav__link">
         
   
   
@@ -1760,7 +2239,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../docs/ResourceOptimizer.md" class="md-nav__link">
+      <a href="../ResourceOptimizer/" class="md-nav__link">
         
   
   
@@ -1847,7 +2326,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../TROUBLESHOOTING.md" class="md-nav__link">
+      <a href="../TROUBLESHOOTING/" class="md-nav__link">
         
   
   
@@ -1875,7 +2354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../CHANGELOG.md" class="md-nav__link">
+      <a href="../CHANGELOG/" class="md-nav__link">
         
   
   

@@ -1,0 +1,218 @@
+# CLI Testing Scenarios
+# Comprehensive test scenarios for Application CLI commands
+
+name: "CLI Command Tests"
+description: "Tests all core CLI commands including version, help, build, doctor, and error handling"
+version: "1.0.0"
+
+# Test configuration
+config:
+  timeout: 120000  # 2 minutes for CLI operations
+  retries: 3
+  parallel: false
+  
+# Environment requirements
+environment:
+  requires:
+    - APP_CONFIG
+    - DATABASE_PASSWORD
+    - DATABASE_PORT
+  optional:
+    - API_CLIENT_ID
+    - API_CLIENT_SECRET
+    - LLM_API_KEY
+
+# Agents involved in this scenario
+agents:
+  - name: "cli-agent"
+    type: "system"
+    config:
+      shell: "bash"
+      cwd: "/path/to/your/application"
+      timeout: 60000
+      capture_output: true
+
+# Test steps
+steps:
+  # Test basic version command
+  - name: "Test app --version"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- --version"
+    expect:
+      exit_code: 0
+      stdout_contains: 
+        - "Your Application"
+        - "version"
+    timeout: 30000
+    
+  # Test help command
+  - name: "Test app --help"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- --help"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "Your Application"
+        - "Commands:"
+        - "build"
+        - "process"
+        - "export"
+        - "create"
+        - "visualize"
+        - "configure"
+        - "validate"
+        - "doctor"
+    timeout: 30000
+    
+  # Test doctor command
+  - name: "Test app doctor"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- doctor"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "Checking CLI dependencies"
+    timeout: 60000
+    
+  # Test build command with missing config (should fail gracefully)
+  - name: "Test app build without config"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- build"
+      environment:
+        APP_CONFIG: ""  # Clear config
+    expect:
+      exit_code: 1
+      stderr_contains:
+        - "config"
+    timeout: 30000
+    
+  # Test build command with valid tenant ID
+  - name: "Test app build with config"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- build --config ${APP_CONFIG} --dry-run"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "Starting application build process"
+    timeout: 90000
+    
+  # Test process command
+  - name: "Test app process"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- process --help"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "process"
+    timeout: 30000
+    
+  # Test export help
+  - name: "Test app export help"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- export --help"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "export"
+        - "format"
+        - "json"
+        - "csv"
+        - "xml"
+    timeout: 30000
+    
+  # Test invalid command
+  - name: "Test invalid command"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- invalid-command"
+    expect:
+      exit_code: 2
+      stderr_contains:
+        - "No such command"
+    timeout: 30000
+    
+  # Test start command (Electron GUI)
+  - name: "Test app start --help"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "npm run app -- start --help"
+    expect:
+      exit_code: 0
+      stdout_contains:
+        - "start"
+        - "Launch Electron GUI"
+    timeout: 30000
+
+# Assertions to validate test success
+assertions:
+  - name: "Version Command Successful"
+    type: "command_success"
+    agent: "cli-agent"
+    params:
+      step: "Test app --version"
+      
+  - name: "Help Command Shows All Commands"
+    type: "output_contains_all"
+    agent: "cli-agent"
+    params:
+      step: "Test app --help"
+      required_strings:
+        - "build"
+        - "process"
+        - "export"
+        - "doctor"
+        
+  - name: "Doctor Command Runs Successfully"
+    type: "command_success"
+    agent: "cli-agent"
+    params:
+      step: "Test app doctor"
+      
+  - name: "Missing Config Handled Gracefully"
+    type: "command_failure_expected"
+    agent: "cli-agent"
+    params:
+      step: "Test app build without config"
+      expected_exit_code: 1
+      
+  - name: "Valid Build Command Starts Successfully"
+    type: "command_success"
+    agent: "cli-agent"
+    params:
+      step: "Test app build with config"
+
+# Cleanup actions
+cleanup:
+  - name: "Clean up test artifacts"
+    agent: "cli-agent"
+    action: "execute_command"
+    params:
+      command: "rm -f /tmp/app-test-*"
+
+# Test metadata
+metadata:
+  tags:
+    - "cli"
+    - "smoke-test"
+    - "commands"
+    - "validation"
+  priority: "high"
+  author: "agentic-testing-system"
+  created: "2024-09-03T00:00:00Z"
+  updated: "2024-09-03T00:00:00Z"

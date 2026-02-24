@@ -5,11 +5,43 @@
          <lastmod>2026-02-24</lastmod>
     </url>
     <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/API_REFERENCE/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
          <loc>https://rysweet.github.io/gadugi-agentic-test/ARCHITECTURE/</loc>
          <lastmod>2026-02-24</lastmod>
     </url>
     <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/CHANGELOG/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/CONTRIBUTING/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/E2E_QUICK_REFERENCE/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/E2E_TESTS_README/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/GETTING_STARTED/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
          <loc>https://rysweet.github.io/gadugi-agentic-test/ResourceOptimizer/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/TEST_APPROACH_COMPARISON/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/TROUBLESHOOTING/</loc>
          <lastmod>2026-02-24</lastmod>
     </url>
     <url>
@@ -622,6 +654,10 @@
     </url>
     <url>
          <loc>https://rysweet.github.io/gadugi-agentic-test/api/variables/waitForTerminalReady/</loc>
+         <lastmod>2026-02-24</lastmod>
+    </url>
+    <url>
+         <loc>https://rysweet.github.io/gadugi-agentic-test/scenarios/</loc>
          <lastmod>2026-02-24</lastmod>
     </url>
 </urlset>
