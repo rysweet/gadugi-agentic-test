@@ -7,9 +7,7 @@ import { ScenarioLoader } from '../../scenarios';
 import * as fs from 'fs/promises';
 import chalk from 'chalk';
 import {
-  logError,
   logWarning,
-  logInfo,
   CLIError,
   handleCommandError,
 } from '../output';
@@ -66,7 +64,7 @@ export function registerListCommand(program: Command): void {
             )
           );
         } else {
-          console.log('\n' + chalk.bold('Available Scenarios:'));
+          console.log(`\n${  chalk.bold('Available Scenarios:')}`);
           if (options.filter) {
             console.log(chalk.gray(`Filtered by tag: ${options.filter}`));
           }

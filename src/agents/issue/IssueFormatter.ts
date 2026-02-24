@@ -38,8 +38,8 @@ export class IssueFormatter {
       category: failure.category
     };
 
-    const title = this.renderTemplate(this.config.issueTitleTemplate!, templateVars);
-    const body = this.renderTemplate(this.config.issueBodyTemplate!, templateVars);
+    const title = this.renderTemplate(this.config.issueTitleTemplate, templateVars);
+    const body = this.renderTemplate(this.config.issueBodyTemplate, templateVars);
 
     // Embed fingerprint for deduplication
     const fingerprint = this.deduplicator.generateFingerprint(failure);

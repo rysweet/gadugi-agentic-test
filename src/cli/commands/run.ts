@@ -131,7 +131,7 @@ export function registerRunCommand(program: Command): void {
           const failedCount = session.summary.failed;
 
           // Report results with colors
-          console.log('\n' + chalk.bold('Test Execution Results:'));
+          console.log(`\n${  chalk.bold('Test Execution Results:')}`);
           console.log(chalk.green(`✓ Passed: ${passedCount}`));
           console.log(chalk.red(`✗ Failed: ${failedCount}`));
           console.log(chalk.gray(`- Total: ${scenarios.length}`));

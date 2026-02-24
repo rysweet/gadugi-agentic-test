@@ -58,7 +58,7 @@ export function registerWatchCommand(program: Command): void {
 
         // Setup file watcher
         const watcher = chokidar.watch(options.directory, {
-          ignored: /(^|[\/\\])\./, // ignore dotfiles
+          ignored: /(^|[/\\])\./, // ignore dotfiles
           persistent: true,
           ignoreInitial: true,
         });
@@ -95,7 +95,7 @@ export function registerWatchCommand(program: Command): void {
             const failedCount = session.summary.failed;
 
             // Report results
-            console.log('\n' + chalk.bold('Watch Mode - Test Results:'));
+            console.log(`\n${  chalk.bold('Watch Mode - Test Results:')}`);
             console.log(chalk.green(`✓ Passed: ${passedCount}`));
             console.log(chalk.red(`✗ Failed: ${failedCount}`));
             console.log(chalk.gray(`- Total: ${scenarios.length}`));

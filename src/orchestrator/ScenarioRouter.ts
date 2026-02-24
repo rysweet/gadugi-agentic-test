@@ -177,7 +177,7 @@ export class ScenarioRouter {
 
     // Last resort: use any registered agent
     const fallback = Object.values(this.agentRegistry)[0];
-    if (fallback) return fallback as IAgent;
+    if (fallback) return fallback;
 
     // Nothing registered — this scenario cannot be executed
     throw new Error(`No agent available for MIXED scenario '${scenario.id}'`);

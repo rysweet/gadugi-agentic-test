@@ -62,7 +62,7 @@ export class OutputComprehender {
     const { llm } = this.config;
 
     const context = featureDoc.length > this.config.maxContextLength
-      ? featureDoc.substring(0, this.config.maxContextLength) + '...'
+      ? `${featureDoc.substring(0, this.config.maxContextLength)  }...`
       : featureDoc;
 
     const response = await client.chat.completions.create({

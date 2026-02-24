@@ -47,7 +47,7 @@ export class DockerMonitor {
       await execAsync('docker --version');
       this.dockerAvailable = true;
       this.logger.info('Docker is available for monitoring');
-    } catch (error) {
+    } catch (_error) {
       this.dockerAvailable = false;
       this.logger.info('Docker is not available');
     }

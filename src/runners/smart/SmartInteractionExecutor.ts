@@ -5,7 +5,8 @@
 
 import { Page } from 'playwright';
 
-// ANSI colour codes for terminal output
+// ANSI colour codes for terminal output (value used by parent SmartUITestRunner, type used here)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const colors = {
   green: '\x1b[32m',
   red: '\x1b[31m',

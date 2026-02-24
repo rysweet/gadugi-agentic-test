@@ -22,7 +22,7 @@ import { safeResolvePath, CLIPathError } from './cli-path-utils';
 // Load environment variables from .env file if it exists
 try {
   dotenv.config();
-} catch (error) {
+} catch (_error) {
   // Silently ignore if .env doesn't exist
 }
 

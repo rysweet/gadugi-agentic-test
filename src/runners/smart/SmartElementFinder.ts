@@ -81,7 +81,7 @@ export class SmartElementFinder {
 
       // Find all selects / dropdowns
       document.querySelectorAll('select').forEach(el => {
-        const element = el as HTMLSelectElement;
+        const element = el;
         interactiveElements.push({
           type: 'select',
           name: element.name || undefined,

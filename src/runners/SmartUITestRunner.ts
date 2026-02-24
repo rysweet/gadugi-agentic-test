@@ -78,7 +78,8 @@ export class SmartUITestRunner {
     this.log('cyan', '🎯', 'Testing the UI by discovering and using actual features\n');
     this.log('blue', '🚀', 'Launching application...');
 
-    const electronPath = require('electron');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const electronPath = require('electron') as string;
     const appPath = path.resolve(process.cwd(), '..');
 
     this.electronApp = await _electron.launch({
@@ -132,20 +133,20 @@ export class SmartUITestRunner {
         this.log('yellow', '📂', `Testing "${tabName}" Tab`);
 
         try {
-          const clicked = await this.page!.click(`text="${tabName}"`, { timeout: 5000 })
+          const clicked = await this.page.click(`text="${tabName}"`, { timeout: 5000 })
             .then(() => true)
             .catch(() => false);
 
           if (clicked) {
-            await this.page!.waitForTimeout(1000);
+            await this.page.waitForTimeout(1000);
 
             const screenshotName = `${tabName.toLowerCase().replace(/\s+/g, '-')}-tested.png`;
             const screenshotPath = path.join(this.screenshotsDir, screenshotName);
-            await this.page!.screenshot({ path: screenshotPath, fullPage: true });
+            await this.page.screenshot({ path: screenshotPath, fullPage: true });
             this.testContext.screenshots.push(screenshotName);
             screenshots.push(screenshotPath);
 
-            const tabDiscovery = await this.finder.discoverElements(this.page!);
+            const tabDiscovery = await this.finder.discoverElements(this.page);
             this.log('blue', '🔎', `Tab contains ${tabDiscovery.interactive.length} elements`);
 
             const testFn = Object.entries(tabTests).find(([key]) =>
@@ -153,7 +154,7 @@ export class SmartUITestRunner {
             )?.[1];
 
             if (testFn) {
-              await testFn(this.page!);
+              await testFn(this.page);
             } else {
               const buttons = tabDiscovery.interactive.filter(el => el.type === 'button');
               const inputs = tabDiscovery.interactive.filter(el =>

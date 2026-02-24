@@ -1,8 +1,7 @@
-import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import * as pty from 'node-pty-prebuilt-multiarch';
 import { ProcessLifecycleManager, ProcessInfo } from './ProcessLifecycleManager';
-import { adaptiveWaiter, waitForTerminalReady, waitForOutput, delay } from './AdaptiveWaiter';
+import { adaptiveWaiter, waitForTerminalReady, waitForOutput } from './AdaptiveWaiter';
 import { logger } from '../utils/logger';
 
 /**
@@ -182,7 +181,7 @@ export class PtyTerminal extends EventEmitter {
    * Write a line to the terminal (adds newline)
    */
   public writeLine(data: string): void {
-    this.write(data + '\r\n');
+    this.write(`${data  }\r\n`);
   }
 
   /**

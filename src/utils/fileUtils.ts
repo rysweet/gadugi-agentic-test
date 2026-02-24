@@ -23,7 +23,6 @@ import * as fsPromises from 'fs/promises';
 
 // Import sub-modules for FileUtils class composition
 import {
-  FileOperationError,
   FileMetadata,
   CleanupOptions,
   SyncOptions
