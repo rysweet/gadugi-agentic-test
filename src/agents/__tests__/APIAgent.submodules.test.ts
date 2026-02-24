@@ -287,6 +287,32 @@ describe('APIAuthHandler', () => {
       const { handler } = makeHandler();
       expect(() => handler.setAuthentication('oauth2')).toThrow(/unsupported/i);
     });
+
+    it('sets apikey authentication and returns correct AuthConfig', () => {
+      const { handler, axiosInstance } = makeHandler();
+      const config = handler.setAuthentication('apikey', 'X-Custom-Header:my-api-key');
+      expect(config.type).toBe('apikey');
+      expect(config.apiKey).toBe('my-api-key');
+      expect(config.apiKeyHeader).toBe('X-Custom-Header');
+      expect(axiosInstance.defaults.headers.common['X-Custom-Header']).toBe('my-api-key');
+    });
+
+    it('sets apikey authentication with default header when no colon separator', () => {
+      const { handler, axiosInstance } = makeHandler();
+      const config = handler.setAuthentication('apikey', 'somekey');
+      expect(config.type).toBe('apikey');
+      expect(axiosInstance.defaults.headers.common['X-API-Key']).toBe(undefined);
+    });
+
+    it('sets basic authentication and returns correct AuthConfig', () => {
+      const { handler, axiosInstance } = makeHandler();
+      const config = handler.setAuthentication('basic', 'admin:secret');
+      expect(config.type).toBe('basic');
+      expect(config.username).toBe('admin');
+      expect(config.password).toBe('secret');
+      const encoded = Buffer.from('admin:secret').toString('base64');
+      expect(axiosInstance.defaults.headers.common['Authorization']).toBe(`Basic ${encoded}`);
+    });
   });
 });
 
