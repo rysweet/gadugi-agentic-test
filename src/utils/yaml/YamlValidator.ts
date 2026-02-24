@@ -5,7 +5,7 @@
 import * as yaml from 'js-yaml';
 import fs from 'fs/promises';
 import { OrchestratorScenario, TestStep, VerificationStep, Priority, TestInterface } from '../../models/TestModels';
-import { YamlParserConfig, RawScenario, ValidationError, YamlParseError } from './types';
+import { YamlParserConfig, RawScenario, ValidationError } from './types';
 
 /**
  * Validates raw YAML data and converts it to OrchestratorScenario instances.

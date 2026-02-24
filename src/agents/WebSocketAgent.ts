@@ -13,7 +13,7 @@
  */
 
 import { AgentType } from './index';
-import { TestStep, TestStatus, StepResult, OrchestratorScenario } from '../models/TestModels';
+import { TestStep, StepResult, OrchestratorScenario } from '../models/TestModels';
 import { createLogger } from '../utils/logger';
 import { BaseAgent, ExecutionContext } from './BaseAgent';
 
@@ -23,7 +23,6 @@ import {
   WebSocketMessage,
   ConnectionMetrics,
   ConnectionInfo,
-  LatencyMeasurement,
   DEFAULT_CONFIG
 } from './websocket/types';
 import { WebSocketConnection } from './websocket/WebSocketConnection';

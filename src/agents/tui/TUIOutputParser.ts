@@ -29,6 +29,7 @@ const ANSI_COLOR_MAP: Record<number, string> = {
  * @returns Clean text without escape sequences
  */
 export function stripAnsiCodes(text: string): string {
+  // eslint-disable-next-line no-control-regex
   return text.replace(/\u001b\[[0-9;]*m/g, '');
 }
 
@@ -46,6 +47,7 @@ export function parseColors(text: string): ColorInfo[] {
   const colors: ColorInfo[] = [];
   // Tokenise the string into alternating escape sequences and plain text.
   // Each token is either an ANSI CSI sequence or a run of printable characters.
+  // eslint-disable-next-line no-control-regex
   const tokenRegex = /\u001b\[([0-9;]*)m|([^\u001b]+)/g;
   let match;
   let position = 0;

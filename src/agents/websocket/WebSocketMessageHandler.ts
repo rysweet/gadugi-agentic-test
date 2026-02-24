@@ -14,7 +14,7 @@ export class WebSocketMessageHandler {
   private messageHistory: WebSocketMessage[] = [];
   private latencyHistory: LatencyMeasurement[] = [];
   private pendingMessages: Map<string, { timestamp: Date; event: string }> = new Map();
-  private eventHandlers: Map<string, Function> = new Map();
+  private eventHandlers: Map<string, (...args: unknown[]) => void> = new Map();
   private messageCounter = 0;
 
   constructor(

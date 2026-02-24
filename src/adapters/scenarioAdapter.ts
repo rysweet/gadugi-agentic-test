@@ -57,7 +57,7 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
 /**
  * Convert scenarios/TestStep to models/OrchestratorStep
  */
-function adaptStepToOrchestrator(simpleStep: SimpleStep, stepIndex: number): OrchestratorStep {
+function adaptStepToOrchestrator(simpleStep: SimpleStep, _stepIndex: number): OrchestratorStep {
   const params = simpleStep.params || {};
 
   // Build target string based on params and step type

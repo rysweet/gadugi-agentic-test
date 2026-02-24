@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import * as zlib from 'zlib';
 import { ProcessLifecycleManager } from './ProcessLifecycleManager';
 import { PtyTerminal, PtyTerminalConfig } from './PtyTerminal';
 import { MemoryOptimizer } from './optimizer/MemoryOptimizer';

@@ -10,7 +10,7 @@ import { CommandResult } from '../../models/TestModels';
 import { TestLogger } from '../../utils/logger';
 import { delay } from '../../utils/async';
 import { generateId } from '../../utils/ids';
-import { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData, DEFAULT_CLI_CONFIG } from './types';
+import { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData } from './types';
 
 export class CLICommandRunner {
   private config: Required<CLIAgentConfig>;

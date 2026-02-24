@@ -135,7 +135,7 @@ export class WebSocketStepExecutor {
         }
       } catch {
         const val = step.value;
-        filter = (data: unknown) => JSON.stringify(data).includes(val!);
+        filter = (data: unknown) => JSON.stringify(data).includes(val);
       }
     }
 

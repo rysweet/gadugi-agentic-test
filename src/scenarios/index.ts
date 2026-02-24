@@ -46,7 +46,7 @@ export class ScenarioLoader {
     // Legacy format has application + scenarios array
     // Convert first scenario to new format (for now, only load first scenario)
     const scenarios = raw['scenarios'] as RawYaml[];
-    const firstScenario = scenarios[0] as RawYaml;
+    const firstScenario = scenarios[0];
     const application = raw['application'] as RawYaml | undefined;
 
     return {

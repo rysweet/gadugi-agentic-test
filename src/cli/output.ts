@@ -24,7 +24,7 @@ export function logInfo(message: string): void {
 
 export function createProgressBar(total: number, description: string): SingleBar {
   return new SingleBar({
-    format: chalk.blue(description) + ' |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s',
+    format: `${chalk.blue(description)  } |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s`,
     barCompleteChar: '\u2588',
     barIncompleteChar: '\u2591',
     hideCursor: true

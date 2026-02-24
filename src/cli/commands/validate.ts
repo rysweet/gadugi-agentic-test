@@ -10,7 +10,6 @@ import * as fs from 'fs/promises';
 import chalk from 'chalk';
 import {
   logSuccess,
-  logError,
   logWarning,
   logInfo,
   createProgressBar,
@@ -33,7 +32,7 @@ export function registerValidateCommand(program: Command): void {
           strictValidation: options.strict || false,
         });
 
-        let validationResults: Array<{ file: string; valid: boolean; errors: string[] }> = [];
+        const validationResults: Array<{ file: string; valid: boolean; errors: string[] }> = [];
 
         if (options.file) {
           try {
@@ -110,12 +109,12 @@ export function registerValidateCommand(program: Command): void {
         const validFiles = validationResults.filter((r) => r.valid);
         const invalidFiles = validationResults.filter((r) => !r.valid);
 
-        console.log('\n' + chalk.bold('Validation Results:'));
+        console.log(`\n${  chalk.bold('Validation Results:')}`);
         console.log(chalk.green(`✓ Valid files: ${validFiles.length}`));
         console.log(chalk.red(`✗ Invalid files: ${invalidFiles.length}`));
 
         if (invalidFiles.length > 0) {
-          console.log('\n' + chalk.red('Validation Errors:'));
+          console.log(`\n${  chalk.red('Validation Errors:')}`);
           invalidFiles.forEach((result) => {
             console.log(chalk.red(`\n✗ ${result.file}:`));
             result.errors.forEach((error) => {

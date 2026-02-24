@@ -161,7 +161,7 @@ export class ProcessLifecycleManager extends EventEmitter {
     });
 
     // Handle when process is closed (all stdio streams closed)
-    childProcess.on('close', (code, signal) => {
+    childProcess.on('close', (_code, _signal) => {
       // Final cleanup if not already done
       if (this.childProcesses.has(processInfo.pid)) {
         this.childProcesses.delete(processInfo.pid);
@@ -307,7 +307,7 @@ export class ProcessLifecycleManager extends EventEmitter {
 
     try {
       await gracefulShutdownPromise;
-    } catch (error) {
+    } catch (_error) {
       // If graceful shutdown fails, force kill with SIGKILL
       await this.killAllProcesses('SIGKILL');
 
@@ -384,7 +384,7 @@ export class ProcessLifecycleManager extends EventEmitter {
             if (processInfo.pgid) {
               process.kill(-processInfo.pgid, 'SIGKILL');
             }
-          } catch (error) {
+          } catch (_error) {
             // Ignore errors during exit cleanup
           }
         });

@@ -86,7 +86,7 @@ export class YamlParser {
     variables: VariableContext = this.substitution.createDefaultContext()
   ): OrchestratorScenario {
     try {
-      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as unknown as RawScenario;
+      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as RawScenario;
       if (!parsed) {
         throw new YamlParseError('Empty or invalid YAML content');
       }
