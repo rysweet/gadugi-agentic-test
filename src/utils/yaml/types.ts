@@ -16,7 +16,7 @@ export class YamlParseError extends Error {
  * Validation error class
  */
 export class ValidationError extends Error {
-  constructor(message: string, public field?: string, public value?: any) {
+  constructor(message: string, public field?: string, public value?: unknown) {
     super(message);
     this.name = 'ValidationError';
   }
@@ -29,9 +29,9 @@ export interface VariableContext {
   /** Environment variables */
   env: Record<string, string>;
   /** Global variables */
-  global: Record<string, any>;
+  global: Record<string, unknown>;
   /** Scenario-specific variables */
-  scenario: Record<string, any>;
+  scenario: Record<string, unknown>;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface YamlParserConfig {
   /** Whether to validate schemas strictly */
   strictValidation: boolean;
   /** Custom variable resolvers */
-  variableResolvers: Record<string, (value: any) => any>;
+  variableResolvers: Record<string, (value: unknown) => unknown>;
   /** Default environment variables */
   defaultEnvironment: Record<string, string>;
 }
@@ -71,14 +71,14 @@ export interface RawScenario {
   priority?: string;
   interface?: string;
   prerequisites?: string[];
-  steps?: any[];
-  verifications?: any[];
+  steps?: Record<string, unknown>[];
+  verifications?: Record<string, unknown>[];
   expectedOutcome?: string;
   estimatedDuration?: number;
   tags?: string[];
   enabled?: boolean;
   environment?: Record<string, string>;
-  cleanup?: any[];
-  variables?: Record<string, any>;
+  cleanup?: Record<string, unknown>[];
+  variables?: Record<string, unknown>;
   includes?: string[];
 }

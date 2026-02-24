@@ -13,7 +13,7 @@ import { validateConfig } from './ConfigValidator';
  * Load a configuration file (JSON or YAML) and return the parsed object.
  * Throws ConfigError for unsupported formats or invalid content.
  */
-export async function loadConfigFile(filePath: string): Promise<any> {
+export async function loadConfigFile(filePath: string): Promise<Partial<TestConfig>> {
   const absolutePath = path.resolve(filePath);
   let fileContent: string;
   try {
@@ -26,7 +26,7 @@ export async function loadConfigFile(filePath: string): Promise<any> {
   }
 
   const extension = path.extname(absolutePath).toLowerCase();
-  let parsed: any;
+  let parsed: unknown;
 
   if (extension === '.json') {
     try {
@@ -55,15 +55,15 @@ export async function loadConfigFile(filePath: string): Promise<any> {
     throw new ConfigError(`Configuration validation failed: ${validation.errors.join(', ')}`, filePath);
   }
 
-  return parsed;
+  return parsed as Partial<TestConfig>;
 }
 
 /**
  * Build a partial config object from environment variables using ENV_MAPPINGS.
  * Returns an empty object if no matching env vars are set.
  */
-export function loadEnvConfig(): { config: any; source: ConfigSource | null } {
-  const envConfig: any = {};
+export function loadEnvConfig(): { config: Partial<TestConfig>; source: ConfigSource | null } {
+  const envConfig: Record<string, unknown> = {};
 
   Object.entries(ENV_MAPPINGS).forEach(([envVar, configPath]) => {
     const envValue = process.env[envVar];
@@ -87,7 +87,7 @@ export function loadEnvConfig(): { config: any; source: ConfigSource | null } {
 
   const hasEnvConfig = Object.keys(envConfig).length > 0;
   return {
-    config: envConfig,
+    config: envConfig as Partial<TestConfig>,
     source: hasEnvConfig ? ConfigSource.ENVIRONMENT : null
   };
 }
@@ -95,6 +95,7 @@ export function loadEnvConfig(): { config: any; source: ConfigSource | null } {
 /**
  * Deep merge two configuration objects.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mergeConfigs<T extends Record<string, any>>(target: T, source: Partial<T>): T {
   const result = { ...target };
 
@@ -107,9 +108,9 @@ export function mergeConfigs<T extends Record<string, any>>(target: T, source: P
         typeof sourceValue === 'object' && !Array.isArray(sourceValue) && sourceValue !== null &&
         typeof targetValue === 'object' && !Array.isArray(targetValue) && targetValue !== null
       ) {
-        (result as any)[key] = mergeConfigs(targetValue, sourceValue);
+        (result as Record<string, unknown>)[key] = mergeConfigs(targetValue, sourceValue);
       } else {
-        (result as any)[key] = sourceValue;
+        (result as Record<string, unknown>)[key] = sourceValue;
       }
     }
   });
@@ -139,26 +140,31 @@ function validatePathSegments(dotPath: string): void {
 /**
  * Get nested value from object using dot notation
  */
-export function getNestedValue(obj: any, dotPath: string): any {
+export function getNestedValue(obj: object, dotPath: string): unknown {
   validatePathSegments(dotPath);
-  return dotPath.split('.').reduce((current, key) => current?.[key], obj);
+  return dotPath.split('.').reduce<unknown>((current, key) => {
+    if (current !== null && typeof current === 'object') {
+      return (current as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, obj);
 }
 
 /**
  * Set nested value in object using dot notation
  */
-export function setNestedValue(obj: any, dotPath: string, value: any): void {
+export function setNestedValue(obj: object, dotPath: string, value: unknown): void {
   validatePathSegments(dotPath);
 
   const keys = dotPath.split('.');
   const lastKey = keys.pop()!;
 
-  const target = keys.reduce((current, key) => {
+  const target = keys.reduce((current: Record<string, unknown>, key) => {
     if (!(key in current) || typeof current[key] !== 'object') {
       current[key] = {};
     }
-    return current[key];
-  }, obj);
+    return current[key] as Record<string, unknown>;
+  }, obj as Record<string, unknown>);
 
   target[lastKey] = value;
 }
@@ -166,7 +172,7 @@ export function setNestedValue(obj: any, dotPath: string, value: any): void {
 /**
  * Parse environment variable value to appropriate type
  */
-function parseEnvValue(value: string): any {
+function parseEnvValue(value: string): unknown {
   // Boolean values
   if (value.toLowerCase() === 'true') return true;
   if (value.toLowerCase() === 'false') return false;

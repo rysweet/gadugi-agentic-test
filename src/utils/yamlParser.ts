@@ -26,6 +26,16 @@ export { YamlParseError, ValidationError };
 export type { VariableContext, YamlParserConfig, RawScenario };
 
 /**
+ * Narrow an unknown value to a Record after substitution.
+ */
+function asRecord(value: unknown): Record<string, unknown> {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+/**
  * YAML parser for test scenarios. Orchestrates file loading, include processing,
  * variable substitution, and schema validation.
  */
@@ -58,14 +68,17 @@ export class YamlParser {
 
       if (Array.isArray(substitutedContent)) {
         return substitutedContent.map((scenario, index) =>
-          this.validator.validateAndConvert(scenario, `${filePath}[${index}]`)
-        );
-      } else if (substitutedContent.scenarios) {
-        return substitutedContent.scenarios.map((scenario: any, index: number) =>
-          this.validator.validateAndConvert(scenario, `${filePath}[scenarios][${index}]`)
+          this.validator.validateAndConvert(scenario as RawScenario, `${filePath}[${index}]`)
         );
       } else {
-        return [this.validator.validateAndConvert(substitutedContent, filePath)];
+        const contentRecord = asRecord(substitutedContent);
+        if (Array.isArray(contentRecord['scenarios'])) {
+          return (contentRecord['scenarios'] as unknown[]).map((scenario, index) =>
+            this.validator.validateAndConvert(scenario as RawScenario, `${filePath}[scenarios][${index}]`)
+          );
+        } else {
+          return [this.validator.validateAndConvert(substitutedContent as RawScenario, filePath)];
+        }
       }
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
@@ -92,7 +105,7 @@ export class YamlParser {
       }
 
       const substituted = this.substitution.substitute(parsed, variables);
-      return this.validator.validateAndConvert(substituted, 'inline');
+      return this.validator.validateAndConvert(substituted as RawScenario, 'inline');
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
         throw error;
@@ -115,7 +128,7 @@ export class YamlParser {
     variables: VariableContext = this.substitution.createDefaultContext()
   ): Promise<OrchestratorScenario[]> {
     try {
-      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA }) as any;
+      const parsed = yaml.load(yamlContent, { schema: yaml.JSON_SCHEMA });
       if (!parsed) {
         throw new YamlParseError('Empty or invalid YAML content');
       }
@@ -124,14 +137,17 @@ export class YamlParser {
 
       if (Array.isArray(substituted)) {
         return substituted.map((scenario, index) =>
-          this.validator.validateAndConvert(scenario, `inline[${index}]`)
-        );
-      } else if (substituted.scenarios) {
-        return substituted.scenarios.map((scenario: any, index: number) =>
-          this.validator.validateAndConvert(scenario, `inline[scenarios][${index}]`)
+          this.validator.validateAndConvert(scenario as RawScenario, `inline[${index}]`)
         );
       } else {
-        return [this.validator.validateAndConvert(substituted, 'inline')];
+        const contentRecord = asRecord(substituted);
+        if (Array.isArray(contentRecord['scenarios'])) {
+          return (contentRecord['scenarios'] as unknown[]).map((scenario, index) =>
+            this.validator.validateAndConvert(scenario as RawScenario, `inline[scenarios][${index}]`)
+          );
+        } else {
+          return [this.validator.validateAndConvert(substituted as RawScenario, 'inline')];
+        }
       }
     } catch (error: unknown) {
       if (error instanceof YamlParseError || error instanceof ValidationError) {
@@ -153,7 +169,7 @@ export class YamlParser {
   /**
    * Extract variables from YAML content.
    */
-  extractVariables(content: any): Record<string, any> {
+  extractVariables(content: unknown): Record<string, unknown> {
     return this.substitution.extractVariables(content);
   }
 
@@ -161,7 +177,7 @@ export class YamlParser {
    * Convert OrchestratorScenario back to YAML string.
    */
   scenarioToYaml(scenario: OrchestratorScenario): string {
-    const yamlObject: Record<string, any> = {
+    const yamlObject: Record<string, unknown> = {
       id: scenario.id,
       name: scenario.name,
       description: scenario.description,

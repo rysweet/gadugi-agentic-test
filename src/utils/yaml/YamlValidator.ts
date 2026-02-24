@@ -98,32 +98,32 @@ export class YamlValidator {
     return Object.values(TestInterface).includes(upper as TestInterface) ? upper as TestInterface : null;
   }
 
-  private validateSteps(rawSteps: any[]): TestStep[] {
+  private validateSteps(rawSteps: Record<string, unknown>[]): TestStep[] {
     return rawSteps.map((step, index) => {
-      if (typeof step !== 'object' || !step.action || !step.target) {
+      if (typeof step !== 'object' || !step['action'] || !step['target']) {
         throw new ValidationError(`Invalid step at index ${index}: action and target are required`);
       }
 
       return {
-        action: step.action,
-        target: step.target,
-        value: step.value,
-        waitFor: step.waitFor,
-        timeout: step.timeout,
-        description: step.description,
-        expected: step.expected
+        action: step['action'] as string,
+        target: step['target'] as string,
+        value: step['value'] as string | undefined,
+        waitFor: step['waitFor'] as string | undefined,
+        timeout: step['timeout'] as number | undefined,
+        description: step['description'] as string | undefined,
+        expected: step['expected'] as string | undefined
       };
     });
   }
 
-  private validateVerifications(rawVerifications: any[]): VerificationStep[] {
+  private validateVerifications(rawVerifications: Record<string, unknown>[]): VerificationStep[] {
     return rawVerifications.map((verification, index) => {
       if (
         typeof verification !== 'object' ||
-        !verification.type ||
-        !verification.target ||
-        !verification.expected ||
-        !verification.operator
+        !verification['type'] ||
+        !verification['target'] ||
+        !verification['expected'] ||
+        !verification['operator']
       ) {
         throw new ValidationError(
           `Invalid verification at index ${index}: type, target, expected, and operator are required`
@@ -131,11 +131,11 @@ export class YamlValidator {
       }
 
       return {
-        type: verification.type,
-        target: verification.target,
-        expected: verification.expected,
-        operator: verification.operator,
-        description: verification.description
+        type: verification['type'] as string,
+        target: verification['target'] as string,
+        expected: verification['expected'] as string,
+        operator: verification['operator'] as string,
+        description: verification['description'] as string | undefined
       };
     });
   }

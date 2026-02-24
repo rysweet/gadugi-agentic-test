@@ -99,14 +99,14 @@ export class ConfigManager {
   /**
    * Get a specific configuration value by dot-notation path
    */
-  get<T = any>(dotPath: string, defaultValue?: T): T {
-    return getNestedValue(this.config, dotPath) ?? defaultValue;
+  get<T = unknown>(dotPath: string, defaultValue?: T): T {
+    return (getNestedValue(this.config, dotPath) ?? defaultValue) as T;
   }
 
   /**
    * Set a specific configuration value by dot-notation path
    */
-  set(dotPath: string, value: any): void {
+  set(dotPath: string, value: unknown): void {
     const updates = {};
     setNestedValue(updates, dotPath, value);
     this.updateConfig(updates);
@@ -129,7 +129,7 @@ export class ConfigManager {
   /**
    * Validate a configuration object
    */
-  validateConfig(config: any) {
+  validateConfig(config: unknown) {
     return validateConfig(config);
   }
 
