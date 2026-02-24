@@ -160,7 +160,7 @@ export class TUIAgent extends BaseAgent {
     return session ? [...session.outputBuffer] : [];
   }
 
-  async validateOutput(sessionId: string, expected: any): Promise<boolean> {
+  async validateOutput(sessionId: string, expected: unknown): Promise<boolean> {
     const session = this.sessionManager.getSession(sessionId);
     if (!session) return false;
     const output = getLatestOutput(session.outputBuffer);
@@ -280,7 +280,7 @@ export class TUIAgent extends BaseAgent {
     return logs.filter(log => log.length > 0);
   }
 
-  private sanitizeConfig(): Record<string, any> {
+  private sanitizeConfig(): Record<string, unknown> {
     return sanitizeConfigWithEnv(this.config, 'environment');
   }
 

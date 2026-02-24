@@ -98,14 +98,19 @@ export class WebSocketStepExecutor {
   }
 
   private async parseSendStep(step: TestStep) {
-    let data: any;
+    let data: unknown;
     let ack = false;
 
     if (step.value) {
       try {
-        const parsed = JSON.parse(step.value);
-        data = parsed.data || parsed;
-        ack = parsed.ack || false;
+        const parsed: unknown = JSON.parse(step.value);
+        if (parsed !== null && typeof parsed === 'object') {
+          const obj = parsed as Record<string, unknown>;
+          data = obj['data'] ?? parsed;
+          ack = Boolean(obj['ack']);
+        } else {
+          data = parsed;
+        }
       } catch {
         data = step.value;
       }
@@ -116,16 +121,21 @@ export class WebSocketStepExecutor {
 
   private async parseWaitStep(step: TestStep) {
     const timeout = step.timeout || 10000;
-    let filter: ((data: any) => boolean) | undefined;
+    let filter: ((data: unknown) => boolean) | undefined;
 
     if (step.value) {
       try {
-        const filterConfig = JSON.parse(step.value);
-        if (filterConfig.filter) {
-          filter = (data: any) => JSON.stringify(data).includes(filterConfig.filter);
+        const filterConfig: unknown = JSON.parse(step.value);
+        if (filterConfig !== null && typeof filterConfig === 'object') {
+          const fc = filterConfig as Record<string, unknown>;
+          if (typeof fc['filter'] === 'string') {
+            const fStr = fc['filter'];
+            filter = (data: unknown) => JSON.stringify(data).includes(fStr);
+          }
         }
       } catch {
-        filter = (data: any) => JSON.stringify(data).includes(step.value!);
+        const val = step.value;
+        filter = (data: unknown) => JSON.stringify(data).includes(val!);
       }
     }
 

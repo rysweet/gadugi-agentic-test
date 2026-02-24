@@ -18,7 +18,7 @@ export interface StepDispatcherDeps {
   spawnTUI(command: string, args: string[]): Promise<string>;
   sendInput(sessionId: string, input: string | InputSimulation): Promise<void>;
   navigateMenu(sessionId: string, path: string[]): Promise<MenuNavigation>;
-  validateOutput(sessionId: string, expected: any): Promise<boolean>;
+  validateOutput(sessionId: string, expected: unknown): Promise<boolean>;
   validateFormatting(sessionId: string, expectedColors: ColorInfo[]): Promise<boolean>;
   captureOutput(sessionId: string): TerminalOutput | null;
   waitForOutputPattern(sessionId: string, pattern: string, timeout: number): Promise<void>;
@@ -70,7 +70,7 @@ export async function dispatchStep(
   }
 }
 
-async function executeAction(step: TestStep, deps: StepDispatcherDeps): Promise<any> {
+async function executeAction(step: TestStep, deps: StepDispatcherDeps): Promise<unknown> {
   const getSessionId = () => step.target || deps.getMostRecentSessionId();
 
   switch (step.action.toLowerCase()) {

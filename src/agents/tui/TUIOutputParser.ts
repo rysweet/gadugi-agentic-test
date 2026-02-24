@@ -125,7 +125,7 @@ export function getLatestOutput(outputBuffer: TerminalOutput[]): TerminalOutput 
  */
 export function performOutputValidation(
   output: TerminalOutput,
-  expected: any,
+  expected: unknown,
   allOutput?: TerminalOutput[]
 ): boolean {
   if (typeof expected === 'string') {
@@ -141,34 +141,39 @@ export function performOutputValidation(
     }
   }
 
-  if (typeof expected === 'object' && expected.type) {
-    switch (expected.type) {
-      case 'contains':
-        return output.text.includes(expected.value);
-      case 'not_contains':
-        return !output.text.includes(expected.value);
-      case 'starts_with':
-        return output.text.startsWith(expected.value);
-      case 'ends_with':
-        return output.text.endsWith(expected.value);
-      case 'empty':
-        return output.text.trim().length === 0;
-      case 'not_empty': {
-        // Check the current output; if it is empty, fall back to the most
-        // recent non-empty output from the session buffer (if provided).
-        if (output.text.trim().length > 0) return true;
-        if (allOutput) {
-          for (let i = allOutput.length - 1; i >= 0; i--) {
-            if (allOutput[i].text.trim().length > 0) return true;
+  if (typeof expected === 'object' && expected !== null) {
+    const exp = expected as Record<string, unknown>;
+    if (exp['type']) {
+      switch (exp['type']) {
+        case 'contains':
+          return output.text.includes(String(exp['value'] ?? ''));
+        case 'not_contains':
+          return !output.text.includes(String(exp['value'] ?? ''));
+        case 'starts_with':
+          return output.text.startsWith(String(exp['value'] ?? ''));
+        case 'ends_with':
+          return output.text.endsWith(String(exp['value'] ?? ''));
+        case 'empty':
+          return output.text.trim().length === 0;
+        case 'not_empty': {
+          // Check the current output; if it is empty, fall back to the most
+          // recent non-empty output from the session buffer (if provided).
+          if (output.text.trim().length > 0) return true;
+          if (allOutput) {
+            for (let i = allOutput.length - 1; i >= 0; i--) {
+              if (allOutput[i].text.trim().length > 0) return true;
+            }
           }
+          return false;
         }
-        return false;
+        case 'length': {
+          // Accept if text length is within the stated bound (<=).
+          const bound = typeof exp['value'] === 'number' ? exp['value'] : Number(exp['value']);
+          return output.text.length <= bound;
+        }
+        default:
+          throw new Error(`Unsupported validation type: ${exp['type']}`);
       }
-      case 'length':
-        // Accept if text length is within the stated bound (<=).
-        return output.text.length <= expected.value;
-      default:
-        throw new Error(`Unsupported validation type: ${expected.type}`);
     }
   }
 

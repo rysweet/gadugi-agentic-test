@@ -211,12 +211,11 @@ export function getResourceOptimizer(): ResourceOptimizer {
 export const resourceOptimizer: ResourceOptimizer = new Proxy(
   {} as ResourceOptimizer,
   {
-    get(_target, prop) {
-      return (getResourceOptimizer() as any)[prop];
+    get(_target, prop, receiver) {
+      return Reflect.get(getResourceOptimizer(), prop, receiver);
     },
-    set(_target, prop, value) {
-      (getResourceOptimizer() as any)[prop] = value;
-      return true;
+    set(_target, prop, value, receiver) {
+      return Reflect.set(getResourceOptimizer(), prop, value, receiver);
     }
   }
 );

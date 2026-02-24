@@ -107,7 +107,7 @@ export interface TUIStyleAssertion {
 export interface TUIScreenAssertion {
   type: TUIScreenAssertionType;
   /** Expected value */
-  expected: any;
+  expected: unknown;
   /** Description of assertion */
   description?: string;
 }
@@ -249,8 +249,8 @@ export interface TUITestResult {
       type: TUIVerificationType;
       passed: boolean;
       message: string;
-      expected?: any;
-      actual?: any;
+      expected?: unknown;
+      actual?: unknown;
     }[];
     /** Performance metrics */
     performance: {

@@ -18,8 +18,8 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
   const verifications = simple.assertions && Array.isArray(simple.assertions)
     ? simple.assertions.map(a => ({
         type: a.type,
-        target: a.params?.target || 'default',
-        expected: String(a.params?.expected || ''),
+        target: typeof a.params?.['target'] === 'string' ? a.params['target'] : 'default',
+        expected: String(a.params?.['expected'] ?? ''),
         operator: 'equals' as const,
         description: a.name
       }))
@@ -64,22 +64,22 @@ function adaptStepToOrchestrator(simpleStep: SimpleStep, stepIndex: number): Orc
   let target = '';
   let value = '';
 
-  if (params.command) {
+  if (params['command']) {
     // For spawn/spawn_tui actions: combine command and args into target
-    if (params.args && Array.isArray(params.args)) {
-      target = `${params.command} ${params.args.join(' ')}`;
+    if (Array.isArray(params['args'])) {
+      target = `${params['command']} ${(params['args'] as unknown[]).join(' ')}`;
     } else {
-      target = params.command;
+      target = String(params['command']);
     }
-  } else if (params.text !== undefined || params.duration !== undefined) {
+  } else if (params['text'] !== undefined || params['duration'] !== undefined) {
     // For actions that operate on the spawned session
     // Use a special marker that TUIAgent can interpret as "use the active session"
-    value = params.text || String(params.duration || '');
+    value = params['text'] !== undefined ? String(params['text']) : String(params['duration'] ?? '');
     target = ''; // TUIAgent will use the active session
   } else {
     // Fallback: use first param value as target
     const firstValue = Object.values(params)[0];
-    target = String(firstValue || '');
+    target = String(firstValue ?? '');
   }
 
   return {
