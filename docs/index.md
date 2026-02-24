@@ -16,7 +16,6 @@ Complete documentation for the Gadugi multi-agent testing framework.
 
 - [Architecture](./ARCHITECTURE.md) - Layered architecture, all modules, BaseAgent pattern, and data flow
 - [API Reference](API_REFERENCE.md) - Programmatic API (`lib.ts`) and exported types
-- [CLI Reference](index.md) - `gadugi-test` command-line options (see this page)
 - [YAML Scenario Schema](scenarios/README.md) - All scenario fields, agent types, and action names
 
 ## E2E Test Suite
