@@ -39,9 +39,9 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: README.md
+  - Home: index.md
   - Getting Started: GETTING_STARTED.md
-  - Architecture: docs/ARCHITECTURE.md
+  - Architecture: ARCHITECTURE.md
   - API Reference:
     - Overview: api/README.md
     - Classes:
@@ -83,8 +83,8 @@ nav:
   - Guides:
     - Contributing: CONTRIBUTING.md
     - Writing Scenarios: scenarios/README.md
-    - Screenshot Diffing: docs/screenshot-diff-guide.md
-    - Resource Optimization: docs/ResourceOptimizer.md
+    - Screenshot Diffing: screenshot-diff-guide.md
+    - Resource Optimization: ResourceOptimizer.md
   - Reference:
     - Troubleshooting: TROUBLESHOOTING.md
     - Changelog: CHANGELOG.md

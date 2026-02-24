@@ -63,6 +63,11 @@ docs/API_REFERENCE.md
 docs/CONTRIBUTING.md
 docs/TROUBLESHOOTING.md
 docs/CHANGELOG.md
+docs/E2E_TESTS_README.md
+docs/E2E_QUICK_REFERENCE.md
+docs/TEST_APPROACH_COMPARISON.md
+docs/scenarios/README.md
+docs/scenarios/*.yaml
 
 # Amplihack runtime directories (auto-generated)
 .claude/logs/

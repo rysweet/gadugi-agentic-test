@@ -364,7 +364,7 @@ Scenarios are executed by the TypeScript Agentic Testing System orchestrator. Th
 6. Execute cleanup procedures
 7. Generate comprehensive reports
 
-For more information on running scenarios, see the main [README.md](../README.md) in the parent directory.
+For more information on running scenarios, see the main [README](../index.md) in the parent directory.
 
 ## Schema Notes
 

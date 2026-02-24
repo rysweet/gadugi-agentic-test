@@ -575,7 +575,7 @@ Congratulations! You've set up Gadugi and run your first intelligent test. Here'
 ### 🤝 Get Help
 - **GitHub Issues** - [Report bugs or request features](https://github.com/rysweet/gadugi-agentic-test/issues)
 - **Discussions** - [Ask questions and share tips](https://github.com/rysweet/gadugi-agentic-test/discussions)
-- **Documentation** - [Full documentation](./README.md)
+- **Documentation** - [Full documentation](index.md)
 
 ### 💡 Pro Tips
 

@@ -348,10 +348,10 @@ Tests should be maintained for at least 3 minor versions after the features they
 
 ## Related Documentation
 
-- [Main README](../README.md) - Framework overview
-- [API Reference](../API_REFERENCE.md) - API documentation
-- [Troubleshooting](../TROUBLESHOOTING.md) - Common issues
-- [Contributing](../CONTRIBUTING.md) - Contribution guidelines
+- [Main README](index.md) - Framework overview
+- [API Reference](API_REFERENCE.md) - API documentation
+- [Troubleshooting](TROUBLESHOOTING.md) - Common issues
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
 
 ---
 
