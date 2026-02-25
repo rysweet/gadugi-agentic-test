@@ -79,14 +79,14 @@ export class APIAgent extends BaseAgent {
 
   // -- Public API-specific API --
 
-  async makeRequest(method: HTTPMethod, url: string, data?: any, headers?: Record<string, string>, options?: Partial<AxiosRequestConfig>): Promise<APIResponse> {
+  async makeRequest(method: HTTPMethod, url: string, data?: unknown, headers?: Record<string, string>, options?: Partial<AxiosRequestConfig>): Promise<APIResponse> {
     return this.executor.makeRequest(method, url, data, headers, options);
   }
 
   async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     try {
-      let result: any;
+      let result: unknown;
       const action = step.action.toLowerCase();
       const getPayload = () => this.validator.parseRequestData(step.value);
       const getHeaders = () => this.validator.parseHeaders(step.value);

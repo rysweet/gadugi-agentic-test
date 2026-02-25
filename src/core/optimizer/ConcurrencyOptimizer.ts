@@ -70,7 +70,7 @@ export class ConcurrencyOptimizer extends EventEmitter {
    * Release a terminal back to the pool
    */
   async releaseTerminal(agent: PtyTerminal): Promise<void> {
-    const resource = this.findResourceByAgent(agent);
+    const resource = this.findResourceByAgentInternal(agent);
     if (!resource) return;
 
     resource.isInUse = false;
@@ -141,11 +141,14 @@ export class ConcurrencyOptimizer extends EventEmitter {
   }
 
   /**
-   * Expose findResourceByAgent for tests that reach into internals
-   * Returns any to avoid leaking the private TerminalConnection type
+   * Expose findResourceByAgent for tests that reach into internals.
+   * Returns unknown to avoid leaking the private TerminalConnection type.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  findResourceByAgent(agent: PtyTerminal): any {
+  findResourceByAgent(agent: PtyTerminal): unknown {
+    return this.findResourceByAgentInternal(agent);
+  }
+
+  private findResourceByAgentInternal(agent: PtyTerminal): PooledResource<TerminalConnection> | null {
     for (const resource of this.terminalPool.values()) {
       if (resource.resource.agent === agent) return resource;
     }

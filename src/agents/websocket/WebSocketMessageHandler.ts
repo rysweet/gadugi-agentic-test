@@ -121,7 +121,7 @@ export class WebSocketMessageHandler {
     const socket = this.connection.getSocket();
     const handler = this.eventHandlers.get(event);
     if (handler && socket) {
-      socket.off(event, handler as (...args: any[]) => void);
+      socket.off(event, handler as (...args: unknown[]) => void);
       this.eventHandlers.delete(event);
     }
   }

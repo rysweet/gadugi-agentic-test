@@ -44,7 +44,7 @@ export class ConfigManager {
   async loadFromFile(filePath: string): Promise<void> {
     const fileConfig = await loadConfigFile(filePath);
 
-    this.config = mergeConfigs(this.config, fileConfig);
+    this.config = mergeConfigs(this.config, fileConfig as Partial<TestConfig>);
     this.metadata = {
       source: ConfigSource.FILE,
       loadedAt: new Date(),
@@ -62,7 +62,7 @@ export class ConfigManager {
     const { config: envConfig, source } = loadEnvConfig();
 
     if (source !== null) {
-      this.config = mergeConfigs(this.config, envConfig);
+      this.config = mergeConfigs(this.config, envConfig as Partial<TestConfig>);
       this.metadata.source = ConfigSource.ENVIRONMENT;
       this.metadata.loadedAt = new Date();
       this.notifyWatchers();
@@ -99,17 +99,17 @@ export class ConfigManager {
   /**
    * Get a specific configuration value by dot-notation path
    */
-  get<T = any>(dotPath: string, defaultValue?: T): T {
-    return getNestedValue(this.config, dotPath) ?? defaultValue;
+  get<T = unknown>(dotPath: string, defaultValue?: T): T {
+    return (getNestedValue(this.config as unknown as Record<string, unknown>, dotPath) ?? defaultValue) as T;
   }
 
   /**
    * Set a specific configuration value by dot-notation path
    */
-  set(dotPath: string, value: any): void {
-    const updates = {};
+  set(dotPath: string, value: unknown): void {
+    const updates: Record<string, unknown> = {};
     setNestedValue(updates, dotPath, value);
-    this.updateConfig(updates);
+    this.updateConfig(updates as Partial<TestConfig>);
   }
 
   /**
@@ -129,7 +129,7 @@ export class ConfigManager {
   /**
    * Validate a configuration object
    */
-  validateConfig(config: any) {
+  validateConfig(config: unknown) {
     return validateConfig(config);
   }
 

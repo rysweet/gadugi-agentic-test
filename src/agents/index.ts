@@ -56,7 +56,7 @@ export function isPipelineAgent(candidate: unknown): candidate is IPipelineAgent
   return (
     typeof candidate === 'object' &&
     candidate !== null &&
-    (candidate as any).isPipelineAgent === true
+    (candidate as Record<string, unknown>).isPipelineAgent === true
   );
 }
 

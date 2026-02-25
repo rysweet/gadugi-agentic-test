@@ -79,7 +79,7 @@ export class ComprehensionAgent implements IAgent, IPipelineAgent {
    * Use analyzeFeature(), generateTestScenarios(), or processDiscoveredFeatures() instead.
    * This method exists only for IAgent backward compatibility.
    */
-  async execute(_scenario: any): Promise<any> {
+  async execute(_scenario: unknown): Promise<unknown> {
     logger.warn('ComprehensionAgent.execute() called - this agent generates scenarios, not executes them');
     return { status: 'skipped', reason: 'ComprehensionAgent does not execute scenarios' };
   }

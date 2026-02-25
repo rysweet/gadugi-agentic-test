@@ -93,7 +93,8 @@ export class ElectronPerformanceMonitor {
     try {
       const metrics = await page.evaluate(() => {
         const timing = performance.timing;
-        const memory = (performance as any).memory;
+        // performance.memory is a Chrome-only non-standard extension
+        const memory = (performance as unknown as { memory?: { usedJSHeapSize?: number } }).memory;
 
         return {
           responseTime: timing.loadEventEnd - timing.navigationStart,

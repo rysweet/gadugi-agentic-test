@@ -99,10 +99,13 @@ export class ImageComparator {
       if (baseline.width !== tw || baseline.height !== th) baseline.resize({ w: tw, h: th });
       if (actual.width !== tw || actual.height !== th) actual.resize({ w: tw, h: th });
 
-      let diffImage: any;
-      if (algorithm === 'structural') diffImage = await createStructuralDiff(baseline, actual, colorOptions);
-      else if (algorithm === 'perceptual') diffImage = await createPerceptualDiff(baseline, actual, colorOptions);
-      else diffImage = await createPixelDiff(baseline, actual, colorOptions, includeAA);
+      // JimpImage from DiffRenderer is the same Jimp instance type, but TypeScript
+      // sees two incompatible structural types due to how jimp re-exports types.
+      // Using InstanceType<typeof Jimp> directly resolves this.
+      let diffImage: InstanceType<typeof Jimp>;
+      if (algorithm === 'structural') diffImage = await createStructuralDiff(baseline, actual, colorOptions) as InstanceType<typeof Jimp>;
+      else if (algorithm === 'perceptual') diffImage = await createPerceptualDiff(baseline, actual, colorOptions) as InstanceType<typeof Jimp>;
+      else diffImage = await createPixelDiff(baseline, actual, colorOptions, includeAA) as InstanceType<typeof Jimp>;
 
       if (showSideBySide) {
         const sbs = new Jimp({ width: tw * 3, height: th, color: 0xFFFFFFFF });

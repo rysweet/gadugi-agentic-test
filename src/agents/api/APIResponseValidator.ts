@@ -114,7 +114,7 @@ export class APIResponseValidator {
   /**
    * Parse request body + optional headers from a step value string
    */
-  parseRequestData(value?: string): { data?: any; headers?: Record<string, string> } {
+  parseRequestData(value?: string): { data?: unknown; headers?: Record<string, string> } {
     if (!value) return {};
     try {
       const parsed = JSON.parse(value);

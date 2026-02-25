@@ -113,8 +113,8 @@ export class TUISessionManager {
       this.sessions.set(sessionId, session);
       this.setupSessionHandlers(session);
 
-      if (proc.stdout && (proc.stdout as any).setRawMode) {
-        (proc.stdout as any).setRawMode(true);
+      if (proc.stdout && typeof (proc.stdout as unknown as { setRawMode?: unknown }).setRawMode === 'function') {
+        (proc.stdout as unknown as { setRawMode: (mode: boolean) => void }).setRawMode(true);
       }
 
       this.logger.info('TUI application spawned successfully', { sessionId, pid: proc.pid });

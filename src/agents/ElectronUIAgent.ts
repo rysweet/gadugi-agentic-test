@@ -105,10 +105,10 @@ export class ElectronUIAgent extends BaseAgent {
         await this.wsMonitor.disconnect();
         await this.launcher.close();
         this.logger.info('ElectronUIAgent: closed resources after scenario', { scenarioId: scenario.id });
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.logger.error('ElectronUIAgent: error closing resources after scenario', {
           scenarioId: scenario.id,
-          error: error?.message,
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }

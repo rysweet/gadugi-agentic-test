@@ -80,7 +80,7 @@ export class CLIAgent extends BaseAgent {
   async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
     const startTime = Date.now();
     try {
-      let result: any;
+      let result: unknown;
       const action = step.action.toLowerCase();
       if (['execute', 'run', 'command', 'execute_command'].includes(action)) {
         result = await this.handleExecuteAction(step);
@@ -120,7 +120,7 @@ export class CLIAgent extends BaseAgent {
     }
   }
 
-  async validateOutput(output: string, expected: any): Promise<boolean> {
+  async validateOutput(output: string, expected: unknown): Promise<boolean> {
     return this.parser.validateOutput(output, expected);
   }
 

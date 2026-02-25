@@ -24,7 +24,7 @@ export interface MenuNavigatorDeps {
   /** Get the key escape sequence for a named key */
   getKeyMapping: (key: string) => string;
   /** Emit an event on the parent agent */
-  emit: (event: string, ...args: any[]) => void;
+  emit: (event: string, ...args: unknown[]) => void;
 }
 
 /**
