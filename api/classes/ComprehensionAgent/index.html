@@ -3071,7 +3071,7 @@
 <hr />
 <p><a href="../../">@gadugi/agentic-test</a> / ComprehensionAgent</p>
 <h1 id="class-comprehensionagent">Class: ComprehensionAgent<a class="headerlink" href="#class-comprehensionagent" title="Permanent link">&para;</a></h1>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L42">agents/ComprehensionAgent.ts:42</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L42">agents/ComprehensionAgent.ts:42</a></p>
 <p>ComprehensionAgent - Main agent class for feature comprehension and test generation</p>
 <p>Implements IPipelineAgent because it generates test scenarios from documentation
 rather than executing them. The primary API is analyzeFeature(),
@@ -3088,7 +3088,7 @@ returns a skip notice and should not be used in production.</p>
 <blockquote>
 <p><strong>new ComprehensionAgent</strong>(<code>config</code>): <code>ComprehensionAgent</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L53">agents/ComprehensionAgent.ts:53</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L52">agents/ComprehensionAgent.ts:52</a></p>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
 <h5 id="config">config<a class="headerlink" href="#config" title="Permanent link">&para;</a></h5>
 <p><a href="../../interfaces/ComprehensionAgentConfig/"><code>ComprehensionAgentConfig</code></a></p>
@@ -3099,7 +3099,7 @@ returns a skip notice and should not be used in production.</p>
 <blockquote>
 <p><code>readonly</code> <strong>isPipelineAgent</strong>: <code>true</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L46">agents/ComprehensionAgent.ts:46</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L46">agents/ComprehensionAgent.ts:46</a></p>
 <p>Interface for pipeline agents that generate or transform data rather than
 executing test scenarios.</p>
 <p>Pipeline agents (ComprehensionAgent, PriorityAgent, IssueReporter) have
@@ -3117,7 +3117,7 @@ execution agents at runtime.</p>
 <blockquote>
 <p><strong>name</strong>: <code>string</code> = <code>'ComprehensionAgent'</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L43">agents/ComprehensionAgent.ts:43</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L43">agents/ComprehensionAgent.ts:43</a></p>
 <p>Human-readable agent name</p>
 <h4 id="implementation-of_1">Implementation of<a class="headerlink" href="#implementation-of_1" title="Permanent link">&para;</a></h4>
 <p><a href="../../interfaces/IPipelineAgent/"><code>IPipelineAgent</code></a>.<a href="../../interfaces/IPipelineAgent/#name"><code>name</code></a></p>
@@ -3126,7 +3126,7 @@ execution agents at runtime.</p>
 <blockquote>
 <p><strong>type</strong>: <a href="../../enumerations/AgentType/"><code>AgentType</code></a> = <code>AgentType.COMPREHENSION</code></p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L44">agents/ComprehensionAgent.ts:44</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L44">agents/ComprehensionAgent.ts:44</a></p>
 <p>Agent type classification</p>
 <h4 id="implementation-of_2">Implementation of<a class="headerlink" href="#implementation-of_2" title="Permanent link">&para;</a></h4>
 <p><a href="../../interfaces/IPipelineAgent/"><code>IPipelineAgent</code></a>.<a href="../../interfaces/IPipelineAgent/#type"><code>type</code></a></p>
@@ -3135,7 +3135,7 @@ execution agents at runtime.</p>
 <blockquote>
 <p><strong>analyzeFeature</strong>(<code>featureDoc</code>): <code>Promise</code>\&lt;<a href="../../interfaces/FeatureSpec/"><code>FeatureSpec</code></a>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L99">agents/ComprehensionAgent.ts:99</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L97">agents/ComprehensionAgent.ts:97</a></p>
 <p>Analyse a feature from documentation using the LLM.
 Returns a FeatureSpec, or a minimal stub on LLM error.</p>
 <h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
@@ -3148,7 +3148,7 @@ Returns a FeatureSpec, or a minimal stub on LLM error.</p>
 <blockquote>
 <p><strong>cleanup</strong>(): <code>Promise</code>\&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L90">agents/ComprehensionAgent.ts:90</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L88">agents/ComprehensionAgent.ts:88</a></p>
 <p>Release the LLM client</p>
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>\&lt;<code>void</code>&gt;</p>
@@ -3159,7 +3159,7 @@ Returns a FeatureSpec, or a minimal stub on LLM error.</p>
 <blockquote>
 <p><strong>discoverFeatures</strong>(): <code>Promise</code>\&lt;<a href="../../interfaces/DiscoveredFeature/"><code>DiscoveredFeature</code></a>[]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L117">agents/ComprehensionAgent.ts:117</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L115">agents/ComprehensionAgent.ts:115</a></p>
 <p>Discover features from documentation files.</p>
 <h4 id="returns_3">Returns<a class="headerlink" href="#returns_3" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>\&lt;<a href="../../interfaces/DiscoveredFeature/"><code>DiscoveredFeature</code></a>[]&gt;</p>
@@ -3168,7 +3168,7 @@ Returns a FeatureSpec, or a minimal stub on LLM error.</p>
 <blockquote>
 <p><strong>execute</strong>(<code>_scenario</code>): <code>Promise</code>\&lt;<code>any</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L84">agents/ComprehensionAgent.ts:84</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L82">agents/ComprehensionAgent.ts:82</a></p>
 <p>ComprehensionAgent generates scenarios; it does not execute them.</p>
 <h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
 <h5 id="_scenario">_scenario<a class="headerlink" href="#_scenario" title="Permanent link">&para;</a></h5>
@@ -3186,7 +3186,7 @@ This method exists only for IAgent backward compatibility.</p>
 <blockquote>
 <p><strong>generateTestScenarios</strong>(<code>featureSpec</code>): <code>Promise</code>\&lt;<a href="../../interfaces/TestScenario/"><code>TestScenario</code></a>[]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L107">agents/ComprehensionAgent.ts:107</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L105">agents/ComprehensionAgent.ts:105</a></p>
 <p>Generate test scenarios from feature specification.
 Returns success, failure, and edge-case scenarios.</p>
 <h4 id="parameters_3">Parameters<a class="headerlink" href="#parameters_3" title="Permanent link">&para;</a></h4>
@@ -3199,7 +3199,7 @@ Returns success, failure, and edge-case scenarios.</p>
 <blockquote>
 <p><strong>initialize</strong>(): <code>Promise</code>\&lt;<code>void</code>&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L66">agents/ComprehensionAgent.ts:66</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L64">agents/ComprehensionAgent.ts:64</a></p>
 <p>Initialize the LLM client</p>
 <h4 id="returns_6">Returns<a class="headerlink" href="#returns_6" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>\&lt;<code>void</code>&gt;</p>
@@ -3210,7 +3210,7 @@ Returns success, failure, and edge-case scenarios.</p>
 <blockquote>
 <p><strong>processDiscoveredFeatures</strong>(): <code>Promise</code>\&lt;<a href="../../interfaces/TestScenario/"><code>TestScenario</code></a>[]&gt;</p>
 </blockquote>
-<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/21b9496f9fb68d28381ccc32e3a4816fa106b550/src/agents/ComprehensionAgent.ts#L143">agents/ComprehensionAgent.ts:143</a></p>
+<p>Defined in: <a href="https://github.com/rysweet/gadugi-agentic-test/blob/cd313ddc110ac2536d219d7cd655d0d2e16d5cca/src/agents/ComprehensionAgent.ts#L141">agents/ComprehensionAgent.ts:141</a></p>
 <p>Process all discovered features and generate comprehensive test scenarios.</p>
 <h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <p><code>Promise</code>\&lt;<a href="../../interfaces/TestScenario/"><code>TestScenario</code></a>[]&gt;</p>
