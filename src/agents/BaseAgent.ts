@@ -140,7 +140,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
         duration: Date.now() - startTime,
         startTime: new Date(startTime),
         endTime: new Date(),
-        error,
+        ...(error !== undefined ? { error } : {}),
         stepResults,
       };
       return this.buildResult(ctx);

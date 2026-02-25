@@ -27,12 +27,11 @@ export class SystemAgent extends EventEmitter implements IAgent {
 
   private config: SystemAgentConfig;
   private logger: TestLogger;
-  private monitoringInterval?: NodeJS.Timeout;
-  private baselineCaptureInterval?: NodeJS.Timeout;
+  private monitoringInterval: NodeJS.Timeout | undefined;
+  private baselineCaptureInterval: NodeJS.Timeout | undefined;
   private isMonitoring = false;
   private metricsHistory: SystemMetrics[] = [];
-  private performanceBaseline?: PerformanceBaseline;
-  private initialMetrics?: SystemMetrics;
+  private performanceBaseline: PerformanceBaseline | undefined;
   private readonly maxHistorySize = 1000;
 
   private metricsCollector: MetricsCollector;
@@ -54,7 +53,7 @@ export class SystemAgent extends EventEmitter implements IAgent {
     this.logger.info('Initializing SystemAgent...');
     try {
       await this.dockerMonitor.checkDockerAvailability();
-      this.initialMetrics = await this.captureMetrics();
+      await this.captureMetrics(); // capture initial metrics to warm up collectors
       this.logger.info('Initial system metrics captured');
       if (this.config.fileSystemMonitoring?.enabled) {
         await this.fsWatcher.setupFileSystemMonitoring(this.config);
@@ -140,7 +139,7 @@ export class SystemAgent extends EventEmitter implements IAgent {
         this.metricsCollector.getProcessMetrics(), this.metricsCollector.getSystemInfo(),
       ]);
       const dockerData = this.dockerMonitor.isAvailable ? await this.dockerMonitor.getDockerMetrics() : undefined;
-      return { timestamp, cpu: cpuData, memory: memData, disk: diskData, network: networkData, processes: processData, docker: dockerData, system: systemData };
+      return { timestamp, cpu: cpuData, memory: memData, disk: diskData, network: networkData, processes: processData, ...(dockerData !== undefined ? { docker: dockerData } : {}), system: systemData };
     } catch (error) {
       this.logger.error('Failed to capture system metrics', { error });
       throw error;

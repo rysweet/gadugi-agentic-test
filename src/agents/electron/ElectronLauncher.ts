@@ -60,19 +60,17 @@ export class ElectronLauncher extends EventEmitter {
 
     this.app = await electron.launch({
       executablePath: this.config.executablePath,
-      args: this.config.args,
-      cwd: this.config.cwd,
+      ...(this.config.args !== undefined ? { args: this.config.args } : {}),
+      ...(this.config.cwd !== undefined ? { cwd: this.config.cwd } : {}),
       env: {
         ...process.env as Record<string, string>,
         ...this.config.env
       },
-      timeout: this.config.launchTimeout,
-      recordVideo: this.config.recordVideo
-        ? { dir: this.config.videoDir || './videos' }
-        : undefined
+      ...(this.config.launchTimeout !== undefined ? { timeout: this.config.launchTimeout } : {}),
+      ...(this.config.recordVideo ? { recordVideo: { dir: this.config.videoDir || './videos' } } : {}),
     });
 
-    this.page = await this.app.firstWindow({ timeout: this.config.launchTimeout });
+    this.page = await this.app.firstWindow(this.config.launchTimeout !== undefined ? { timeout: this.config.launchTimeout } : {});
 
     if (!this.page) {
       throw new Error('No main window found');

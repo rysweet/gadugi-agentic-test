@@ -10,7 +10,6 @@
  */
 
 import {
-  PriorityAgent,
   createPriorityAgent,
   PriorityAgentConfig,
   PriorityRule,
@@ -216,7 +215,7 @@ export async function flakyTestDetectionExample(): Promise<void> {
           duration: 1000 + Math.random() * 2000,
           startTime: new Date(Date.now() - (20 - i) * 60 * 60 * 1000), // Spread over 20 hours
           endTime: new Date(Date.now() - (20 - i - 1) * 60 * 60 * 1000),
-          error: status === TestStatus.FAILED ? 'Random failure' : undefined
+          ...(status === TestStatus.FAILED ? { error: 'Random failure' } : {}),
         });
       }
     });
@@ -388,7 +387,7 @@ export async function comprehensiveReportExample(): Promise<void> {
         duration: 2000 + Math.random() * 1000,
         startTime: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
         endTime: new Date(Date.now() - i * 24 * 60 * 60 * 1000 + 2500),
-        error: i >= 8 ? 'Authentication error' : undefined
+        ...(i >= 8 ? { error: 'Authentication error' } : {}),
       });
     }
 

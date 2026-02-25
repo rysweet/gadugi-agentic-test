@@ -98,11 +98,11 @@ export class RetryManager {
     this.options.onFailure?.(lastError!, this.options.maxAttempts);
 
     return {
-      error: lastError,
+      ...(lastError !== undefined ? { error: lastError } : {}),
       attempts: this.options.maxAttempts,
       totalTime: Date.now() - startTime,
       success: false,
-      attemptDetails
+      attemptDetails,
     };
   }
 

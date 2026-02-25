@@ -57,7 +57,7 @@ export class APIAuthHandler {
   setAuthentication(type: string, value?: string): AuthConfig {
     switch (type.toLowerCase()) {
       case 'bearer': {
-        const auth: AuthConfig = { type: 'bearer', token: value };
+        const auth: AuthConfig = { type: 'bearer', ...(value !== undefined ? { token: value } : {}) };
         this.axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${value}`;
         this.logger.debug(`Authentication configured: bearer`);
         return auth;

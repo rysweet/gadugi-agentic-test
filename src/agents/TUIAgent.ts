@@ -46,8 +46,7 @@ export class TUIAgent extends BaseAgent {
 
   private config: Required<TUIAgentConfig>;
   private logger: TestLogger;
-  private currentScenarioId?: string;
-  private performanceMonitor?: NodeJS.Timeout;
+  private performanceMonitor: NodeJS.Timeout | undefined;
   private performanceMetricsHistory: PerformanceMetrics[] = [];
   private sessionManager: TUISessionManager;
   private inputSimulator: TUIInputSimulator;
@@ -87,7 +86,6 @@ export class TUIAgent extends BaseAgent {
   // -- BaseAgent template-method hooks --
 
   protected applyEnvironment(scenario: OrchestratorScenario): void {
-    this.currentScenarioId = scenario.id;
     this.logger.setContext({ scenarioId: scenario.id, component: 'TUIAgent' });
     this.logger.scenarioStart(scenario.id, scenario.name);
     if (scenario.environment) {
@@ -111,7 +109,6 @@ export class TUIAgent extends BaseAgent {
   protected async onAfterExecute(scenario: OrchestratorScenario, status: TestStatus): Promise<void> {
     await this.sessionManager.cleanupSessions();
     this.logger.scenarioEnd(scenario.id, status, 0 /* duration tracked inside BaseAgent */);
-    this.currentScenarioId = undefined;
   }
 
   // -- Public TUI-specific API --

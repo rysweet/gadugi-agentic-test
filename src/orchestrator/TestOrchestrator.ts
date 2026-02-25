@@ -165,6 +165,7 @@ export class TestOrchestrator extends EventEmitter {
 
       this.emit('phase:start', 'reporting');
       await this.aggregator.report();
+      await this.reportFailures();
       this.emit('phase:end', 'reporting');
 
     } catch (error) {
@@ -205,6 +206,7 @@ export class TestOrchestrator extends EventEmitter {
 
       this.emit('phase:start', 'reporting');
       await this.aggregator.report();
+      await this.reportFailures();
       this.emit('phase:end', 'reporting');
 
     } catch (error) {

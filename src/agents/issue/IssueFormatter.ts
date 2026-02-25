@@ -27,15 +27,15 @@ export class IssueFormatter {
       scenarioId: failure.scenarioId,
       scenarioName: failure.scenarioId,
       failureMessage: failure.message,
-      stackTrace: failure.stackTrace,
+      ...(failure.stackTrace !== undefined ? { stackTrace: failure.stackTrace } : {}),
       timestamp: failure.timestamp.toISOString(),
       environment: this.getSafeEnvironment(),
-      screenshots: failure.screenshots,
-      logs: failure.logs,
+      ...(failure.screenshots !== undefined ? { screenshots: failure.screenshots } : {}),
+      ...(failure.logs !== undefined ? { logs: failure.logs } : {}),
       reproductionSteps: this.generateReproductionSteps(failure),
       systemInfo,
       priority: this.determinePriority(failure),
-      category: failure.category
+      ...(failure.category !== undefined ? { category: failure.category } : {}),
     };
 
     const title = this.renderTemplate(this.config.issueTitleTemplate, templateVars);
@@ -158,7 +158,7 @@ export class IssueFormatter {
       platform: process.platform,
       arch: process.arch,
       nodeVersion: process.version,
-      electronVersion: process.versions.electron,
+      ...(process.versions.electron !== undefined ? { electronVersion: process.versions.electron } : {}),
       timestamp: new Date().toISOString(),
       workingDirectory: process.cwd(),
       environment: {

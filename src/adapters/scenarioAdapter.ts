@@ -49,8 +49,7 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     estimatedDuration: simple.config?.timeout ? simple.config.timeout / 1000 : 60,
     tags: simple.metadata?.tags || [],
     enabled: true,
-    environment: undefined,
-    cleanup
+    ...(cleanup !== undefined ? { cleanup } : {}),
   };
 }
 
@@ -86,7 +85,7 @@ function adaptStepToOrchestrator(simpleStep: SimpleStep, _stepIndex: number): Or
     action: simpleStep.action,
     target,
     value,
-    timeout: simpleStep.timeout
+    ...(simpleStep.timeout !== undefined ? { timeout: simpleStep.timeout } : {}),
   };
 }
 

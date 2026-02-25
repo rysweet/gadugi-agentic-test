@@ -38,9 +38,9 @@ export class ResultAggregator {
         scenarioId: result.scenarioId,
         timestamp: new Date(),
         message: result.error,
-        stackTrace: result.stackTrace,
+        ...(result.stackTrace !== undefined ? { stackTrace: result.stackTrace } : {}),
         category: 'execution',
-        logs: result.logs
+        ...(result.logs !== undefined ? { logs: result.logs } : {}),
       });
     }
   }

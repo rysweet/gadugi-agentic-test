@@ -49,10 +49,12 @@ export class ScenarioLoader {
     const firstScenario = scenarios[0];
     const application = raw['application'] as RawYaml | undefined;
 
+    const descStr = raw['description'] !== undefined ? String(raw['description']) : firstScenario['description'] !== undefined ? String(firstScenario['description']) : undefined;
+    const verStr = raw['version'] !== undefined ? String(raw['version']) : undefined;
     return {
       name: String(raw['name'] || firstScenario['name'] || ''),
-      description: raw['description'] !== undefined ? String(raw['description']) : firstScenario['description'] !== undefined ? String(firstScenario['description']) : undefined,
-      version: raw['version'] !== undefined ? String(raw['version']) : undefined,
+      ...(descStr !== undefined ? { description: descStr } : {}),
+      ...(verStr !== undefined ? { version: verStr } : {}),
       config: { timeout: (typeof application?.['timeout'] === 'number' ? application['timeout'] * 1000 : 0) || 120000 },
       environment: { requires: [] },
       agents: [{ name: 'tui-agent', type: 'tui', config: {} }],

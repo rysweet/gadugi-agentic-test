@@ -199,6 +199,7 @@ export class ScenarioRouter {
           await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
           continue;
         }
+        const stack = error instanceof Error ? error.stack : undefined;
         return {
           scenarioId: scenario.id,
           status: TestStatus.FAILED,
@@ -206,7 +207,7 @@ export class ScenarioRouter {
           startTime: new Date(startTime),
           endTime: new Date(),
           error: error instanceof Error ? error.message : String(error),
-          stackTrace: error instanceof Error ? error.stack : undefined
+          ...(stack !== undefined ? { stackTrace: stack } : {}),
         };
       }
     }

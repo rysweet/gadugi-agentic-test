@@ -90,24 +90,24 @@ export class APIAgent extends BaseAgent {
       const action = step.action.toLowerCase();
       const getPayload = () => this.validator.parseRequestData(step.value);
       const getHeaders = () => this.validator.parseHeaders(step.value);
-      const timeout = step.timeout;
+      const timeoutOpts = step.timeout !== undefined ? { timeout: step.timeout } : {};
       if (action === 'get') {
-        result = await this.executor.makeRequest('GET', step.target, undefined, getHeaders(), { timeout });
+        result = await this.executor.makeRequest('GET', step.target, undefined, getHeaders(), timeoutOpts);
       } else if (action === 'post') {
         const { data, headers } = getPayload();
-        result = await this.executor.makeRequest('POST', step.target, data, headers, { timeout });
+        result = await this.executor.makeRequest('POST', step.target, data, headers, timeoutOpts);
       } else if (action === 'put') {
         const { data, headers } = getPayload();
-        result = await this.executor.makeRequest('PUT', step.target, data, headers, { timeout });
+        result = await this.executor.makeRequest('PUT', step.target, data, headers, timeoutOpts);
       } else if (action === 'delete') {
-        result = await this.executor.makeRequest('DELETE', step.target, undefined, getHeaders(), { timeout });
+        result = await this.executor.makeRequest('DELETE', step.target, undefined, getHeaders(), timeoutOpts);
       } else if (action === 'patch') {
         const { data, headers } = getPayload();
-        result = await this.executor.makeRequest('PATCH', step.target, data, headers, { timeout });
+        result = await this.executor.makeRequest('PATCH', step.target, data, headers, timeoutOpts);
       } else if (action === 'head') {
-        result = await this.executor.makeRequest('HEAD', step.target, undefined, getHeaders(), { timeout });
+        result = await this.executor.makeRequest('HEAD', step.target, undefined, getHeaders(), timeoutOpts);
       } else if (action === 'options') {
-        result = await this.executor.makeRequest('OPTIONS', step.target, undefined, getHeaders(), { timeout });
+        result = await this.executor.makeRequest('OPTIONS', step.target, undefined, getHeaders(), timeoutOpts);
       } else if (action === 'validate_response') {
         result = this.validator.validateResponse(this.executor.getLatestResponse(), step.expected || step.value || '');
       } else if (action === 'validate_status') {

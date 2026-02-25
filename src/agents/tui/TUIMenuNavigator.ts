@@ -32,7 +32,7 @@ export interface MenuNavigatorDeps {
  */
 export class TUIMenuNavigator {
   private readonly logger: TestLogger;
-  private menuContext?: MenuNavigation;
+  private menuContext: MenuNavigation | undefined;
 
   constructor(logger: TestLogger) {
     this.logger = logger;

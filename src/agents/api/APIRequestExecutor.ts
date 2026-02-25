@@ -76,10 +76,10 @@ export class APIRequestExecutor {
       id: requestId,
       method,
       url,
-      headers,
+      ...(headers !== undefined ? { headers } : {}),
       data,
       timestamp: new Date(),
-      timeout: options?.timeout
+      ...(options?.timeout !== undefined ? { timeout: options.timeout } : {}),
     };
     this.requestHistory.push(request);
 
@@ -102,7 +102,7 @@ export class APIRequestExecutor {
           method: method.toLowerCase() as any,
           url,
           data,
-          headers,
+          ...(headers !== undefined ? { headers } : {}),
           ...options
         };
 

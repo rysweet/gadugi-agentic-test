@@ -30,7 +30,9 @@ export class WebSocketMessageHandler {
     const messageId = this.generateMessageId();
     const message: WebSocketMessage = {
       id: messageId, event, data, timestamp: new Date(),
-      direction: 'sent', ack, namespace: this.config.namespace
+      direction: 'sent',
+      ...(ack !== undefined ? { ack } : {}),
+      namespace: this.config.namespace,
     };
     this.messageHistory.push(message);
 

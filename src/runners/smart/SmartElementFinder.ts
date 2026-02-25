@@ -53,12 +53,15 @@ export class SmartElementFinder {
       // Find all buttons
       document.querySelectorAll('button, [role="button"]').forEach(el => {
         const element = el as HTMLElement;
+        const ariaLabel0 = element.getAttribute('aria-label') || undefined;
+        const id0 = element.id || undefined;
+        const className0 = element.className || undefined;
         interactiveElements.push({
           type: 'button',
           text: element.innerText || element.textContent || '',
-          ariaLabel: element.getAttribute('aria-label') || undefined,
-          id: element.id || undefined,
-          className: element.className || undefined,
+          ...(ariaLabel0 !== undefined ? { ariaLabel: ariaLabel0 } : {}),
+          ...(id0 !== undefined ? { id: id0 } : {}),
+          ...(className0 !== undefined ? { className: className0 } : {}),
           disabled: (element as HTMLButtonElement).disabled
         });
       });
@@ -66,26 +69,33 @@ export class SmartElementFinder {
       // Find all inputs and textareas
       document.querySelectorAll('input, textarea').forEach(el => {
         const element = el as HTMLInputElement | HTMLTextAreaElement;
+        const placeholder1 = element.placeholder || undefined;
+        const value1 = element.value || undefined;
+        const name1 = element.getAttribute('name') || undefined;
+        const id1 = element.id || undefined;
+        const ariaLabel1 = element.getAttribute('aria-label') || undefined;
         interactiveElements.push({
           type:
             element.tagName.toLowerCase() === 'input'
               ? (element as HTMLInputElement).type || 'text'
               : 'textarea',
-          placeholder: element.placeholder || undefined,
-          value: element.value || undefined,
-          name: element.getAttribute('name') || undefined,
-          id: element.id || undefined,
-          ariaLabel: element.getAttribute('aria-label') || undefined
+          ...(placeholder1 !== undefined ? { placeholder: placeholder1 } : {}),
+          ...(value1 !== undefined ? { value: value1 } : {}),
+          ...(name1 !== undefined ? { name: name1 } : {}),
+          ...(id1 !== undefined ? { id: id1 } : {}),
+          ...(ariaLabel1 !== undefined ? { ariaLabel: ariaLabel1 } : {}),
         });
       });
 
       // Find all selects / dropdowns
       document.querySelectorAll('select').forEach(el => {
         const element = el;
+        const name2 = element.name || undefined;
+        const id2 = element.id || undefined;
         interactiveElements.push({
           type: 'select',
-          name: element.name || undefined,
-          id: element.id || undefined,
+          ...(name2 !== undefined ? { name: name2 } : {}),
+          ...(id2 !== undefined ? { id: id2 } : {}),
           options: Array.from(element.options).map(opt => opt.text)
         });
       });
@@ -93,11 +103,13 @@ export class SmartElementFinder {
       // Find all links and tab elements
       document.querySelectorAll('a, [role="tab"]').forEach(el => {
         const element = el as HTMLElement;
+        const href3 = (element as HTMLAnchorElement).href || undefined;
+        const ariaLabel3 = element.getAttribute('aria-label') || undefined;
         interactiveElements.push({
           type: 'link',
           text: element.innerText || element.textContent || '',
-          href: (element as HTMLAnchorElement).href || undefined,
-          ariaLabel: element.getAttribute('aria-label') || undefined
+          ...(href3 !== undefined ? { href: href3 } : {}),
+          ...(ariaLabel3 !== undefined ? { ariaLabel: ariaLabel3 } : {}),
         });
       });
 

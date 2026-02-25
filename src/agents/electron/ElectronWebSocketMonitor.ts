@@ -22,7 +22,7 @@ export class ElectronWebSocketMonitor {
   private emitter: EventEmitter;
 
   public events: WebSocketEvent[] = [];
-  private wsAgent?: WebSocketAgent;
+  private wsAgent: WebSocketAgent | undefined;
 
   constructor(config: ElectronUIAgentConfig, logger: TestLogger, emitter: EventEmitter) {
     this.config = config;

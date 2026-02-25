@@ -5,8 +5,8 @@
  * in test failure scenarios.
  */
 
-import { IssueReporter, createIssueReporter, IssueReporterConfig } from '../IssueReporter';
-import { TestFailure, Priority } from '../../models/TestModels';
+import { createIssueReporter, IssueReporterConfig } from '../IssueReporter';
+import { TestFailure } from '../../models/TestModels';
 
 /**
  * Example configuration for GitHub integration

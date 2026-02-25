@@ -73,8 +73,8 @@ export class ElectronPageInteractor {
     this.logger.debug(`Filling input: ${selector} with value: ${value}`);
     try {
       const element = page.locator(selector);
-      await element.waitFor({ state: 'attached', timeout: this.config.defaultTimeout });
-      await element.waitFor({ state: 'visible', timeout: this.config.defaultTimeout });
+      await element.waitFor({ state: 'attached', ...(this.config.defaultTimeout !== undefined ? { timeout: this.config.defaultTimeout } : {}) });
+      await element.waitFor({ state: 'visible', ...(this.config.defaultTimeout !== undefined ? { timeout: this.config.defaultTimeout } : {}) });
       await element.clear();
       await element.fill(value);
       const actual = await element.inputValue();
@@ -91,8 +91,8 @@ export class ElectronPageInteractor {
     this.logger.debug(`Clicking button: ${selector}`);
     try {
       const element = page.locator(selector);
-      await element.waitFor({ state: 'attached', timeout: this.config.defaultTimeout });
-      await element.waitFor({ state: 'visible', timeout: this.config.defaultTimeout });
+      await element.waitFor({ state: 'attached', ...(this.config.defaultTimeout !== undefined ? { timeout: this.config.defaultTimeout } : {}) });
+      await element.waitFor({ state: 'visible', ...(this.config.defaultTimeout !== undefined ? { timeout: this.config.defaultTimeout } : {}) });
       await element.scrollIntoViewIfNeeded();
       await element.click();
       this.logger.debug(`Successfully clicked button: ${selector}`);
@@ -112,7 +112,7 @@ export class ElectronPageInteractor {
     this.logger.debug(`Waiting for element: ${selector} (state: ${state})`);
     try {
       const element = page.locator(selector);
-      await element.waitFor({ state, timeout });
+      await element.waitFor({ state, ...(timeout !== undefined ? { timeout } : {}) });
       this.logger.debug(`Element found: ${selector}`);
       return element;
     } catch (error: unknown) {
@@ -126,7 +126,7 @@ export class ElectronPageInteractor {
     this.logger.debug(`Getting text from element: ${selector}`);
     try {
       const element = page.locator(selector);
-      await element.waitFor({ state: 'visible', timeout: this.config.defaultTimeout });
+      await element.waitFor({ state: 'visible', ...(this.config.defaultTimeout !== undefined ? { timeout: this.config.defaultTimeout } : {}) });
       const text = await element.textContent() || '';
       this.logger.debug(`Element text: ${text}`);
       return text;
@@ -141,9 +141,9 @@ export class ElectronPageInteractor {
     this.logger.debug(`Taking screenshot: ${name}`);
     try {
       const metadata = await this.screenshotManager.capturePageScreenshot(page, {
-        scenarioId: currentScenarioId,
+        ...(currentScenarioId !== undefined ? { scenarioId: currentScenarioId } : {}),
         description: name,
-        fullPage: this.config.screenshotConfig?.fullPage
+        ...(this.config.screenshotConfig?.fullPage !== undefined ? { fullPage: this.config.screenshotConfig.fullPage } : {}),
       });
       this.logger.screenshot(metadata.fileName);
       return metadata;
@@ -157,18 +157,20 @@ export class ElectronPageInteractor {
   async captureState(page: Page, scenarioId: string | undefined, providers: StateCaptureProviders): Promise<AppState> {
     const timestamp = new Date();
     const screenshotMeta = await this.screenshotManager.capturePageScreenshot(page, {
-      scenarioId,
+      ...(scenarioId !== undefined ? { scenarioId } : {}),
       description: 'State capture'
     });
 
+    const processInfo = await providers.getProcessInfo();
+    const performance = providers.getLatestPerformanceMetrics();
     const state: AppState = {
       timestamp,
       interface: 'GUI',
       screenshotPath: screenshotMeta.filePath,
       url: page.url(),
       title: await page.title(),
-      processInfo: await providers.getProcessInfo(),
-      performance: providers.getLatestPerformanceMetrics(),
+      ...(processInfo !== undefined ? { processInfo } : {}),
+      ...(performance !== undefined ? { performance } : {}),
       networkState: providers.getNetworkState(),
       customData: {
         consoleMessageCount: providers.counters.consoleMessages,
@@ -181,7 +183,7 @@ export class ElectronPageInteractor {
       id: generateId(),
       timestamp,
       state,
-      scenarioId
+      ...(scenarioId !== undefined ? { scenarioId } : {}),
     });
     return state;
   }
@@ -213,8 +215,10 @@ export class ElectronPageInteractor {
         case 'fill': case 'type':
           if (!step.value) throw new Error('Fill action requires a value');
           await this.fillInput(page, step.target, step.value); break;
-        case 'wait_for_element': case 'wait_for':
-          await this.waitForElement(page, step.target, { timeout: step.timeout || defaultTimeout }); break;
+        case 'wait_for_element': case 'wait_for': {
+          const waitTimeout = step.timeout ?? defaultTimeout;
+          await this.waitForElement(page, step.target, waitTimeout !== undefined ? { timeout: waitTimeout } : {}); break;
+        }
         case 'get_text':
           result = await this.getElementText(page, step.target); break;
         case 'screenshot':
@@ -229,15 +233,17 @@ export class ElectronPageInteractor {
 
       const duration = Date.now() - startTime;
       this.logger.stepComplete(stepIndex, TestStatus.PASSED, duration);
-      return { stepIndex, status: TestStatus.PASSED, duration, actualResult: typeof result === 'string' ? result : undefined };
+      const actualResult = typeof result === 'string' ? result : undefined;
+      return { stepIndex, status: TestStatus.PASSED, duration, ...(actualResult !== undefined ? { actualResult } : {}) };
 
     } catch (error: unknown) {
       const duration = Date.now() - startTime;
       this.logger.stepComplete(stepIndex, TestStatus.FAILED, duration);
       await this.captureFailureScreenshot(page, `step_${stepIndex}_failure`, currentScenarioId);
+      const screenshot = await this.getLastScreenshotPath(currentScenarioId);
       return {
         stepIndex, status: TestStatus.FAILED, duration, error: error instanceof Error ? error.message : String(error),
-        screenshot: await this.getLastScreenshotPath(currentScenarioId)
+        ...(screenshot !== undefined ? { screenshot } : {}),
       };
     }
   }

@@ -138,14 +138,6 @@ export class TUIInputSimulator {
   // -- Private helpers --
 
   /**
-   * Replace named key tokens like {Enter} with their escape sequences
-   * (kept for backward-compat; use tokenizeInput for send operations)
-   */
-  private processSpecialKeys(input: string): string {
-    return this.tokenizeInput(input).join('');
-  }
-
-  /**
    * Split input into an ordered list of tokens, where each token is written
    * as a single stdin.write() call.
    *
