@@ -53,11 +53,12 @@ const validate_1 = require("./cli/commands/validate");
 const list_1 = require("./cli/commands/list");
 const init_1 = require("./cli/commands/init");
 const help_1 = require("./cli/commands/help");
+const cli_path_utils_1 = require("./cli-path-utils");
 // Load environment variables from .env file if it exists
 try {
     dotenv.config();
 }
-catch (error) {
+catch (_error) {
     // Silently ignore if .env doesn't exist
 }
 const program = new commander_1.Command();
@@ -80,11 +81,18 @@ program
     // Load additional .env file if specified
     if (opts.env && opts.env !== '.env') {
         try {
-            dotenv.config({ path: opts.env });
-            (0, output_1.logInfo)(`Loaded environment from: ${opts.env}`);
+            // Validate the env file path to prevent traversal (issue #93)
+            const safeEnvPath = (0, cli_path_utils_1.safeResolvePath)(opts.env);
+            dotenv.config({ path: safeEnvPath });
+            (0, output_1.logInfo)(`Loaded environment from: ${safeEnvPath}`);
         }
         catch (error) {
-            (0, output_1.logWarning)(`Failed to load environment file: ${opts.env}`);
+            if (error instanceof cli_path_utils_1.CLIPathError) {
+                (0, output_1.logWarning)(`Rejected environment file path (path traversal attempt): ${opts.env}`);
+            }
+            else {
+                (0, output_1.logWarning)(`Failed to load environment file: ${opts.env}`);
+            }
         }
     }
     // Set logging level (simplified for compatibility)
@@ -111,16 +119,38 @@ program
     console.log('Run', chalk_1.default.cyan('agentic-test help'), 'for usage information.');
     process.exit(1);
 });
+// Shutdown helper - invokes ProcessLifecycleManager cleanup if available.
+// Registered inside library modules.  ProcessLifecycleManager deliberately
+// does NOT register global handlers; those belong here in the CLI entry point.
+async function shutdownProcessManager() {
+    try {
+        const { getProcessLifecycleManager } = await Promise.resolve().then(() => __importStar(require('./core/ProcessLifecycleManager')));
+        await getProcessLifecycleManager().shutdown(3000);
+    }
+    catch (_err) {
+        // Ignore errors during shutdown - we are exiting anyway
+    }
+}
+process.on('SIGTERM', async () => {
+    (0, output_1.logInfo)('Received SIGTERM, shutting down...');
+    await shutdownProcessManager();
+    process.exit(0);
+});
+process.on('SIGINT', async () => {
+    (0, output_1.logInfo)('Received SIGINT, shutting down...');
+    await shutdownProcessManager();
+    process.exit(0);
+});
 // Enhanced error handling for uncaught exceptions
-process.on('uncaughtException', (error) => {
-    (0, output_1.logError)('Uncaught exception:');
-    console.error(error);
+process.on('uncaughtException', async (error) => {
+    (0, output_1.logError)(`Uncaught exception: ${error instanceof Error ? error.message : String(error)}`);
+    await shutdownProcessManager();
     process.exit(1);
 });
-process.on('unhandledRejection', (reason, promise) => {
-    (0, output_1.logError)('Unhandled rejection at:');
-    console.error('Promise:', promise);
-    console.error('Reason:', reason);
+process.on('unhandledRejection', async (reason, _promise) => {
+    const message = reason instanceof Error ? reason.message : String(reason);
+    (0, output_1.logError)(`Unhandled promise rejection: ${message}`);
+    await shutdownProcessManager();
     process.exit(1);
 });
 // Parse command line arguments

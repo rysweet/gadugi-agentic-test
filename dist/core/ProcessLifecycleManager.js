@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.processLifecycleManager = exports.ProcessLifecycleManager = void 0;
+exports.getProcessLifecycleManager = getProcessLifecycleManager;
 const child_process_1 = require("child_process");
 const events_1 = require("events");
 /**
@@ -8,6 +9,16 @@ const events_1 = require("events");
  *
  * Comprehensive process lifecycle management to prevent zombie processes
  * and ensure proper cleanup of all child processes and their process groups.
+ *
+ * NOTE: This class does NOT register uncaughtException or unhandledRejection
+ * handlers. Those are global error handlers that must only be registered by
+ * application entry points (e.g. cli.ts), not by library modules. Registering
+ * them here would interfere with Jest and any library consumer.
+ *
+ * SIGTERM and SIGINT are also not registered here; they are registered by
+ * cli.ts for the application use-case. The process 'exit' handler for
+ * synchronous child-process cleanup IS registered here because it is
+ * side-effect-free (synchronous, no process.exit call).
  */
 class ProcessLifecycleManager extends events_1.EventEmitter {
     constructor() {
@@ -16,9 +27,7 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
         this.childProcesses = new Map();
         this.isShuttingDown = false;
         this.cleanupTimeout = 5000; // 5 seconds for graceful shutdown
-        this.signalHandlersRegistered = false;
-        this.registerSignalHandlers();
-        this.registerExitHandlers();
+        this.registerExitHandler();
     }
     /**
      * Start a new process with lifecycle management
@@ -88,7 +97,9 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
         // Handle process exit
         childProcess.on('exit', (code, signal) => {
             processInfo.status = 'exited';
-            processInfo.exitCode = code || undefined;
+            if (code !== null && code !== undefined) {
+                processInfo.exitCode = code;
+            }
             this.processes.set(processInfo.pid, processInfo);
             this.emit('processExited', processInfo, code, signal);
             // Clean up tracking
@@ -107,7 +118,7 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
             }
         });
         // Handle when process is closed (all stdio streams closed)
-        childProcess.on('close', (code, signal) => {
+        childProcess.on('close', (_code, _signal) => {
             // Final cleanup if not already done
             if (this.childProcesses.has(processInfo.pid)) {
                 this.childProcesses.delete(processInfo.pid);
@@ -231,7 +242,7 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
         try {
             await gracefulShutdownPromise;
         }
-        catch (error) {
+        catch (_error) {
             // If graceful shutdown fails, force kill with SIGKILL
             await this.killAllProcesses('SIGKILL');
             // Wait a bit more for SIGKILL to take effect
@@ -275,47 +286,19 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
         });
     }
     /**
-     * Register signal handlers for cleanup
+     * Register a synchronous 'exit' handler to kill remaining child processes
+     * when the Node.js process exits. This is safe for library use: it does not
+     * call process.exit() and does not interfere with error handling.
+     *
+     * SIGTERM, SIGINT, uncaughtException, and unhandledRejection are intentionally
+     * NOT registered here. Those handlers belong in the CLI entry point (cli.ts).
      */
-    registerSignalHandlers() {
-        if (this.signalHandlersRegistered || ProcessLifecycleManager.globalHandlersRegistered) {
+    registerExitHandler() {
+        if (ProcessLifecycleManager.globalExitHandlerRegistered) {
             return;
         }
-        const signals = ['SIGTERM', 'SIGINT'];
-        // Create a single global signal handler that all instances can use
-        if (!ProcessLifecycleManager.globalSignalHandler) {
-            ProcessLifecycleManager.globalSignalHandler = async (signal) => {
-                console.log(`ProcessLifecycleManager: Received ${signal}, cleaning up processes...`);
-                try {
-                    // Use the global singleton for cleanup in production
-                    if (_globalProcessManager) {
-                        await _globalProcessManager.shutdown();
-                    }
-                    console.log('ProcessLifecycleManager: Cleanup complete');
-                    process.exit(0);
-                }
-                catch (error) {
-                    console.error('ProcessLifecycleManager: Error during cleanup:', error);
-                    process.exit(1);
-                }
-            };
-            signals.forEach(signal => {
-                process.on(signal, ProcessLifecycleManager.globalSignalHandler);
-            });
-        }
-        this.signalHandlersRegistered = true;
-        ProcessLifecycleManager.globalHandlersRegistered = true;
-    }
-    /**
-     * Register exit handlers for cleanup
-     */
-    registerExitHandlers() {
-        if (ProcessLifecycleManager.globalExitHandlersRegistered) {
-            return;
-        }
-        // Handle process exit
+        // Synchronous cleanup only - kill lingering child processes on exit
         process.on('exit', () => {
-            // Synchronous cleanup only - clean up all instances
             if (_globalProcessManager) {
                 const runningProcesses = _globalProcessManager.getRunningProcesses();
                 runningProcesses.forEach(processInfo => {
@@ -324,53 +307,41 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
                             process.kill(-processInfo.pgid, 'SIGKILL');
                         }
                     }
-                    catch (error) {
+                    catch (_error) {
                         // Ignore errors during exit cleanup
                     }
                 });
             }
         });
-        // Handle uncaught exceptions
-        process.on('uncaughtException', async (error) => {
-            console.error('ProcessLifecycleManager: Uncaught exception, cleaning up:', error);
-            try {
-                if (_globalProcessManager) {
-                    await _globalProcessManager.shutdown(1000); // Quick shutdown
-                }
-            }
-            catch (cleanupError) {
-                console.error('ProcessLifecycleManager: Error during exception cleanup:', cleanupError);
-            }
-            process.exit(1);
-        });
-        // Handle unhandled promise rejections
-        process.on('unhandledRejection', async (reason) => {
-            console.error('ProcessLifecycleManager: Unhandled rejection, cleaning up:', reason);
-            try {
-                if (_globalProcessManager) {
-                    await _globalProcessManager.shutdown(1000); // Quick shutdown
-                }
-            }
-            catch (cleanupError) {
-                console.error('ProcessLifecycleManager: Error during rejection cleanup:', cleanupError);
-            }
-            process.exit(1);
-        });
-        ProcessLifecycleManager.globalExitHandlersRegistered = true;
+        ProcessLifecycleManager.globalExitHandlerRegistered = true;
     }
 }
 exports.ProcessLifecycleManager = ProcessLifecycleManager;
-ProcessLifecycleManager.globalHandlersRegistered = false;
-ProcessLifecycleManager.globalSignalHandler = null;
-ProcessLifecycleManager.globalExitHandlersRegistered = false;
+ProcessLifecycleManager.globalExitHandlerRegistered = false;
 /**
- * Singleton instance for global process management
+ * Singleton instance for global process management.
+ * Lazily initialised on first access to avoid registering handlers at import time.
  */
 let _globalProcessManager = null;
-exports.processLifecycleManager = (() => {
+function getProcessLifecycleManager() {
     if (!_globalProcessManager) {
         _globalProcessManager = new ProcessLifecycleManager();
     }
     return _globalProcessManager;
-})();
+}
+/**
+ * Backward-compatible singleton export.
+ * The value is a Proxy so the singleton is created lazily on first property access.
+ *
+ * Historical consumers that wrote `processLifecycleManager.startProcess(...)` continue
+ * to work because the Proxy forwards to `getProcessLifecycleManager()`.
+ */
+exports.processLifecycleManager = new Proxy({}, {
+    get(_target, prop, receiver) {
+        return Reflect.get(getProcessLifecycleManager(), prop, receiver);
+    },
+    set(_target, prop, value, receiver) {
+        return Reflect.set(getProcessLifecycleManager(), prop, value, receiver);
+    }
+});
 //# sourceMappingURL=ProcessLifecycleManager.js.map

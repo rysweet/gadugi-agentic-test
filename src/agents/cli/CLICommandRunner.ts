@@ -36,7 +36,7 @@ export class CLICommandRunner {
     const context: ExecutionContext = {
       command, args,
       cwd: options.cwd || this.config.workingDirectory,
-      env: { ...this.config.environment, ...options.env },
+      env: { ...process.env as Record<string, string>, ...this.config.environment, ...options.env },
       timeout: options.timeout || this.config.defaultTimeout,
       expectedExitCodes: options.expectedExitCodes || [0],
       ...options

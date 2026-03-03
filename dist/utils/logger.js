@@ -2,109 +2,31 @@
 /**
  * Winston-based logging system for the Agentic Testing System
  * Provides configurable logging with different levels, formats, and outputs
+ *
+ * This file re-exports types from logging/ sub-modules and provides the
+ * TestLogger class plus the singleton convenience object.
  */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logger = exports.defaultLogger = exports.TestLogger = exports.LogLevel = void 0;
+exports.logger = exports.TestLogger = exports.LogLevel = void 0;
 exports.createLogger = createLogger;
 exports.setupLogger = setupLogger;
 const winston_1 = __importDefault(require("winston"));
-const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
-/**
- * Log levels enumeration
- */
-var LogLevel;
-(function (LogLevel) {
-    LogLevel["ERROR"] = "error";
-    LogLevel["WARN"] = "warn";
-    LogLevel["INFO"] = "info";
-    LogLevel["HTTP"] = "http";
-    LogLevel["DEBUG"] = "debug";
-})(LogLevel || (exports.LogLevel = LogLevel = {}));
-/**
- * Default logger configuration
- */
-const DEFAULT_CONFIG = {
-    level: LogLevel.INFO,
-    logDir: './logs',
-    enableConsole: true,
-    enableFile: true,
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-    maxFiles: 5,
-    compress: true,
-    includeTimestamp: true,
-    includeStackTrace: true
-};
+const LogTransport_1 = require("./logging/LogTransport");
+Object.defineProperty(exports, "LogLevel", { enumerable: true, get: function () { return LogTransport_1.LogLevel; } });
 /**
  * Enhanced Winston logger with testing-specific features
  */
 class TestLogger {
     constructor(config = {}) {
         this.context = {};
-        this.config = { ...DEFAULT_CONFIG, ...config };
+        this.config = { ...LogTransport_1.DEFAULT_LOGGER_CONFIG, ...config };
         this.logger = this.createLogger();
     }
-    /**
-     * Create the Winston logger instance with configured transports
-     */
     createLogger() {
-        // Ensure log directory exists
-        if (this.config.enableFile && !fs_1.default.existsSync(this.config.logDir)) {
-            fs_1.default.mkdirSync(this.config.logDir, { recursive: true });
-        }
-        const transports = [];
-        // Console transport
-        if (this.config.enableConsole) {
-            transports.push(new winston_1.default.transports.Console({
-                level: this.config.level,
-                format: winston_1.default.format.combine(winston_1.default.format.colorize({ all: true }), winston_1.default.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), winston_1.default.format.printf(({ timestamp, level, message, ...meta }) => {
-                    let output = `${timestamp} [${level}]`;
-                    // Add context information
-                    if (this.context.scenarioId) {
-                        output += ` [${this.context.scenarioId}]`;
-                    }
-                    if (this.context.component) {
-                        output += ` [${this.context.component}]`;
-                    }
-                    output += `: ${message}`;
-                    // Add metadata if present
-                    if (Object.keys(meta).length > 0) {
-                        output += ` ${JSON.stringify(meta)}`;
-                    }
-                    return output;
-                }))
-            }));
-        }
-        // File transports
-        if (this.config.enableFile) {
-            // Combined log file
-            transports.push(new winston_1.default.transports.File({
-                filename: path_1.default.join(this.config.logDir, 'combined.log'),
-                level: this.config.level,
-                maxsize: this.config.maxFileSize,
-                maxFiles: this.config.maxFiles,
-                format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.errors({ stack: this.config.includeStackTrace }), winston_1.default.format.json())
-            }));
-            // Error-only log file
-            transports.push(new winston_1.default.transports.File({
-                filename: path_1.default.join(this.config.logDir, 'error.log'),
-                level: LogLevel.ERROR,
-                maxsize: this.config.maxFileSize,
-                maxFiles: this.config.maxFiles,
-                format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.errors({ stack: true }), winston_1.default.format.json())
-            }));
-            // Test-specific log file
-            transports.push(new winston_1.default.transports.File({
-                filename: path_1.default.join(this.config.logDir, 'test-execution.log'),
-                level: this.config.level,
-                maxsize: this.config.maxFileSize,
-                maxFiles: this.config.maxFiles,
-                format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.errors({ stack: this.config.includeStackTrace }), winston_1.default.format.json())
-            }));
-        }
+        const transports = (0, LogTransport_1.buildTransports)(this.config, () => this.context);
         return winston_1.default.createLogger({
             level: this.config.level,
             format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.errors({ stack: this.config.includeStackTrace }), winston_1.default.format.json()),
@@ -112,21 +34,12 @@ class TestLogger {
             transports
         });
     }
-    /**
-     * Set the logging context for structured logging
-     */
     setContext(context) {
         this.context = { ...this.context, ...context };
     }
-    /**
-     * Clear the current logging context
-     */
     clearContext() {
         this.context = {};
     }
-    /**
-     * Get the current logging context
-     */
     getContext() {
         return { ...this.context };
     }
@@ -134,35 +47,32 @@ class TestLogger {
      * Log an error message
      */
     error(message, meta) {
-        this.logger.error(message, { ...this.context, ...meta });
+        this.logger.error(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta : { meta }) });
     }
     /**
      * Log a warning message
      */
     warn(message, meta) {
-        this.logger.warn(message, { ...this.context, ...meta });
+        this.logger.warn(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta : { meta }) });
     }
     /**
      * Log an info message
      */
     info(message, meta) {
-        this.logger.info(message, { ...this.context, ...meta });
+        this.logger.info(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta : { meta }) });
     }
     /**
      * Log an HTTP message
      */
     http(message, meta) {
-        this.logger.http(message, { ...this.context, ...meta });
+        this.logger.http(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta : { meta }) });
     }
     /**
      * Log a debug message
      */
     debug(message, meta) {
-        this.logger.debug(message, { ...this.context, ...meta });
+        this.logger.debug(message, { ...this.context, ...(typeof meta === 'object' && meta !== null ? meta : { meta }) });
     }
-    /**
-     * Log test scenario start
-     */
     scenarioStart(scenarioId, scenarioName) {
         this.setContext({ scenarioId });
         this.info(`Starting test scenario: ${scenarioName}`, {
@@ -171,9 +81,6 @@ class TestLogger {
             scenarioName
         });
     }
-    /**
-     * Log test scenario completion
-     */
     scenarioEnd(scenarioId, status, duration) {
         this.info(`Test scenario completed: ${status}`, {
             event: 'scenario_end',
@@ -183,9 +90,6 @@ class TestLogger {
         });
         this.clearContext();
     }
-    /**
-     * Log test step execution
-     */
     stepExecution(stepIndex, action, target) {
         this.debug(`Executing step ${stepIndex + 1}: ${action}`, {
             event: 'step_execution',
@@ -194,9 +98,6 @@ class TestLogger {
             target
         });
     }
-    /**
-     * Log test step completion
-     */
     stepComplete(stepIndex, status, duration) {
         this.debug(`Step ${stepIndex + 1} completed: ${status}`, {
             event: 'step_complete',
@@ -216,9 +117,6 @@ class TestLogger {
             ...metadata
         });
     }
-    /**
-     * Log screenshot capture
-     */
     screenshot(filename, stepIndex) {
         this.debug(`Screenshot captured: ${filename}`, {
             event: 'screenshot',
@@ -226,9 +124,6 @@ class TestLogger {
             stepIndex
         });
     }
-    /**
-     * Log command execution
-     */
     commandExecution(command, workingDir) {
         this.debug(`Executing command: ${command}`, {
             event: 'command_execution',
@@ -236,9 +131,6 @@ class TestLogger {
             workingDir
         });
     }
-    /**
-     * Log command completion
-     */
     commandComplete(command, exitCode, duration) {
         const level = exitCode === 0 ? 'info' : 'warn';
         this.logger[level](`Command completed with exit code ${exitCode}`, {
@@ -248,37 +140,23 @@ class TestLogger {
             duration
         });
     }
-    /**
-     * Create a child logger with additional context
-     */
     child(context) {
         const childLogger = new TestLogger(this.config);
         childLogger.setContext({ ...this.context, ...context });
         return childLogger;
     }
-    /**
-     * Change the log level at runtime
-     */
     setLevel(level) {
         this.config.level = level;
         this.logger.level = level;
-        // Update all transports
         this.logger.transports.forEach(transport => {
             transport.level = level;
         });
     }
-    /**
-     * Get current log level
-     */
     getLevel() {
         return this.config.level;
     }
-    /**
-     * Flush all log transports
-     */
     async flush() {
         return new Promise((resolve) => {
-            // Winston doesn't have a built-in flush method, so we use a workaround
             let pendingTransports = this.logger.transports.length;
             if (pendingTransports === 0) {
                 resolve();
@@ -286,7 +164,6 @@ class TestLogger {
             }
             this.logger.transports.forEach((transport) => {
                 if ('close' in transport && typeof transport.close === 'function') {
-                    // Winston v3 close() is synchronous (no callback)
                     transport.close();
                 }
                 pendingTransports--;
@@ -296,9 +173,6 @@ class TestLogger {
             });
         });
     }
-    /**
-     * Close the logger and clean up resources
-     */
     async close() {
         await this.flush();
         this.logger.close();
@@ -312,15 +186,11 @@ function createLogger(config) {
     return new TestLogger(config);
 }
 /**
- * Mutable active logger — swapped by setupLogger() without mutating any instance.
- * All code should use the `logger` convenience object rather than this directly.
+ * Mutable active logger swapped by setupLogger() without mutating any instance.
  */
 let _activeLogger = new TestLogger();
-/** @deprecated Use the `logger` convenience object instead */
-exports.defaultLogger = _activeLogger;
 /**
  * Convenience methods that always delegate to the current active logger.
- * Safe to use before or after setupLogger() is called.
  */
 exports.logger = {
     error: (message, meta) => _activeLogger.error(message, meta),
@@ -333,8 +203,7 @@ exports.logger = {
     child: (context) => _activeLogger.child(context)
 };
 /**
- * Reconfigure the active logger. Replaces the logger instance rather than
- * mutating it, so all subsequent calls through `logger` use the new config.
+ * Reconfigure the active logger. Replaces the logger instance rather than mutating it.
  */
 function setupLogger(config) {
     _activeLogger = createLogger(config);

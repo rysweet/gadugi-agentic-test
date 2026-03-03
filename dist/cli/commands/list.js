@@ -82,7 +82,7 @@ function registerListCommand(program) {
                 })), null, 2));
             }
             else {
-                console.log('\n' + chalk_1.default.bold('Available Scenarios:'));
+                console.log(`\n${chalk_1.default.bold('Available Scenarios:')}`);
                 if (options.filter) {
                     console.log(chalk_1.default.gray(`Filtered by tag: ${options.filter}`));
                 }
@@ -102,12 +102,8 @@ function registerListCommand(program) {
                     console.log();
                 });
                 // Summary
-                const enabled = filteredScenarios.length;
-                const disabled = 0; // All enabled for now
                 console.log(chalk_1.default.bold('Summary:'));
-                console.log(`${chalk_1.default.green('●')} Enabled: ${enabled}`);
-                console.log(`${chalk_1.default.red('○')} Disabled: ${disabled}`);
-                console.log(`Total: ${filteredScenarios.length}`);
+                console.log(`${chalk_1.default.green('●')} Scenarios: ${filteredScenarios.length}`);
             }
         }
         catch (error) {

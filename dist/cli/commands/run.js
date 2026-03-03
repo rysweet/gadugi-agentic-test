@@ -69,7 +69,7 @@ function registerRunCommand(program) {
                     (0, output_1.logSuccess)(`Configuration loaded from: ${options.config}`);
                 }
                 catch (error) {
-                    throw new output_1.CLIError(`Failed to load configuration: ${error.message}`, 'CONFIG_ERROR');
+                    throw new output_1.CLIError(`Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`, 'CONFIG_ERROR');
                 }
             }
             else {
@@ -146,7 +146,7 @@ function registerRunCommand(program) {
                 const passedCount = session.summary.passed;
                 const failedCount = session.summary.failed;
                 // Report results with colors
-                console.log('\n' + chalk_1.default.bold('Test Execution Results:'));
+                console.log(`\n${chalk_1.default.bold('Test Execution Results:')}`);
                 console.log(chalk_1.default.green(`✓ Passed: ${passedCount}`));
                 console.log(chalk_1.default.red(`✗ Failed: ${failedCount}`));
                 console.log(chalk_1.default.gray(`- Total: ${scenarios.length}`));

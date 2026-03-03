@@ -2,12 +2,12 @@
  * Scenarios module - Test scenario management
  */
 export declare class ScenarioLoader {
-    static loadFromFile(filePath: string): Promise<TestScenario>;
-    static loadFromDirectory(dirPath: string): Promise<TestScenario[]>;
+    static loadFromFile(filePath: string): Promise<ScenarioDefinition>;
+    static loadFromDirectory(dirPath: string): Promise<ScenarioDefinition[]>;
     private static convertLegacyFormat;
     private static validateScenario;
 }
-export interface TestScenario {
+export interface ScenarioDefinition {
     name: string;
     description?: string;
     version?: string;
@@ -19,6 +19,8 @@ export interface TestScenario {
     cleanup?: TestStep[];
     metadata?: ScenarioMetadata;
 }
+/** @deprecated Use ScenarioDefinition instead - renamed to resolve naming conflict with models/TestModels.TestScenario. Will be removed in v2.0. */
+export type TestScenario = ScenarioDefinition;
 export interface ScenarioConfig {
     timeout?: number;
     retries?: number;
@@ -31,13 +33,13 @@ export interface EnvironmentConfig {
 export interface AgentConfig {
     name: string;
     type: string;
-    config?: Record<string, any>;
+    config?: Record<string, unknown>;
 }
 export interface TestStep {
     name: string;
     agent: string;
     action: string;
-    params?: Record<string, any>;
+    params?: Record<string, unknown>;
     timeout?: number;
     wait_for?: WaitCondition;
     until?: UntilCondition;
@@ -49,14 +51,14 @@ export interface WaitCondition {
 }
 export interface UntilCondition {
     condition: 'contains' | 'equals' | 'matches';
-    value: any;
+    value: unknown;
     timeout?: number;
 }
 export interface TestAssertion {
     name: string;
     type: string;
     agent: string;
-    params: Record<string, any>;
+    params: Record<string, unknown>;
 }
 export interface ScenarioMetadata {
     tags?: string[];

@@ -264,7 +264,7 @@ export interface TestSession {
         skipped: number;
     };
     /** Configuration used */
-    config?: any;
+    config?: import('./Config').TestConfig;
     /** Number of scenarios executed */
     scenariosExecuted?: number;
     /** Number of issues created from failures */
@@ -303,12 +303,11 @@ export declare enum AssertionType {
 }
 export interface TestAssertion {
     type: AssertionType;
-    value: any;
-    expected?: any;
+    value: unknown;
+    expected?: unknown;
     operator?: 'equals' | 'contains' | 'exists' | 'gt' | 'lt' | 'gte' | 'lte';
 }
-/** @deprecated Use OrchestratorStep - kept for backward compatibility with existing code */
+/** @deprecated Use OrchestratorStep instead - kept for backward compatibility with existing code. Will be removed in v2.0. */
 export type TestStep = OrchestratorStep;
-/** @deprecated Use OrchestratorScenario - kept for backward compatibility with existing code */
-export type TestScenario = OrchestratorScenario;
+/** @deprecated Use OrchestratorScenario directly - this alias is removed to resolve naming conflict with scenarios/ScenarioDefinition. Will be removed in v2.0. */
 //# sourceMappingURL=TestModels.d.ts.map

@@ -3,7 +3,22 @@
  * Agents module - Autonomous testing agents
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defaultSystemAgentConfig = exports.createSystemAgent = exports.SystemAgent = exports.createWebSocketAgent = exports.WebSocketAgent = exports.createAPIAgent = exports.APIAgent = exports.defaultComprehensionAgentConfig = exports.createComprehensionAgent = exports.ComprehensionAgent = exports.defaultPriorityAgentConfig = exports.createPriorityAgent = exports.PriorityAgent = exports.defaultIssueReporterConfig = exports.createIssueReporter = exports.IssueReporter = exports.createTUIAgent = exports.TUIAgent = exports.createCLIAgent = exports.CLIAgent = exports.createElectronUIAgent = exports.ElectronUIAgent = exports.AgentType = void 0;
+exports.defaultSystemAgentConfig = exports.createSystemAgent = exports.SystemAgent = exports.ConnectionState = exports.createWebSocketAgent = exports.WebSocketAgent = exports.createAPIAgent = exports.APIAgent = exports.defaultComprehensionAgentConfig = exports.createComprehensionAgent = exports.ComprehensionAgent = exports.defaultPriorityAgentConfig = exports.createPriorityAgent = exports.PriorityAgent = exports.defaultIssueReporterConfig = exports.createIssueReporter = exports.IssueReporter = exports.createTUIAgent = exports.TUIAgent = exports.createCLIAgent = exports.CLIAgent = exports.createElectronUIAgent = exports.ElectronUIAgent = exports.BaseAgent = exports.AgentType = void 0;
+exports.isPipelineAgent = isPipelineAgent;
+/**
+ * Type guard: returns true when \`candidate\` satisfies the IPipelineAgent
+ * interface (i.e. has an \`isPipelineAgent: true\` marker).
+ *
+ * @example
+ * if (isPipelineAgent(agent)) {
+ *   // agent is IPipelineAgent — use its specialized methods
+ * }
+ */
+function isPipelineAgent(candidate) {
+    return (typeof candidate === 'object' &&
+        candidate !== null &&
+        candidate.isPipelineAgent === true);
+}
 // Agent types
 var AgentType;
 (function (AgentType) {
@@ -15,7 +30,11 @@ var AgentType;
     AgentType["GITHUB"] = "github";
     AgentType["SYSTEM"] = "system";
     AgentType["COMPREHENSION"] = "comprehension";
+    AgentType["PRIORITY"] = "priority";
 })(AgentType || (exports.AgentType = AgentType = {}));
+// BaseAgent - shared execute() boilerplate (issue #117)
+var BaseAgent_1 = require("./BaseAgent");
+Object.defineProperty(exports, "BaseAgent", { enumerable: true, get: function () { return BaseAgent_1.BaseAgent; } });
 // Re-export all agent implementations
 var ElectronUIAgent_1 = require("./ElectronUIAgent");
 Object.defineProperty(exports, "ElectronUIAgent", { enumerable: true, get: function () { return ElectronUIAgent_1.ElectronUIAgent; } });
@@ -44,6 +63,7 @@ Object.defineProperty(exports, "createAPIAgent", { enumerable: true, get: functi
 var WebSocketAgent_1 = require("./WebSocketAgent");
 Object.defineProperty(exports, "WebSocketAgent", { enumerable: true, get: function () { return WebSocketAgent_1.WebSocketAgent; } });
 Object.defineProperty(exports, "createWebSocketAgent", { enumerable: true, get: function () { return WebSocketAgent_1.createWebSocketAgent; } });
+Object.defineProperty(exports, "ConnectionState", { enumerable: true, get: function () { return WebSocketAgent_1.ConnectionState; } });
 var SystemAgent_1 = require("./SystemAgent");
 Object.defineProperty(exports, "SystemAgent", { enumerable: true, get: function () { return SystemAgent_1.SystemAgent; } });
 Object.defineProperty(exports, "createSystemAgent", { enumerable: true, get: function () { return SystemAgent_1.createSystemAgent; } });

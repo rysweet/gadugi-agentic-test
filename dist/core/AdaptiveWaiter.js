@@ -68,7 +68,7 @@ class AdaptiveWaiter {
             success: false,
             attempts,
             totalWaitTime: Date.now() - startTime,
-            lastError
+            ...(lastError !== undefined ? { lastError } : {}),
         };
     }
     /**
@@ -144,13 +144,8 @@ class AdaptiveWaiter {
      */
     async retryOperation(operation, options = {}) {
         return this.waitForCondition(async () => {
-            try {
-                const result = await operation();
-                return result;
-            }
-            catch (error) {
-                throw error; // Let waitForCondition handle the retry logic
-            }
+            const result = await operation();
+            return result;
         }, options);
     }
     /**
@@ -207,8 +202,7 @@ class AdaptiveWaiter {
         const jitterMs = jitter > 0 ? ms * jitter * (Math.random() - 0.5) : 0;
         const actualDelay = Math.max(1, ms + jitterMs);
         return new Promise(resolve => {
-            const timer = setTimeout(() => resolve(), actualDelay);
-            return timer;
+            setTimeout(() => resolve(), actualDelay);
         });
     }
     /**
@@ -236,7 +230,7 @@ class AdaptiveWaiter {
             case BackoffStrategy.QUADRATIC:
                 return (attempt, baseDelay) => baseDelay * Math.pow(attempt, 2);
             default:
-                return (attempt, baseDelay) => baseDelay * 1.5; // Default exponential
+                return (_attempt, baseDelay) => baseDelay * 1.5; // Default exponential
         }
     }
     /**

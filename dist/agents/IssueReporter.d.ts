@@ -1,254 +1,98 @@
 /**
- * GitHub Issue Reporter Agent
+ * GitHub Issue Reporter Agent (facade)
  *
- * Handles GitHub issue creation and management for test failures.
- * Supports issue deduplication, template-based creation, and comprehensive
- * GitHub API integration with rate limiting and error handling.
+ * Thin coordinator that delegates to:
+ *   - IssueFormatter  – title/body template rendering
+ *   - IssueDeduplicator – fingerprint-based duplicate detection
+ *   - IssueSubmitter  – all GitHub API calls
  */
-import { TestFailure } from '../models/TestModels';
-import { GitHubConfig } from '../models/Config';
-import { IAgent, AgentType } from './index';
-/**
- * GitHub API rate limit information
- */
-export interface RateLimitInfo {
-    limit: number;
-    used: number;
-    remaining: number;
-    reset: Date;
-}
-/**
- * Issue fingerprint for deduplication
- */
-export interface IssueFingerprint {
-    scenarioId: string;
-    errorMessage: string;
-    stackTraceHash?: string;
-    category?: string;
-    hash: string;
-}
-/**
- * GitHub issue creation options
- */
-export interface CreateIssueOptions {
-    title: string;
-    body: string;
-    labels?: string[];
-    assignees?: string[];
-    milestone?: number;
-    projects?: number[];
-}
-/**
- * GitHub issue update options
- */
-export interface UpdateIssueOptions {
-    title?: string;
-    body?: string;
-    state?: 'open' | 'closed';
-    labels?: string[];
-    assignees?: string[];
-    milestone?: number | null;
-}
-/**
- * GitHub pull request creation options
- */
-export interface CreatePullRequestOptions {
-    title: string;
-    body: string;
-    head: string;
-    base: string;
-    draft?: boolean;
-    maintainer_can_modify?: boolean;
-}
-/**
- * Issue template variables
- */
-export interface IssueTemplateVars {
-    scenarioId: string;
-    scenarioName: string;
-    failureMessage: string;
-    stackTrace?: string;
-    timestamp: string;
-    environment: Record<string, any>;
-    screenshots?: string[];
-    logs?: string[];
-    reproductionSteps: string[];
-    systemInfo: Record<string, any>;
-    priority: string;
-    category?: string;
-}
-/**
- * System information for issues
- */
-export interface SystemInfo {
-    platform: string;
-    arch: string;
-    nodeVersion: string;
-    electronVersion?: string;
-    timestamp: string;
-    workingDirectory: string;
-    environment: Record<string, string>;
-}
-/**
- * Issue Reporter agent configuration
- */
-export interface IssueReporterConfig extends GitHubConfig {
-    /** GitHub API base URL (for Enterprise) */
-    baseUrl?: string;
-    /** Request timeout in milliseconds */
-    timeout?: number;
-    /** Rate limit buffer (requests to keep in reserve) */
-    rateLimitBuffer?: number;
-    /** Custom issue templates directory */
-    templatesDir?: string;
-    /** Screenshot storage configuration */
-    screenshotStorage?: 'embed' | 'link' | 'attach';
-    /** Maximum issue body length */
-    maxBodyLength?: number;
-    /** Issue deduplication enabled */
-    enableDeduplication?: boolean;
-    /** Days to look back for duplicate issues */
-    deduplicationLookbackDays?: number;
-}
-/**
- * Default configuration values
- */
-declare const DEFAULT_CONFIG: Partial<IssueReporterConfig>;
+import { TestFailure, OrchestratorScenario } from '../models/TestModels';
+import { IAgent, IPipelineAgent, AgentType } from './index';
+import { IssueReporterConfig, RateLimitInfo, UpdateIssueOptions, CreatePullRequestOptions } from './issue/types';
+export type { IssueReporterConfig, RateLimitInfo, IssueFingerprint, CreateIssueOptions, UpdateIssueOptions, CreatePullRequestOptions, IssueTemplateVars, SystemInfo } from './issue/types';
+export { DEFAULT_CONFIG as defaultIssueReporterConfig } from './issue/types';
 /**
  * GitHub Issue Reporter Agent
  *
- * Provides comprehensive GitHub integration for test failure reporting
- * and issue management with advanced features like deduplication,
- * template-based issue creation, and rate limiting.
+ * Coordinates issue creation, deduplication, and GitHub API submission
+ * for test failure reporting.
+ *
+ * Implements IPipelineAgent because it reports on failures rather than
+ * executing test scenarios. The primary API is createIssue(), updateIssue(),
+ * and createPullRequest().
+ *
+ * Also implements IAgent for backward compatibility.
  */
-export declare class IssueReporter implements IAgent {
+export declare class IssueReporter implements IAgent<OrchestratorScenario, {
+    issueNumber: number;
+    url: string;
+} | null>, IPipelineAgent {
     readonly name = "IssueReporter";
     readonly type = AgentType.GITHUB;
-    private octokit;
+    /** @inheritdoc IPipelineAgent */
+    readonly isPipelineAgent: true;
     private config;
-    private logger;
-    private rateLimitInfo;
-    private issueTemplates;
-    private fingerprintCache;
+    private log;
+    private formatter;
+    private deduplicator;
+    private submitter;
+    private octokit;
     constructor(config: IssueReporterConfig);
-    /**
-     * Initialize the agent
-     */
+    /** Verify API access and refresh rate limits */
     initialize(): Promise<void>;
-    /**
-     * Execute scenario (not applicable for this agent)
-     */
-    execute(scenario: any): Promise<any>;
-    /**
-     * Clean up resources
-     */
+    /** Release cached state */
     cleanup(): Promise<void>;
     /**
-     * Create a GitHub issue from a test failure
+     * Execute issue reporting for a scenario (implements IAgent interface).
+     *
+     * Constructs a TestFailure from the scenario metadata and delegates to createIssue().
+     * Returns null when createIssuesOnFailure is disabled in config.
+     *
+     * @deprecated Prefer calling createIssue() directly with a TestFailure.
+     * This method exists only for IAgent backward compatibility.
+     * IssueReporter is a pipeline agent — use isPipelineAgent() to detect it.
+     */
+    execute(scenario: OrchestratorScenario): Promise<{
+        issueNumber: number;
+        url: string;
+    } | null>;
+    /**
+     * Create or update a GitHub issue for a test failure.
+     * When deduplication is enabled and a matching issue exists, appends a comment
+     * instead of creating a new issue.
      */
     createIssue(failure: TestFailure): Promise<{
         issueNumber: number;
         url: string;
     }>;
-    /**
-     * Update an existing GitHub issue
-     */
+    /** Update an existing issue */
     updateIssue(issueNumber: number, update: UpdateIssueOptions): Promise<void>;
-    /**
-     * Find duplicate issues for a test failure
-     */
+    /** Search for a duplicate issue for the given failure */
     findDuplicates(failure: TestFailure): Promise<any | null>;
-    /**
-     * Add a comment to an existing issue
-     */
+    /** Add a comment to an existing issue */
     addComment(issueNumber: number, comment: string): Promise<void>;
     /**
-     * Attach screenshots to an issue
+     * Record a screenshot reference for an issue.
+     *
+     * Security fix (issue #98): screenshots are never uploaded to external
+     * services.  The local path is logged and returned so callers can include
+     * it in reports without exposing credentials or sensitive data.
      */
     attachScreenshot(issueNumber: number, screenshotPath: string): Promise<string>;
-    /**
-     * Create a pull request for fixes
-     */
+    /** Create a pull request */
     createPullRequest(options: CreatePullRequestOptions): Promise<{
         prNumber: number;
         url: string;
     }>;
-    /**
-     * Link issues to each other
-     */
+    /** Link issues with a comment */
     linkIssues(issueNumber: number, relatedIssueNumbers: number[], linkType?: 'blocks' | 'duplicates' | 'relates'): Promise<void>;
-    /**
-     * Assign users to an issue
-     */
+    /** Assign users to an issue */
     assignUsers(issueNumber: number, assignees: string[]): Promise<void>;
-    /**
-     * Set milestone for an issue
-     */
+    /** Set a milestone on an issue */
     setMilestone(issueNumber: number, milestoneNumber: number): Promise<void>;
-    /**
-     * Get current rate limit information
-     */
+    /** Fetch current GitHub rate limit info */
     getRateLimitInfo(): Promise<RateLimitInfo>;
-    /**
-     * Generate issue fingerprint for deduplication
-     */
-    private generateFingerprint;
-    /**
-     * Generate issue content from test failure
-     */
-    private generateIssueContent;
-    /**
-     * Return a safe subset of environment variables for issue templates.
-     * Never includes secrets (tokens, keys, passwords).
-     */
-    private getSafeEnvironment;
-    /**
-     * Render template with variables
-     */
-    private renderTemplate;
-    /**
-     * Generate reproduction steps from failure
-     */
-    private generateReproductionSteps;
-    /**
-     * Determine issue priority from failure
-     */
-    private determinePriority;
-    /**
-     * Determine priority label
-     */
-    private determinePriorityLabel;
-    /**
-     * Get system information
-     */
-    private getSystemInfo;
-    /**
-     * Truncate body to maximum length
-     */
-    private truncateBody;
-    /**
-     * Verify GitHub API access
-     */
-    private verifyAccess;
-    /**
-     * Update rate limit information
-     */
-    private updateRateLimitInfo;
-    /**
-     * Check rate limit and wait if necessary
-     */
-    private checkRateLimit;
-    /**
-     * Load custom templates from directory
-     */
-    private loadCustomTemplates;
 }
-/**
- * Create an IssueReporter agent instance
- */
+/** Factory function */
 export declare function createIssueReporter(config: IssueReporterConfig): IssueReporter;
-/**
- * Export default configuration for reference
- */
-export { DEFAULT_CONFIG as defaultIssueReporterConfig };
 //# sourceMappingURL=IssueReporter.d.ts.map

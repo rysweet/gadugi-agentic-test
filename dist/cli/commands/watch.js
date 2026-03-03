@@ -74,12 +74,12 @@ function registerWatchCommand(program) {
                     (0, output_1.logSuccess)(`Configuration loaded from: ${options.config}`);
                 }
                 catch (error) {
-                    throw new output_1.CLIError(`Failed to load configuration: ${error.message}`, 'CONFIG_ERROR');
+                    throw new output_1.CLIError(`Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`, 'CONFIG_ERROR');
                 }
             }
             // Setup file watcher
             const watcher = chokidar.watch(options.directory, {
-                ignored: /(^|[\/\\])\./, // ignore dotfiles
+                ignored: /(^|[/\\])\./, // ignore dotfiles
                 persistent: true,
                 ignoreInitial: true,
             });
@@ -106,7 +106,7 @@ function registerWatchCommand(program) {
                     const passedCount = session.summary.passed;
                     const failedCount = session.summary.failed;
                     // Report results
-                    console.log('\n' + chalk_1.default.bold('Watch Mode - Test Results:'));
+                    console.log(`\n${chalk_1.default.bold('Watch Mode - Test Results:')}`);
                     console.log(chalk_1.default.green(`✓ Passed: ${passedCount}`));
                     console.log(chalk_1.default.red(`✗ Failed: ${failedCount}`));
                     console.log(chalk_1.default.gray(`- Total: ${scenarios.length}`));
@@ -120,7 +120,7 @@ function registerWatchCommand(program) {
                     }
                 }
                 catch (error) {
-                    (0, output_1.logError)(`Test execution failed: ${error.message}`);
+                    (0, output_1.logError)(`Test execution failed: ${error instanceof Error ? error.message : String(error)}`);
                     (0, output_1.logInfo)('Watching for changes...');
                 }
             };

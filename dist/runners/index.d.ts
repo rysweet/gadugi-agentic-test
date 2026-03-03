@@ -4,9 +4,11 @@
  * This module exports all test runners for the Agentic Testing System.
  * These runners are TypeScript implementations that replace the original JavaScript test runners.
  */
-export { SmartUITestRunner, createSmartUITestRunner, runSmartUITests } from './SmartUITestRunner';
-export { ComprehensiveUITestRunner, createComprehensiveUITestRunner, runComprehensiveUITests } from './ComprehensiveUITestRunner';
-export type { TestResult, TestStatus, TestStep } from '../models/TestModels';
+import { SmartUITestRunner, createSmartUITestRunner, runSmartUITests } from './SmartUITestRunner';
+export { SmartUITestRunner, createSmartUITestRunner, runSmartUITests };
+import { ComprehensiveUITestRunner, createComprehensiveUITestRunner, runComprehensiveUITests } from './ComprehensiveUITestRunner';
+export { ComprehensiveUITestRunner, createComprehensiveUITestRunner, runComprehensiveUITests };
+export type { TestResult, TestStatus } from '../models/TestModels';
 /**
  * Available test runners
  */
@@ -27,9 +29,9 @@ export interface RunnerConfig {
 /**
  * Factory function to create any test runner by type
  */
-export declare function createTestRunner(type: TestRunnerType, config?: RunnerConfig): any;
+export declare function createTestRunner(type: TestRunnerType, config?: RunnerConfig): ComprehensiveUITestRunner | SmartUITestRunner;
 /**
  * Run any test runner by type
  */
-export declare function runTestRunner(type: TestRunnerType, config?: RunnerConfig): Promise<any>;
+export declare function runTestRunner(type: TestRunnerType, config?: RunnerConfig): Promise<import("../models/TestModels").TestResult>;
 //# sourceMappingURL=index.d.ts.map

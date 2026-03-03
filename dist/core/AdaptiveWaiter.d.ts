@@ -87,7 +87,7 @@ export declare class AdaptiveWaiter {
     /**
      * Race wait for multiple conditions (any can be true)
      */
-    waitForAny(conditions: WaitCondition[], options?: WaitOptions): Promise<WaitResult<any>>;
+    waitForAny(conditions: WaitCondition[], options?: WaitOptions): Promise<WaitResult<unknown>>;
     /**
      * Simple delay with jitter
      */

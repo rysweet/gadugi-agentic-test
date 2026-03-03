@@ -44,16 +44,16 @@ const path = __importStar(require("path"));
 class ScenarioLoader {
     static async loadFromFile(filePath) {
         const content = await fs.readFile(filePath, 'utf-8');
-        const raw = yaml.load(content);
+        const raw = yaml.load(content, { schema: yaml.JSON_SCHEMA });
         // Handle three formats:
         // Format 1: Top-level name, steps, assertions (canonical format)
         // Format 2: Top-level application, scenarios array (legacy format)
         // Format 3: scenario: { name, steps, ... } (wrapped format)
-        if (raw.scenario && typeof raw.scenario === 'object') {
+        if (raw['scenario'] && typeof raw['scenario'] === 'object') {
             // Wrapped format - unwrap and validate
-            return this.validateScenario(raw.scenario);
+            return this.validateScenario(raw['scenario']);
         }
-        else if (raw.scenarios && Array.isArray(raw.scenarios)) {
+        else if (raw['scenarios'] && Array.isArray(raw['scenarios'])) {
             // Legacy format with application/scenarios - convert
             return this.convertLegacyFormat(raw);
         }
@@ -71,27 +71,35 @@ class ScenarioLoader {
     static convertLegacyFormat(raw) {
         // Legacy format has application + scenarios array
         // Convert first scenario to new format (for now, only load first scenario)
-        const firstScenario = raw.scenarios[0];
+        const scenarios = raw['scenarios'];
+        const firstScenario = scenarios[0];
+        const application = raw['application'];
+        const descStr = raw['description'] !== undefined ? String(raw['description']) : firstScenario['description'] !== undefined ? String(firstScenario['description']) : undefined;
+        const verStr = raw['version'] !== undefined ? String(raw['version']) : undefined;
         return {
-            name: raw.name || firstScenario.name,
-            description: raw.description || firstScenario.description,
-            version: raw.version,
-            config: { timeout: raw.application?.timeout * 1000 || 120000 },
+            name: String(raw['name'] || firstScenario['name'] || ''),
+            ...(descStr !== undefined ? { description: descStr } : {}),
+            ...(verStr !== undefined ? { version: verStr } : {}),
+            config: { timeout: (typeof application?.['timeout'] === 'number' ? application['timeout'] * 1000 : 0) || 120000 },
             environment: { requires: [] },
             agents: [{ name: 'tui-agent', type: 'tui', config: {} }],
-            steps: firstScenario.steps.map((s) => ({
-                name: s.description || s.action,
+            steps: firstScenario['steps'].map((s) => ({
+                name: String(s['description'] || s['action'] || ''),
                 agent: 'tui-agent',
-                action: s.action,
-                params: { input: s.input, conditions: s.conditions },
-                timeout: s.conditions?.[0]?.timeout * 1000 || 30000
+                action: String(s['action'] || ''),
+                params: { input: s['input'], conditions: s['conditions'] },
+                timeout: (Array.isArray(s['conditions']) && s['conditions'].length > 0 && typeof s['conditions'][0]['timeout'] === 'number'
+                    ? s['conditions'][0]['timeout'] * 1000
+                    : 0) || 30000
             })),
-            assertions: firstScenario.assertions?.map((a) => ({
-                name: a.description || a.type,
-                type: a.type,
-                agent: 'tui-agent',
-                params: { value: a.value, description: a.description }
-            })) || [],
+            assertions: Array.isArray(firstScenario['assertions'])
+                ? firstScenario['assertions'].map((a) => ({
+                    name: String(a['description'] || a['type'] || ''),
+                    type: String(a['type'] || ''),
+                    agent: 'tui-agent',
+                    params: { value: a['value'], description: a['description'] }
+                }))
+                : [],
             cleanup: [],
             metadata: {
                 tags: ['legacy-format'],
@@ -100,11 +108,14 @@ class ScenarioLoader {
         };
     }
     static validateScenario(scenario) {
-        if (!scenario.name) {
+        if (!scenario['name']) {
             throw new Error('Scenario must have a name');
         }
-        if (!scenario.steps || !Array.isArray(scenario.steps)) {
+        if (!scenario['steps'] || !Array.isArray(scenario['steps'])) {
             throw new Error('Scenario must have steps array');
+        }
+        if (!scenario['agents'] || !Array.isArray(scenario['agents']) || scenario['agents'].length === 0) {
+            throw new Error('Scenario must have at least one agent');
         }
         return scenario;
     }

@@ -69,7 +69,12 @@ export class ScenarioRouter {
       }
 
       logger.info(`Executing ${group.length} ${iface} scenario(s)`);
-      await this.executeParallelBatch(group, agent);
+      await agent.initialize();
+      try {
+        await this.executeParallelBatch(group, agent);
+      } finally {
+        await agent.cleanup();
+      }
     }
 
     // GUI: sequential with initialize/cleanup lifecycle

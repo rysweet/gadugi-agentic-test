@@ -46,4 +46,6 @@ var AssertionType;
     AssertionType["GREATER_THAN"] = "GREATER_THAN";
     AssertionType["LESS_THAN"] = "LESS_THAN";
 })(AssertionType || (exports.AssertionType = AssertionType = {}));
+/** @deprecated Use OrchestratorScenario directly - this alias is removed to resolve naming conflict with scenarios/ScenarioDefinition. Will be removed in v2.0. */
+// export type TestScenario = OrchestratorScenario; // REMOVED: caused naming conflict with scenarios/index.ts TestScenario
 //# sourceMappingURL=TestModels.js.map

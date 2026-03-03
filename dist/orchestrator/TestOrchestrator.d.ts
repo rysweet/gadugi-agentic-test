@@ -1,15 +1,28 @@
 /**
- * Main orchestrator for the Agentic Testing System
- * Coordinates all testing agents and manages test execution flow
+ * TestOrchestrator
+ *
+ * Thin orchestration facade. Delegates to:
+ *   - ScenarioRouter  : dispatch scenarios to agents (via IAgent registry)
+ *   - SessionManager  : session lifecycle and persistence
+ *   - ResultAggregator: collect results, analyze, report
  */
 import { EventEmitter } from 'events';
 import { OrchestratorScenario, TestResult, TestSession, TestFailure } from '../models/TestModels';
-import { TestScenario } from '../scenarios';
+import { ScenarioDefinition } from '../scenarios';
 import { TestConfig } from '../models/Config';
 /**
- * Test suite configuration
+ * Suite filter configuration used internally by TestOrchestrator.
+ *
+ * NOTE: This is intentionally distinct from `TestModels.TestSuite`, which
+ * describes a named collection of OrchestratorScenario objects for consumption
+ * by test runners. SuiteFilterConfig describes patterns used to select which
+ * scenarios belong to a named run (e.g. "smoke", "full").
+ *
+ * Distinction at a glance:
+ *   - TestModels.TestSuite  → { name, scenarios: OrchestratorScenario[] }
+ *   - SuiteFilterConfig     → { name, patterns: string[], tags?: string[] }
  */
-export interface TestSuite {
+export interface SuiteFilterConfig {
     name: string;
     description?: string;
     patterns: string[];
@@ -27,141 +40,35 @@ export interface OrchestratorEvents {
     'phase:end': (phase: string) => void;
     'error': (error: Error) => void;
 }
-/**
- * Main test orchestrator class
- */
 export declare class TestOrchestrator extends EventEmitter {
     private config;
-    private session;
-    private results;
-    private failures;
-    private cliAgent;
-    private uiAgent;
-    private tuiAgent;
-    private issueReporter;
-    private priorityAgent;
-    private maxParallel;
-    private retryCount;
-    private failFast;
+    private sessionManager;
+    private aggregator;
+    private router;
     private abortController;
+    private issueReporter;
+    private failures;
     constructor(config: TestConfig);
     /**
-     * Setup internal event handlers
+     * Run with pre-loaded scenarios (used by programmatic API)
      */
-    private setupEventHandlers;
-    /**
-     * Create a new test session
-     */
-    private createSession;
-    /**
-     * Run a complete testing session with pre-loaded scenarios
-     */
-    runWithScenarios(suite: string, loadedScenarios: TestScenario[]): Promise<TestSession>;
+    runWithScenarios(suite: string, loadedScenarios: ScenarioDefinition[]): Promise<TestSession>;
     /**
      * Run a complete testing session
      */
     run(suite?: string, scenarioFiles?: string[]): Promise<TestSession>;
-    /**
-     * Load test scenarios from files
-     */
-    private loadScenarios;
-    /**
-     * Filter scenarios based on test suite configuration
-     */
-    private filterScenariosForSuite;
-    /**
-     * Execute test scenarios with parallel execution support
-     */
-    private executeScenarios;
-    /**
-     * Execute CLI test scenarios in parallel
-     */
-    private executeCLIScenarios;
-    /**
-     * Execute TUI test scenarios in parallel
-     */
-    private executeTUIScenarios;
-    /**
-     * Execute UI test scenarios
-     */
-    private executeUIScenarios;
-    /**
-     * Execute mixed interface scenarios
-     */
-    private executeMixedScenarios;
-    /**
-     * Execute scenarios in parallel with a hard concurrency limit.
-     * Uses a semaphore counter so at most maxParallel handlers run at once.
-     */
-    private executeParallel;
-    /**
-     * Execute a single test scenario
-     */
-    private executeSingleScenario;
-    /**
-     * Select appropriate agent for scenario
-     */
-    private selectAgentForScenario;
-    /**
-     * Process execution results
-     */
-    private processResults;
-    /**
-     * Record test result
-     */
-    private recordResult;
-    /**
-     * Record a scenario failure
-     */
-    private recordFailure;
-    /**
-     * Analyze test results and prioritize failures
-     */
-    private analyzeResults;
-    /**
-     * Report failures to GitHub
-     */
-    private reportFailures;
-    /**
-     * Calculate session status based on results
-     */
-    private calculateSessionStatus;
-    /**
-     * Calculate session metrics
-     */
-    private calculateSessionMetrics;
-    /**
-     * Save session results to file
-     */
-    private saveSessionResults;
-    /**
-     * Abort the current test session
-     */
     abort(): void;
-    /**
-     * Get current session
-     */
     getSession(): TestSession | null;
-    /**
-     * Get test results
-     */
     getResults(): TestResult[];
-    /**
-     * Get test failures
-     */
     getFailures(): TestFailure[];
     /**
-     * Adapt TUIConfig to TUIAgentConfig
+     * Report failures to GitHub via IssueReporter.
+     *
+     * Best-effort: individual createIssue failures are logged but do not abort
+     * subsequent reports. Cleanup is always called.
      */
-    private adaptTUIConfig;
-    /**
-     * Adapt PriorityConfig to PriorityAgentConfig
-     */
-    private adaptPriorityConfig;
-    /**
-     * Adapt UIConfig to ElectronUIAgentConfig
-     */
-    private adaptUIConfig;
+    private reportFailures;
+    private loadScenarios;
 }
 /**
  * Create a test orchestrator instance

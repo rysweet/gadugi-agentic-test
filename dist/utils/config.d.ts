@@ -1,115 +1,26 @@
 /**
- * Configuration loader for the Agentic Testing System
- * Handles loading from environment variables, config files, and provides validation
+ * Configuration utilities - backward-compatible re-export facade
+ *
+ * Implementation has been split into focused sub-modules in src/utils/config/:
+ *   - types.ts          - ConfigError, ConfigSource, ValidationResult, ConfigMetadata, DEFAULT_CONFIG
+ *   - ConfigValidator.ts - validateConfig() validation logic
+ *   - ConfigLoader.ts   - File/env loading, mergeConfigs, getNestedValue, setNestedValue
+ *   - ConfigManager.ts  - ConfigManager class (get/set/watch/load/export)
+ *
+ * All types and exports are re-exported here for full backward compatibility.
  */
 import { TestConfig } from '../models/Config';
+export type { ValidationResult, ConfigMetadata } from './config/types';
+export { ConfigError, ConfigSource, DEFAULT_CONFIG, ENV_MAPPINGS } from './config/types';
+export { validateConfig } from './config/ConfigValidator';
+export { loadConfigFile, loadEnvConfig, mergeConfigs, getNestedValue, setNestedValue, exportConfigToFile } from './config/ConfigLoader';
+export { ConfigManager } from './config/ConfigManager';
+import { ConfigManager } from './config/ConfigManager';
+export declare function getGlobalConfigManager(): ConfigManager;
 /**
- * Configuration loading error
- */
-export declare class ConfigError extends Error {
-    configPath?: string | undefined;
-    constructor(message: string, configPath?: string | undefined);
-}
-/**
- * Configuration source types
- */
-export declare enum ConfigSource {
-    ENVIRONMENT = "environment",
-    FILE = "file",
-    DEFAULT = "default"
-}
-/**
- * Configuration validation result
- */
-export interface ValidationResult {
-    valid: boolean;
-    errors: string[];
-    warnings: string[];
-}
-/**
- * Configuration metadata
- */
-export interface ConfigMetadata {
-    source: ConfigSource;
-    loadedAt: Date;
-    filePath?: string;
-    environment: Record<string, string>;
-}
-/**
- * Configuration manager class
- */
-export declare class ConfigManager {
-    private config;
-    private metadata;
-    private watchers;
-    constructor(initialConfig?: Partial<TestConfig>);
-    /**
-     * Load configuration from a file
-     */
-    loadFromFile(filePath: string): Promise<void>;
-    /**
-     * Load configuration from environment variables
-     */
-    loadFromEnvironment(): void;
-    /**
-     * Get the current configuration
-     */
-    getConfig(): TestConfig;
-    /**
-     * Get configuration metadata
-     */
-    getMetadata(): ConfigMetadata;
-    /**
-     * Update configuration at runtime
-     */
-    updateConfig(updates: Partial<TestConfig>): void;
-    /**
-     * Get a specific configuration value by path
-     */
-    get<T = any>(path: string, defaultValue?: T): T;
-    /**
-     * Set a specific configuration value by path
-     */
-    set(path: string, value: any): void;
-    /**
-     * Watch for configuration changes
-     */
-    watch(callback: (config: TestConfig) => void): () => void;
-    /**
-     * Validate configuration object
-     */
-    validateConfig(config: any): ValidationResult;
-    /**
-     * Create a configuration for a specific environment
-     */
-    createEnvironmentConfig(environment: 'development' | 'testing' | 'production'): TestConfig;
-    /**
-     * Export configuration to file
-     */
-    exportToFile(filePath: string, format?: 'json' | 'yaml'): Promise<void>;
-    /**
-     * Deep merge two configuration objects
-     */
-    private mergeConfigs;
-    /**
-     * Get nested value from object using dot notation
-     */
-    private getNestedValue;
-    /**
-     * Set nested value in object using dot notation
-     */
-    private setNestedValue;
-    /**
-     * Parse environment variable value to appropriate type
-     */
-    private parseEnvValue;
-    /**
-     * Notify configuration watchers
-     */
-    private notifyWatchers;
-}
-/**
- * Global configuration manager instance
+ * Global configuration manager instance (backward-compatible proxy).
+ * Delegates all property access to the lazily-created ConfigManager so that
+ * no ConfigManager is instantiated at module-import time.
  */
 export declare const globalConfigManager: ConfigManager;
 /**
@@ -129,7 +40,7 @@ export declare function getConfig(): TestConfig;
  */
 export declare function updateConfig(updates: Partial<TestConfig>): void;
 /**
- * Load configuration from a YAML file
+ * Load configuration from a YAML or JSON file
  */
 export declare function loadConfigFromYaml(filePath: string): Promise<TestConfig>;
 /**
