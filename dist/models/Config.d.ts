@@ -178,6 +178,8 @@ export interface TestConfig {
     tui: import('./TUIModels').TUIConfig;
     /** GitHub integration settings */
     github?: GitHubConfig;
+    /** API testing configuration (optional — APIAgent uses sensible defaults) */
+    api?: import('../agents/api/types').APIAgentConfig;
     /** Priority-based execution settings */
     priority: PriorityConfig;
     /** Logging configuration */

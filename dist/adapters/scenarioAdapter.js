@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Adapter to convert between scenarios/TestScenario and models/OrchestratorScenario formats
+ * Adapter to convert between scenarios/ScenarioDefinition and models/OrchestratorScenario formats
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adaptScenarioToComplex = adaptScenarioToComplex;
@@ -17,8 +17,8 @@ function adaptScenarioToComplex(simple) {
     const verifications = simple.assertions && Array.isArray(simple.assertions)
         ? simple.assertions.map(a => ({
             type: a.type,
-            target: a.params?.target || 'default',
-            expected: String(a.params?.expected || ''),
+            target: typeof a.params?.['target'] === 'string' ? a.params['target'] : 'default',
+            expected: String(a.params?.['expected'] ?? ''),
             operator: 'equals',
             description: a.name
         }))
@@ -26,8 +26,14 @@ function adaptScenarioToComplex(simple) {
     const cleanup = simple.cleanup && Array.isArray(simple.cleanup)
         ? simple.cleanup.map(adaptStepToOrchestrator)
         : undefined;
+    // Build a deterministic ID from the scenario name so that repeated calls
+    // with the same scenario produce the same ID (stable across test runs and
+    // diffing). Fall back to a random UUID only when no name is provided.
+    const id = simple.name
+        ? `scenario-${simple.name.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`
+        : (0, uuid_1.v4)();
     return {
-        id: (0, uuid_1.v4)(),
+        id,
         name: simple.name || 'Unnamed scenario',
         description: simple.description || `Test scenario: ${simple.name || 'unnamed'}`,
         priority: mapPriority(simple.metadata?.priority),
@@ -39,52 +45,42 @@ function adaptScenarioToComplex(simple) {
         estimatedDuration: simple.config?.timeout ? simple.config.timeout / 1000 : 60,
         tags: simple.metadata?.tags || [],
         enabled: true,
-        environment: undefined,
-        cleanup
+        ...(cleanup !== undefined ? { cleanup } : {}),
     };
 }
 /**
- * Session ID tracker for multi-step scenarios
- * The first spawn action creates a session, subsequent steps reference it
- */
-let lastSessionId = null;
-/**
  * Convert scenarios/TestStep to models/OrchestratorStep
  */
-function adaptStepToOrchestrator(simpleStep, stepIndex) {
+function adaptStepToOrchestrator(simpleStep, _stepIndex) {
     const params = simpleStep.params || {};
     // Build target string based on params and step type
     let target = '';
     let value = '';
-    if (params.command) {
+    if (params['command']) {
         // For spawn/spawn_tui actions: combine command and args into target
-        if (params.args && Array.isArray(params.args)) {
-            target = `${params.command} ${params.args.join(' ')}`;
+        if (Array.isArray(params['args'])) {
+            target = `${params['command']} ${params['args'].join(' ')}`;
         }
         else {
-            target = params.command;
-        }
-        // First spawn step establishes the session
-        if (stepIndex === 0) {
-            lastSessionId = null; // Reset for new scenario
+            target = String(params['command']);
         }
     }
-    else if (params.text !== undefined || params.duration !== undefined) {
+    else if (params['text'] !== undefined || params['duration'] !== undefined) {
         // For actions that operate on the spawned session
         // Use a special marker that TUIAgent can interpret as "use the active session"
-        value = params.text || String(params.duration || '');
+        value = params['text'] !== undefined ? String(params['text']) : String(params['duration'] ?? '');
         target = ''; // TUIAgent will use the active session
     }
     else {
         // Fallback: use first param value as target
         const firstValue = Object.values(params)[0];
-        target = String(firstValue || '');
+        target = String(firstValue ?? '');
     }
     return {
         action: simpleStep.action,
         target,
         value,
-        timeout: simpleStep.timeout
+        ...(simpleStep.timeout !== undefined ? { timeout: simpleStep.timeout } : {}),
     };
 }
 /**

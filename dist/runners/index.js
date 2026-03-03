@@ -10,12 +10,12 @@ exports.TestRunners = exports.runComprehensiveUITests = exports.createComprehens
 exports.createTestRunner = createTestRunner;
 exports.runTestRunner = runTestRunner;
 // Smart UI Test Runner - Uses Playwright's accessibility tree and element detection
-var SmartUITestRunner_1 = require("./SmartUITestRunner");
+const SmartUITestRunner_1 = require("./SmartUITestRunner");
 Object.defineProperty(exports, "SmartUITestRunner", { enumerable: true, get: function () { return SmartUITestRunner_1.SmartUITestRunner; } });
 Object.defineProperty(exports, "createSmartUITestRunner", { enumerable: true, get: function () { return SmartUITestRunner_1.createSmartUITestRunner; } });
 Object.defineProperty(exports, "runSmartUITests", { enumerable: true, get: function () { return SmartUITestRunner_1.runSmartUITests; } });
 // Comprehensive UI Test Runner - Systematically exercises all tabs and features
-var ComprehensiveUITestRunner_1 = require("./ComprehensiveUITestRunner");
+const ComprehensiveUITestRunner_1 = require("./ComprehensiveUITestRunner");
 Object.defineProperty(exports, "ComprehensiveUITestRunner", { enumerable: true, get: function () { return ComprehensiveUITestRunner_1.ComprehensiveUITestRunner; } });
 Object.defineProperty(exports, "createComprehensiveUITestRunner", { enumerable: true, get: function () { return ComprehensiveUITestRunner_1.createComprehensiveUITestRunner; } });
 Object.defineProperty(exports, "runComprehensiveUITests", { enumerable: true, get: function () { return ComprehensiveUITestRunner_1.runComprehensiveUITests; } });
@@ -30,16 +30,11 @@ exports.TestRunners = {
  * Factory function to create any test runner by type
  */
 function createTestRunner(type, config) {
-    // Dynamic imports to avoid circular dependencies
     switch (type) {
-        case exports.TestRunners.Smart: {
-            const { createSmartUITestRunner } = require('./SmartUITestRunner');
-            return createSmartUITestRunner(config?.screenshotsDir);
-        }
-        case exports.TestRunners.Comprehensive: {
-            const { createComprehensiveUITestRunner } = require('./ComprehensiveUITestRunner');
-            return createComprehensiveUITestRunner(config?.screenshotsDir);
-        }
+        case exports.TestRunners.Smart:
+            return (0, SmartUITestRunner_1.createSmartUITestRunner)(config?.screenshotsDir);
+        case exports.TestRunners.Comprehensive:
+            return (0, ComprehensiveUITestRunner_1.createComprehensiveUITestRunner)(config?.screenshotsDir);
         default:
             throw new Error(`Unknown test runner type: ${type}`);
     }
@@ -48,16 +43,11 @@ function createTestRunner(type, config) {
  * Run any test runner by type
  */
 async function runTestRunner(type, config) {
-    // Dynamic imports to avoid circular dependencies
     switch (type) {
-        case exports.TestRunners.Smart: {
-            const { runSmartUITests } = require('./SmartUITestRunner');
-            return await runSmartUITests(config?.screenshotsDir);
-        }
-        case exports.TestRunners.Comprehensive: {
-            const { runComprehensiveUITests } = require('./ComprehensiveUITestRunner');
-            return await runComprehensiveUITests(config?.screenshotsDir);
-        }
+        case exports.TestRunners.Smart:
+            return await (0, SmartUITestRunner_1.runSmartUITests)(config?.screenshotsDir);
+        case exports.TestRunners.Comprehensive:
+            return await (0, ComprehensiveUITestRunner_1.runComprehensiveUITests)(config?.screenshotsDir);
         default:
             throw new Error(`Unknown test runner type: ${type}`);
     }

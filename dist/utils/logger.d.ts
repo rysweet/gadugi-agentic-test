@@ -1,57 +1,13 @@
 /**
  * Winston-based logging system for the Agentic Testing System
  * Provides configurable logging with different levels, formats, and outputs
+ *
+ * This file re-exports types from logging/ sub-modules and provides the
+ * TestLogger class plus the singleton convenience object.
  */
-/**
- * Log levels enumeration
- */
-export declare enum LogLevel {
-    ERROR = "error",
-    WARN = "warn",
-    INFO = "info",
-    HTTP = "http",
-    DEBUG = "debug"
-}
-/**
- * Log context interface for structured logging
- */
-export interface LogContext {
-    /** Test scenario ID */
-    scenarioId?: string;
-    /** Test step index */
-    stepIndex?: number;
-    /** Component or module name */
-    component?: string;
-    /** Session or run ID */
-    sessionId?: string;
-    /** Additional metadata */
-    metadata?: Record<string, any>;
-}
-/**
- * Logger configuration options
- */
-export interface LoggerConfig {
-    /** Log level threshold */
-    level: LogLevel;
-    /** Output directory for log files */
-    logDir: string;
-    /** Whether to log to console */
-    enableConsole: boolean;
-    /** Whether to log to file */
-    enableFile: boolean;
-    /** Maximum size of each log file in bytes */
-    maxFileSize: number;
-    /** Maximum number of log files to keep */
-    maxFiles: number;
-    /** Whether to compress rotated log files */
-    compress: boolean;
-    /** Custom log format */
-    format?: string;
-    /** Whether to include timestamps */
-    includeTimestamp: boolean;
-    /** Whether to include stack traces for errors */
-    includeStackTrace: boolean;
-}
+import { LogLevel, LogContext, LoggerConfig } from './logging/LogTransport';
+export { LogLevel };
+export type { LogContext, LoggerConfig };
 /**
  * Enhanced Winston logger with testing-specific features
  */
@@ -60,118 +16,66 @@ export declare class TestLogger {
     private config;
     private context;
     constructor(config?: Partial<LoggerConfig>);
-    /**
-     * Create the Winston logger instance with configured transports
-     */
     private createLogger;
-    /**
-     * Set the logging context for structured logging
-     */
     setContext(context: LogContext): void;
-    /**
-     * Clear the current logging context
-     */
     clearContext(): void;
-    /**
-     * Get the current logging context
-     */
     getContext(): LogContext;
     /**
      * Log an error message
      */
-    error(message: string, meta?: any): void;
+    error(message: string, meta?: unknown): void;
     /**
      * Log a warning message
      */
-    warn(message: string, meta?: any): void;
+    warn(message: string, meta?: unknown): void;
     /**
      * Log an info message
      */
-    info(message: string, meta?: any): void;
+    info(message: string, meta?: unknown): void;
     /**
      * Log an HTTP message
      */
-    http(message: string, meta?: any): void;
+    http(message: string, meta?: unknown): void;
     /**
      * Log a debug message
      */
-    debug(message: string, meta?: any): void;
-    /**
-     * Log test scenario start
-     */
+    debug(message: string, meta?: unknown): void;
     scenarioStart(scenarioId: string, scenarioName: string): void;
-    /**
-     * Log test scenario completion
-     */
     scenarioEnd(scenarioId: string, status: string, duration: number): void;
-    /**
-     * Log test step execution
-     */
     stepExecution(stepIndex: number, action: string, target: string): void;
-    /**
-     * Log test step completion
-     */
     stepComplete(stepIndex: number, status: string, duration: number): void;
     /**
      * Log performance metrics
      */
-    performance(operation: string, duration: number, metadata?: Record<string, any>): void;
-    /**
-     * Log screenshot capture
-     */
+    performance(operation: string, duration: number, metadata?: Record<string, unknown>): void;
     screenshot(filename: string, stepIndex?: number): void;
-    /**
-     * Log command execution
-     */
     commandExecution(command: string, workingDir?: string): void;
-    /**
-     * Log command completion
-     */
     commandComplete(command: string, exitCode: number, duration: number): void;
-    /**
-     * Create a child logger with additional context
-     */
     child(context: LogContext): TestLogger;
-    /**
-     * Change the log level at runtime
-     */
     setLevel(level: LogLevel): void;
-    /**
-     * Get current log level
-     */
     getLevel(): LogLevel;
-    /**
-     * Flush all log transports
-     */
     flush(): Promise<void>;
-    /**
-     * Close the logger and clean up resources
-     */
     close(): Promise<void>;
 }
 /**
  * Create a logger instance with the specified configuration
  */
 export declare function createLogger(config?: Partial<LoggerConfig>): TestLogger;
-/** @deprecated Use the `logger` convenience object instead */
-export declare const defaultLogger: TestLogger;
 /**
  * Convenience methods that always delegate to the current active logger.
- * Safe to use before or after setupLogger() is called.
  */
 export declare const logger: {
-    error: (message: string, meta?: any) => void;
-    warn: (message: string, meta?: any) => void;
-    info: (message: string, meta?: any) => void;
-    debug: (message: string, meta?: any) => void;
+    error: (message: string, meta?: unknown) => void;
+    warn: (message: string, meta?: unknown) => void;
+    info: (message: string, meta?: unknown) => void;
+    debug: (message: string, meta?: unknown) => void;
     setContext: (context: LogContext) => void;
     clearContext: () => void;
     setLevel: (level: LogLevel) => void;
     child: (context: LogContext) => TestLogger;
 };
 /**
- * Reconfigure the active logger. Replaces the logger instance rather than
- * mutating it, so all subsequent calls through `logger` use the new config.
+ * Reconfigure the active logger. Replaces the logger instance rather than mutating it.
  */
 export declare function setupLogger(config?: Partial<LoggerConfig>): TestLogger;
 //# sourceMappingURL=logger.d.ts.map

@@ -28,9 +28,9 @@ function logWarning(message) {
 function logInfo(message) {
     console.log(chalk_1.default.blue('ℹ'), message);
 }
-function createProgressBar(total, description) {
+function createProgressBar(_total, description) {
     return new cli_progress_1.SingleBar({
-        format: chalk_1.default.blue(description) + ' |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s',
+        format: `${chalk_1.default.blue(description)} |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s`,
         barCompleteChar: '\u2588',
         barIncompleteChar: '\u2591',
         hideCursor: true

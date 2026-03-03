@@ -59,7 +59,7 @@ function registerValidateCommand(program) {
             const parser = (0, utils_1.createYamlParser)({
                 strictValidation: options.strict || false,
             });
-            let validationResults = [];
+            const validationResults = [];
             if (options.file) {
                 try {
                     await fs.access(options.file);
@@ -78,7 +78,7 @@ function registerValidateCommand(program) {
                     validationResults.push({
                         file: options.file,
                         valid: false,
-                        errors: [error.message],
+                        errors: [error instanceof Error ? error.message : String(error)],
                     });
                 }
             }
@@ -116,7 +116,7 @@ function registerValidateCommand(program) {
                         validationResults.push({
                             file: filePath,
                             valid: false,
-                            errors: [error.message],
+                            errors: [error instanceof Error ? error.message : String(error)],
                         });
                     }
                     progressBar.update(index + 1);
@@ -126,11 +126,11 @@ function registerValidateCommand(program) {
             // Report validation results
             const validFiles = validationResults.filter((r) => r.valid);
             const invalidFiles = validationResults.filter((r) => !r.valid);
-            console.log('\n' + chalk_1.default.bold('Validation Results:'));
+            console.log(`\n${chalk_1.default.bold('Validation Results:')}`);
             console.log(chalk_1.default.green(`✓ Valid files: ${validFiles.length}`));
             console.log(chalk_1.default.red(`✗ Invalid files: ${invalidFiles.length}`));
             if (invalidFiles.length > 0) {
-                console.log('\n' + chalk_1.default.red('Validation Errors:'));
+                console.log(`\n${chalk_1.default.red('Validation Errors:')}`);
                 invalidFiles.forEach((result) => {
                     console.log(chalk_1.default.red(`\n✗ ${result.file}:`));
                     result.errors.forEach((error) => {

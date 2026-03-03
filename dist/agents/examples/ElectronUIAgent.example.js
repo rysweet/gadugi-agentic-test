@@ -56,13 +56,13 @@ async function basicSpaTest() {
         // Wait for build to complete (or progress to show)
         await agent.waitForElement('[data-testid="build-progress"]', { timeout: 30000 });
         // Capture final state
-        const finalState = await agent.captureState();
+        await agent.captureState();
         console.log('Build completed, final state captured');
         // Take a success screenshot
         await agent.screenshot('build-completed-successfully');
     }
     catch (error) {
-        console.error('Test failed:', error?.message);
+        console.error('Test failed:', error instanceof Error ? error.message : String(error));
         await agent.screenshot('test-failure');
         throw error;
     }
@@ -139,10 +139,9 @@ async function fullScenarioTest() {
         console.log('- Duration:', result.duration, 'ms');
         console.log('- Screenshots:', result.screenshots?.length || 0);
         console.log('- Performance samples:', result.performanceSamples?.length || 0);
-        return result;
     }
     catch (error) {
-        console.error('Scenario execution failed:', error?.message);
+        console.error('Scenario execution failed:', error instanceof Error ? error.message : String(error));
         throw error;
     }
 }
@@ -242,7 +241,7 @@ async function errorHandlingTest() {
             await agent.clickButton('[data-testid="non-existent-button"]');
         }
         catch (error) {
-            console.log('Expected error caught:', error?.message);
+            console.log('Expected error caught:', error instanceof Error ? error.message : String(error));
             await agent.screenshot('after-expected-error');
         }
         // Try to fill a non-existent input
@@ -250,7 +249,7 @@ async function errorHandlingTest() {
             await agent.fillInput('[data-testid="non-existent-input"]', 'test value');
         }
         catch (error) {
-            console.log('Expected error caught:', error?.message);
+            console.log('Expected error caught:', error instanceof Error ? error.message : String(error));
             await agent.screenshot('after-second-expected-error');
         }
         // Recover by performing valid actions

@@ -7,7 +7,7 @@ export declare function logSuccess(message: string): void;
 export declare function logError(message: string): void;
 export declare function logWarning(message: string): void;
 export declare function logInfo(message: string): void;
-export declare function createProgressBar(total: number, description: string): SingleBar;
+export declare function createProgressBar(_total: number, description: string): SingleBar;
 /**
  * Enhanced error class for CLI-specific errors with optional error codes.
  */

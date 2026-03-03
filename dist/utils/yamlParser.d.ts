@@ -1,120 +1,55 @@
 /**
  * YAML parsing utilities for test scenarios
  * Handles loading, parsing, validation, and variable substitution
+ *
+ * This file re-exports types from yaml/ sub-modules and provides the main
+ * YamlParser class that orchestrates loading, includes, substitution, and validation.
  */
-import { TestScenario } from '../models/TestModels';
+import { OrchestratorScenario } from '../models/TestModels';
+import { YamlParseError, ValidationError, VariableContext, YamlParserConfig, RawScenario } from './yaml/types';
+export { YamlParseError, ValidationError };
+export type { VariableContext, YamlParserConfig, RawScenario };
 /**
- * YAML parsing error class
- */
-export declare class YamlParseError extends Error {
-    fileName?: string | undefined;
-    lineNumber?: number | undefined;
-    constructor(message: string, fileName?: string | undefined, lineNumber?: number | undefined);
-}
-/**
- * Validation error class
- */
-export declare class ValidationError extends Error {
-    field?: string | undefined;
-    value?: any | undefined;
-    constructor(message: string, field?: string | undefined, value?: any | undefined);
-}
-/**
- * Variable substitution context
- */
-export interface VariableContext {
-    /** Environment variables */
-    env: Record<string, string>;
-    /** Global variables */
-    global: Record<string, any>;
-    /** Scenario-specific variables */
-    scenario: Record<string, any>;
-}
-/**
- * YAML parser configuration
- */
-export interface YamlParserConfig {
-    /** Base directory for resolving includes */
-    baseDir: string;
-    /** Maximum recursion depth for includes */
-    maxIncludeDepth: number;
-    /** Whether to validate schemas strictly */
-    strictValidation: boolean;
-    /** Custom variable resolvers */
-    variableResolvers: Record<string, (value: any) => any>;
-    /** Default environment variables */
-    defaultEnvironment: Record<string, string>;
-}
-/**
- * YAML parser for test scenarios
+ * YAML parser for test scenarios. Orchestrates file loading, include processing,
+ * variable substitution, and schema validation.
  */
 export declare class YamlParser {
     private config;
-    private processedFiles;
+    private loader;
+    private substitution;
+    private validator;
     constructor(config?: Partial<YamlParserConfig>);
     /**
-     * Load and parse a YAML file containing test scenarios
+     * Load and parse a YAML file containing test scenarios.
      */
-    loadScenarios(filePath: string, variables?: VariableContext): Promise<TestScenario[]>;
+    loadScenarios(filePath: string, variables?: VariableContext): Promise<OrchestratorScenario[]>;
     /**
-     * Load a single scenario from YAML string
+     * Parse a single scenario from a YAML string.
      */
-    parseScenario(yamlContent: string, variables?: VariableContext): TestScenario;
+    parseScenario(yamlContent: string, variables?: VariableContext): OrchestratorScenario;
     /**
-     * Process include directives in YAML content
+     * Parse multiple scenarios from a YAML string (content, not file path).
+     *
+     * This is the correct function to use when you already have YAML content
+     * in memory (e.g. after calling fs.readFile). Use loadScenarios() when
+     * you want to load directly from a file path.
      */
-    private processIncludes;
+    parseScenariosFromString(yamlContent: string, variables?: VariableContext): Promise<OrchestratorScenario[]>;
     /**
-     * Substitute variables in content
-     */
-    private substituteVariables;
-    /**
-     * Substitute variables in a string
-     */
-    private substituteStringVariables;
-    /**
-     * Merge variables into content
-     */
-    private mergeVariables;
-    /**
-     * Validate and convert raw scenario to TestScenario
-     */
-    private validateAndConvertScenario;
-    /**
-     * Validate priority string
-     */
-    private validatePriority;
-    /**
-     * Validate interface string
-     */
-    private validateInterface;
-    /**
-     * Validate test steps
-     */
-    private validateSteps;
-    /**
-     * Validate verification steps
-     */
-    private validateVerifications;
-    /**
-     * Create default variable context
-     */
-    private createDefaultVariableContext;
-    /**
-     * Validate YAML file structure without full parsing
+     * Validate YAML file structure without full parsing.
      */
     validateYamlFile(filePath: string): Promise<{
         valid: boolean;
         errors: string[];
     }>;
     /**
-     * Extract variables from YAML content
+     * Extract variables from YAML content.
      */
-    extractVariables(content: any): Record<string, any>;
+    extractVariables(content: unknown): Record<string, unknown>;
     /**
-     * Convert TestScenario back to YAML string
+     * Convert OrchestratorScenario back to YAML string.
      */
-    scenarioToYaml(scenario: TestScenario): string;
+    scenarioToYaml(scenario: OrchestratorScenario): string;
 }
 /**
  * Create a YAML parser instance
@@ -123,11 +58,18 @@ export declare function createYamlParser(config?: Partial<YamlParserConfig>): Ya
 /**
  * Convenience function to load scenarios from a file
  */
-export declare function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<TestScenario[]>;
+export declare function loadScenariosFromFile(filePath: string, variables?: VariableContext): Promise<OrchestratorScenario[]>;
 /**
  * Convenience function to parse a scenario from YAML string
  */
-export declare function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): TestScenario;
+export declare function parseScenarioFromYaml(yamlContent: string, variables?: VariableContext): OrchestratorScenario;
+/**
+ * Convenience function to parse multiple scenarios from a YAML string.
+ *
+ * Unlike parseYamlScenarios / loadScenariosFromFile which expect a file path,
+ * this function accepts YAML content that is already in memory.
+ */
+export declare function parseScenariosFromString(yamlContent: string, variables?: VariableContext): Promise<OrchestratorScenario[]>;
 /**
  * Alias for loadScenariosFromFile for backward compatibility
  */

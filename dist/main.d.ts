@@ -1,103 +1,28 @@
 /**
- * Main entry point for the Agentic Testing System
+ * Legacy entry point for the Agentic Testing System
  *
- * This module provides the core functionality for initializing and running
- * the testing system, including configuration management, agent initialization,
- * and orchestrator setup. It supports both CLI and programmatic usage.
+ * This module exists for backwards compatibility. All library
+ * functionality has moved to ./lib.ts, and the CLI lives in
+ * ./cli.ts. This file is a thin wrapper that delegates to the
+ * CLI when executed directly.
+ *
+ * IMPORTANT: Importing this module no longer triggers argv
+ * parsing or installs signal handlers.
  */
-import { TestOrchestrator, createTestOrchestrator } from './orchestrator';
-import { TestConfig } from './models/Config';
-import { TestSession, TestResult, TestScenario } from './models/TestModels';
+export { TEST_SUITES, createDefaultConfig, loadConfiguration, loadTestScenarios, filterScenariosForSuite, saveResults, displayResults, performDryRun, runTests, TestOrchestrator, createTestOrchestrator } from './lib';
+export type { CliArguments, ProgrammaticTestOptions, TestConfig, TestSession, TestResult, OrchestratorScenario } from './lib';
 /**
- * Command line arguments interface
+ * @deprecated setupGracefulShutdown has moved to src/cli/setup.ts.
+ * Import from './cli/setup' in CLI entry points only.
+ * This re-export will be removed in the next major release.
  */
-export interface CliArguments {
-    config: string;
-    suite: 'smoke' | 'full' | 'regression';
-    dryRun: boolean;
-    noIssues: boolean;
-    logLevel: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
-    output?: string;
-    parallel?: number;
-    timeout?: number;
-    scenarioFiles?: string[];
-    verbose: boolean;
-    debug: boolean;
-}
+export { setupGracefulShutdown } from './cli/setup';
+export { TestStatus } from './models/TestModels';
 /**
- * Suite configuration for selecting test scenarios
- */
-interface SuiteConfig {
-    name: string;
-    description: string;
-    patterns: string[];
-    tags: string[];
-}
-/**
- * Test suite configuration mapping
- */
-export declare const TEST_SUITES: Record<string, SuiteConfig>;
-/**
- * Default configuration factory
- */
-export declare function createDefaultConfig(): TestConfig;
-/**
- * Parse command line arguments
- */
-export declare function parseArguments(): CliArguments;
-/**
- * Load and merge configuration from file and environment
- */
-export declare function loadConfiguration(configPath: string, cliArgs: CliArguments): Promise<TestConfig>;
-/**
- * Discover and load test scenarios
- */
-export declare function loadTestScenarios(scenarioFiles?: string[]): Promise<TestScenario[]>;
-/**
- * Filter scenarios based on test suite configuration
- */
-export declare function filterScenariosForSuite(scenarios: TestScenario[], suite: string): TestScenario[];
-/**
- * Save test results to output file
- */
-export declare function saveResults(session: TestSession, outputPath: string): Promise<void>;
-/**
- * Display test session summary
- */
-export declare function displayResults(session: TestSession): void;
-/**
- * Perform dry run - discover and display scenarios without execution
- */
-export declare function performDryRun(scenarios: TestScenario[], suite: string): Promise<void>;
-/**
- * Setup graceful shutdown handlers
- */
-export declare function setupGracefulShutdown(orchestrator: TestOrchestrator): void;
-/**
- * Main entry point for the testing system
- */
-export declare function main(): Promise<number>;
-/**
- * Run the main async function with proper error handling
+ * Run the CLI when this module is executed directly.
+ *
+ * Dynamically imports cli.ts to avoid pulling in Commander
+ * and its dependencies at library-import time.
  */
 export declare function run(): void;
-/**
- * Programmatic API for running tests
- */
-export interface ProgrammaticTestOptions {
-    configPath?: string;
-    suite?: 'smoke' | 'full' | 'regression';
-    scenarioFiles?: string[];
-    config?: Partial<TestConfig>;
-    dryRun?: boolean;
-    outputFile?: string;
-}
-/**
- * Run tests programmatically
- */
-export declare function runTests(options?: ProgrammaticTestOptions): Promise<TestSession>;
-/**
- * Export all public interfaces and functions
- */
-export { TestOrchestrator, TestConfig, TestSession, TestResult, TestScenario, createTestOrchestrator };
 //# sourceMappingURL=main.d.ts.map

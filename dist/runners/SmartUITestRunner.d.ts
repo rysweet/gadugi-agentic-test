@@ -1,66 +1,37 @@
 #!/usr/bin/env node
 /**
  * Smart UI Testing Runner
- * Uses Playwright's accessibility tree and element detection to test like a user
+ * Uses Playwright's accessibility tree and element detection to test like a user.
+ *
+ * Thin facade: delegates element discovery to SmartElementFinder and tab
+ * interaction to SmartInteractionExecutor.
  */
 import { TestResult } from '../models/TestModels';
 /**
- * Smart UI Test Runner class
+ * Smart UI Test Runner
+ *
+ * Launches an Electron app, discovers tabs via SmartElementFinder, and
+ * exercises each tab via SmartInteractionExecutor.
  */
 export declare class SmartUITestRunner {
     private electronApp;
     private page;
     private testContext;
     private screenshotsDir;
+    private finder;
+    private executor;
     constructor(screenshotsDir?: string);
     private log;
-    /**
-     * Initialize the test runner
-     */
+    /** Initialize the test runner: create screenshot dir and launch Electron. */
     initialize(): Promise<void>;
-    /**
-     * Discover all interactive elements on the page
-     */
-    private discoverElements;
-    /**
-     * Test Scan/Build functionality
-     */
-    private testScanTab;
-    /**
-     * Test Generate IaC functionality
-     */
-    private testGenerateIaCTab;
-    /**
-     * Test Visualize functionality
-     */
-    private testVisualizeTab;
-    /**
-     * Test Status indicators
-     */
-    private testStatusTab;
-    /**
-     * Test Configuration
-     */
-    private testConfigTab;
-    /**
-     * Run smart UI tests
-     */
+    /** Run all discovered tab tests and keyboard-navigation checks. */
     runTests(): Promise<TestResult>;
-    /**
-     * Generate and display test report
-     */
     private generateReport;
-    /**
-     * Cleanup resources
-     */
+    /** Close the Electron application and release resources. */
     cleanup(): Promise<void>;
 }
-/**
- * Create and configure Smart UI Test Runner
- */
+/** Create and configure a Smart UI Test Runner. */
 export declare function createSmartUITestRunner(screenshotsDir?: string): SmartUITestRunner;
-/**
- * Run Smart UI Tests standalone
- */
+/** Run Smart UI Tests as a standalone invocation. */
 export declare function runSmartUITests(screenshotsDir?: string): Promise<TestResult>;
 //# sourceMappingURL=SmartUITestRunner.d.ts.map
