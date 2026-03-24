@@ -24,10 +24,9 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "start": "node dist/cli.js",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build",
     "docs": "typedoc && mkdocs serve",
-    "docs:build": "typedoc && mkdocs build --strict"
+    "docs:build": "typedoc && mkdocs build --strict",
+    "prepare": "npm run build"
   },
   "keywords": [
     "testing",
