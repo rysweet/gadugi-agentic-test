@@ -121,13 +121,22 @@ describe('registerRunCommand', () => {
   });
 
   it('loads a specific scenario via --scenario option', async () => {
-    mockLoadFromFile.mockResolvedValue({ name: 'login', steps: [], assertions: [] });
+    // With the fix, --scenario now loads ALL from directory and filters by name
+    mockLoadFromDirectory.mockResolvedValue([
+      { name: 'login', steps: [], assertions: [] },
+      { name: 'logout', steps: [], assertions: [] },
+    ]);
     mockRunWithScenarios.mockResolvedValue({ summary: { passed: 1, failed: 0 } });
 
     await invokeRun(['--directory', './scenarios', '--scenario', 'login']);
 
-    // path.join('./scenarios', 'login.yaml') normalizes to 'scenarios/login.yaml'
-    expect(mockLoadFromFile).toHaveBeenCalledWith('scenarios/login.yaml');
+    // Should load from directory, not from a specific file
+    expect(mockLoadFromDirectory).toHaveBeenCalledWith('./scenarios');
+    // Should only run the matched scenario
+    expect(mockRunWithScenarios).toHaveBeenCalledWith(
+      'test-suite',
+      [expect.objectContaining({ name: 'login' })]
+    );
   });
 
   it('applies --parallel flag without throwing', async () => {
@@ -137,6 +146,37 @@ describe('registerRunCommand', () => {
     await expect(
       invokeRun(['--directory', './scenarios', '--parallel'])
     ).resolves.not.toThrow();
+  });
+
+  it('throws CLIError when --scenario matches nothing', async () => {
+    mockLoadFromDirectory.mockResolvedValue([
+      { name: 'login', steps: [], assertions: [] },
+    ]);
+
+    await expect(
+      invokeRun(['--directory', './scenarios', '--scenario', 'nonexistent'])
+    ).rejects.toThrow('process.exit(1)');
+
+    const allCalls = consoleLogSpy.mock.calls.map((c) => c.join(' '));
+    const hasNotFound = allCalls.some(
+      (c) => c.includes('No scenario matching') || c.includes('SCENARIO_NOT_FOUND')
+    );
+    expect(hasNotFound).toBe(true);
+  });
+
+  it('--scenario filter is case-insensitive', async () => {
+    mockLoadFromDirectory.mockResolvedValue([
+      { name: 'Login Flow', steps: [], assertions: [] },
+      { name: 'Logout', steps: [], assertions: [] },
+    ]);
+    mockRunWithScenarios.mockResolvedValue({ summary: { passed: 1, failed: 0 } });
+
+    await invokeRun(['--directory', './scenarios', '--scenario', 'login']);
+
+    expect(mockRunWithScenarios).toHaveBeenCalledWith(
+      'test-suite',
+      [expect.objectContaining({ name: 'Login Flow' })]
+    );
   });
 
   it('throws CLIError (process.exit 1) when directory is missing', async () => {

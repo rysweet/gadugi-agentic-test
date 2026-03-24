@@ -223,13 +223,19 @@ steps:
       await expect(ScenarioLoader.loadFromDirectory('/nonexistent')).rejects.toThrow();
     });
 
-    it('should propagate errors from individual file loads', async () => {
+    it('should warn and skip individual files that fail to load', async () => {
       mockFs.readdir.mockResolvedValue([
         'bad.yaml'
       ] as unknown as Awaited<ReturnType<typeof fs.readdir>>);
       mockFs.readFile.mockResolvedValue('name: Bad\n# no steps');
 
-      await expect(ScenarioLoader.loadFromDirectory('/scenarios')).rejects.toThrow('Scenario must have steps array');
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const result = await ScenarioLoader.loadFromDirectory('/scenarios');
+      expect(result).toEqual([]);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to load scenario from')
+      );
+      consoleSpy.mockRestore();
     });
   });
 
