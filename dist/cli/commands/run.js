@@ -42,7 +42,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerRunCommand = registerRunCommand;
 const scenarios_1 = require("../../scenarios");
 const utils_1 = require("../../utils");
-const path = __importStar(require("path"));
 const fs = __importStar(require("fs/promises"));
 const chalk_1 = __importDefault(require("chalk"));
 const lib_1 = require("../../lib");
@@ -107,16 +106,19 @@ function registerRunCommand(program) {
             const progressBar = (0, output_1.createProgressBar)(1, 'Loading scenarios');
             progressBar.start(1, 0);
             try {
+                // Always load all scenarios from directory first
+                (0, output_1.logInfo)(`Loading scenarios from directory: ${options.directory}`);
+                scenarios = await scenarios_1.ScenarioLoader.loadFromDirectory(options.directory);
                 if (options.scenario) {
-                    // Load specific scenario
-                    const scenarioPath = path.join(options.directory, `${options.scenario}.yaml`);
-                    (0, output_1.logInfo)(`Loading scenario: ${scenarioPath}`);
-                    scenarios = [await scenarios_1.ScenarioLoader.loadFromFile(scenarioPath)];
-                }
-                else {
-                    // Load all scenarios from directory
-                    (0, output_1.logInfo)(`Loading scenarios from directory: ${options.directory}`);
-                    scenarios = await scenarios_1.ScenarioLoader.loadFromDirectory(options.directory);
+                    // Filter by scenario name (case-insensitive substring match)
+                    const filter = options.scenario.toLowerCase();
+                    const matched = scenarios.filter((s) => s.name.toLowerCase().includes(filter));
+                    if (matched.length === 0) {
+                        const available = scenarios.map((s) => s.name).join('\n  - ');
+                        throw new output_1.CLIError(`No scenario matching "${options.scenario}" found.\nAvailable scenarios:\n  - ${available}`, 'SCENARIO_NOT_FOUND');
+                    }
+                    scenarios = matched;
+                    (0, output_1.logInfo)(`Matched ${scenarios.length} scenario(s) for filter "${options.scenario}"`);
                 }
                 progressBar.update(1);
                 progressBar.stop();

@@ -5,7 +5,6 @@
 import { Command } from 'commander';
 import { ScenarioLoader } from '../../scenarios';
 import { logger, ConfigManager } from '../../utils';
-import * as path from 'path';
 import * as fs from 'fs/promises';
 import chalk from 'chalk';
 import { createDefaultConfig } from '../../lib';
@@ -84,15 +83,25 @@ export function registerRunCommand(program: Command): void {
         progressBar.start(1, 0);
 
         try {
+          // Always load all scenarios from directory first
+          logInfo(`Loading scenarios from directory: ${options.directory}`);
+          scenarios = await ScenarioLoader.loadFromDirectory(options.directory);
+
           if (options.scenario) {
-            // Load specific scenario
-            const scenarioPath = path.join(options.directory, `${options.scenario}.yaml`);
-            logInfo(`Loading scenario: ${scenarioPath}`);
-            scenarios = [await ScenarioLoader.loadFromFile(scenarioPath)];
-          } else {
-            // Load all scenarios from directory
-            logInfo(`Loading scenarios from directory: ${options.directory}`);
-            scenarios = await ScenarioLoader.loadFromDirectory(options.directory);
+            // Filter by scenario name (case-insensitive substring match)
+            const filter = options.scenario.toLowerCase();
+            const matched = scenarios.filter(
+              (s) => s.name.toLowerCase().includes(filter)
+            );
+            if (matched.length === 0) {
+              const available = scenarios.map((s) => s.name).join('\n  - ');
+              throw new CLIError(
+                `No scenario matching "${options.scenario}" found.\nAvailable scenarios:\n  - ${available}`,
+                'SCENARIO_NOT_FOUND'
+              );
+            }
+            scenarios = matched;
+            logInfo(`Matched ${scenarios.length} scenario(s) for filter "${options.scenario}"`);
           }
           progressBar.update(1);
           progressBar.stop();
