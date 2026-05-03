@@ -124,18 +124,27 @@ Tests command-line interfaces by running commands and parsing their output.
 ```typescript
 import { CLIAgent } from '@gadugi/agentic-test';
 
-const agent = new CLIAgent({ cwd: '/path/to/project', shell: '/bin/bash' });
+const agent = new CLIAgent({ workingDirectory: '/path/to/project', shell: '/bin/bash' });
 
 await agent.initialize();
 const result = await agent.execute({
   id: 'cli-smoke',
   name: 'CLI smoke test',
+  agents: [
+    {
+      name: 'repo-cli',
+      type: 'cli',
+      config: { workingDirectory: '/path/to/project' }
+    }
+  ],
   steps: [
-    { action: 'run', target: 'npm --version', expectedOutput: /\d+\.\d+\.\d+/ }
+    { agent: 'repo-cli', action: 'run', target: 'npm --version', expectedOutput: /\d+\.\d+\.\d+/ }
   ]
 });
 await agent.cleanup();
 ```
+
+When a scenario defines cwd configuration, command steps use one deterministic scenario-level working directory. The CLI agent selects the first command-capable `cli` or `system` agent with `config.workingDirectory` or `config.cwd`; if none exists, it falls back to the first scenario agent of any type with cwd configuration. `workingDirectory` wins when both fields are present, and scenarios without either field keep the CLIAgent's existing default cwd behavior.
 
 ---
 

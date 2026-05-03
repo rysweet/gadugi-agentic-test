@@ -83,6 +83,10 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
             this.runner.setEnvironmentVariables(scenario.environment);
         }
     }
+    onBeforeExecute(scenario) {
+        this.scenarioWorkingDirectory = undefined;
+        this.scenarioWorkingDirectory = this.resolveScenarioWorkingDirectory(scenario);
+    }
     buildResult(ctx) {
         return {
             ...ctx,
@@ -92,6 +96,7 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
         };
     }
     async onAfterExecute() {
+        this.scenarioWorkingDirectory = undefined;
         await this.runner.killAllProcesses();
     }
     // -- Public CLI-specific API --
@@ -108,7 +113,7 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
             }
             else if (action === 'execute_with_input') {
                 const parts = step.target.split(' ');
-                result = await this.runner.executeCommand(parts[0], parts.slice(1), { input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) });
+                result = await this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory({ input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) }));
             }
             else if (action === 'wait_for_output') {
                 result = await this.parser.waitForOutput(step.target, () => this.getAllOutput(), step.timeout || this.config.defaultTimeout);
@@ -191,7 +196,52 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
                 options.input = step.value;
             }
         }
-        return this.runner.executeCommand(parts[0], parts.slice(1), options);
+        return this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory(options));
+    }
+    withScenarioWorkingDirectory(options) {
+        if (options.cwd !== undefined || this.scenarioWorkingDirectory === undefined) {
+            return options;
+        }
+        return { ...options, cwd: this.scenarioWorkingDirectory };
+    }
+    resolveScenarioWorkingDirectory(scenario) {
+        if (!scenario.agents || scenario.agents.length === 0) {
+            return undefined;
+        }
+        const commandAgent = scenario.agents.find(agent => this.isCommandCapableScenarioAgent(agent) && this.hasWorkingDirectoryConfig(agent.config));
+        if (commandAgent) {
+            return this.resolveWorkingDirectoryFromConfig(commandAgent.config, commandAgent);
+        }
+        const fallbackAgent = scenario.agents.find(agent => this.hasWorkingDirectoryConfig(agent.config));
+        if (fallbackAgent) {
+            return this.resolveWorkingDirectoryFromConfig(fallbackAgent.config, fallbackAgent);
+        }
+        return undefined;
+    }
+    isCommandCapableScenarioAgent(agent) {
+        return ['cli', 'system'].includes(agent.type.toLowerCase());
+    }
+    hasWorkingDirectoryConfig(config) {
+        return config !== undefined && ('workingDirectory' in config || 'cwd' in config);
+    }
+    resolveWorkingDirectoryFromConfig(config, agent) {
+        if (!config) {
+            return undefined;
+        }
+        if ('workingDirectory' in config) {
+            return this.requireNonEmptyWorkingDirectory(config.workingDirectory, 'workingDirectory', agent);
+        }
+        if ('cwd' in config) {
+            return this.requireNonEmptyWorkingDirectory(config.cwd, 'cwd', agent);
+        }
+        return undefined;
+    }
+    requireNonEmptyWorkingDirectory(value, fieldName, agent) {
+        if (typeof value === 'string' && value.trim().length > 0) {
+            return value;
+        }
+        const agentLabel = agent.id || agent.name || agent.type;
+        throw new Error(`Invalid scenario agent ${fieldName} for "${agentLabel}": expected a non-empty string`);
     }
     async fileExists(filePath) {
         try {

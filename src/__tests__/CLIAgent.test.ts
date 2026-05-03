@@ -70,12 +70,41 @@ jest.mock('fs/promises', () => ({
 import { CLIAgent, createCLIAgent } from '../agents/CLIAgent';
 import { validateDirectory } from '../utils/fileUtils';
 import * as fs from 'fs/promises';
-import { TestStatus } from '../models/TestModels';
+import { OrchestratorScenario, Priority, TestInterface, TestStatus } from '../models/TestModels';
 
 // ---------------------------------------------------------------------------
 
 function makeStep(action: string, target = 'cmd', value?: string, timeout?: number) {
   return { action, target, value, timeout, description: '' };
+}
+
+type ScenarioAgentConfig = {
+  id?: string;
+  name?: string;
+  type: string;
+  config?: Record<string, unknown>;
+};
+
+type ScenarioWithAgents = OrchestratorScenario & {
+  agents?: ScenarioAgentConfig[];
+};
+
+function makeScenarioWithAgents(agents?: ScenarioAgentConfig[]): ScenarioWithAgents {
+  return {
+    id: 'scenario-cli-working-directory',
+    name: 'CLI working directory scenario',
+    description: 'Verifies scenario agent working directory propagation',
+    priority: Priority.MEDIUM,
+    interface: TestInterface.CLI,
+    prerequisites: [],
+    steps: [makeStep('execute', 'pwd')],
+    verifications: [],
+    expectedOutcome: 'Command executes',
+    estimatedDuration: 1,
+    tags: ['cli'],
+    enabled: true,
+    ...(agents !== undefined ? { agents } : {}),
+  };
 }
 
 beforeEach(() => {
@@ -255,6 +284,82 @@ describe('CLIAgent.executeStep()', () => {
       0
     );
     expect(result.status).toBe(TestStatus.PASSED);
+  });
+});
+
+// ===========================================================================
+// execute() — scenario agent working directory
+// ===========================================================================
+describe('CLIAgent.execute() scenario working directory resolution', () => {
+  let agent: CLIAgent;
+
+  beforeEach(async () => {
+    agent = new CLIAgent();
+    await agent.initialize();
+  });
+
+  it('honors agents[].config.cwd for CLI scenario commands', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'cli-agent', type: 'cli', config: { cwd: '/workspace/from-cwd' } }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-cwd' })
+    );
+  });
+
+  it('honors agents[].config.workingDirectory for CLI scenario commands', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'cli-agent', type: 'cli', config: { workingDirectory: '/workspace/from-working-directory' } }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-working-directory' })
+    );
+  });
+
+  it('uses workingDirectory over cwd when both are configured', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      {
+        id: 'cli-agent',
+        type: 'cli',
+        config: {
+          cwd: '/workspace/from-cwd',
+          workingDirectory: '/workspace/from-working-directory'
+        }
+      }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-working-directory' })
+    );
+  });
+
+  it('considers system scenario agents command-capable for cwd resolution', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'system-agent', type: 'system', config: { cwd: '/workspace/from-system' } }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-system' })
+    );
+  });
+
+  it('does not add a cwd override when no scenario working directory is configured', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'cli-agent', type: 'cli', config: { defaultTimeout: 1000 } }
+    ]));
+
+    const options = mockRunnerInstance.executeCommand.mock.calls[0][2] as Record<string, unknown>;
+    expect(options).not.toHaveProperty('cwd');
   });
 });
 

@@ -18,9 +18,11 @@ export declare class CLIAgent extends BaseAgent {
     private config;
     private runner;
     private parser;
+    private scenarioWorkingDirectory;
     constructor(config?: CLIAgentConfig);
     initialize(): Promise<void>;
     protected applyEnvironment(scenario: OrchestratorScenario): void;
+    protected onBeforeExecute(scenario: OrchestratorScenario): void;
     protected buildResult(ctx: AgentExecutionContext): unknown;
     protected onAfterExecute(): Promise<void>;
     executeCommand(command: string, args?: string[], options?: Partial<ExecutionContext>): Promise<CommandResult>;
@@ -36,6 +38,12 @@ export declare class CLIAgent extends BaseAgent {
     cleanup(): Promise<void>;
     private getAllOutput;
     private handleExecuteAction;
+    private withScenarioWorkingDirectory;
+    private resolveScenarioWorkingDirectory;
+    private isCommandCapableScenarioAgent;
+    private hasWorkingDirectoryConfig;
+    private resolveWorkingDirectoryFromConfig;
+    private requireNonEmptyWorkingDirectory;
     private fileExists;
     private directoryExists;
 }
