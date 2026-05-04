@@ -141,10 +141,10 @@ describe('createCLIAgent()', () => {
 // ===========================================================================
 describe('CLIAgent.initialize()', () => {
   it('validates the working directory and sets isInitialized', async () => {
-    const agent = new CLIAgent({ workingDirectory: '/tmp/workspace' });
+    const agent = new CLIAgent({ workingDirectory: '/workspace/project' });
     await agent.initialize();
 
-    expect(validateDirectory).toHaveBeenCalledWith('/tmp/workspace');
+    expect(validateDirectory).toHaveBeenCalledWith('/workspace/project');
     expect(mockRunnerInstance.setupInteractiveResponses).toHaveBeenCalled();
   });
 
@@ -240,7 +240,7 @@ describe('CLIAgent.executeStep()', () => {
   });
 
   it('change_directory updates working directory', async () => {
-    const result = await agent.executeStep(makeStep('change_directory', '/tmp'), 0);
+    const result = await agent.executeStep(makeStep('change_directory', '/workspace/project'), 0);
     expect(result.status).toBe(TestStatus.PASSED);
   });
 
@@ -259,7 +259,7 @@ describe('CLIAgent.executeStep()', () => {
 
   it('directory_exists returns PASSED when dir stat succeeds', async () => {
     (fs.stat as jest.Mock).mockResolvedValueOnce({ isDirectory: () => true });
-    const result = await agent.executeStep(makeStep('directory_exists', '/tmp'), 0);
+    const result = await agent.executeStep(makeStep('directory_exists', '/workspace/project'), 0);
     expect(result.status).toBe(TestStatus.PASSED);
   });
 

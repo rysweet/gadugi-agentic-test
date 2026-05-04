@@ -1,11 +1,12 @@
 import { ProcessLifecycleManager } from '../core/ProcessLifecycleManager';
 import { ChildProcess, exec } from 'child_process';
-import { mkdtemp, rm } from 'fs/promises';
-import { tmpdir } from 'os';
+import { mkdir, rm } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+const testWorkspaceRoot = join(process.cwd(), 'tmp', 'process-lifecycle-manager', String(process.pid));
+let tempDirCounter = 0;
 
 function collectStdout(childProcess: ChildProcess): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -51,10 +52,12 @@ describe('ProcessLifecycleManager', () => {
     await manager.shutdown();
     manager.destroy(); // Clean up listeners
     await Promise.all(tempDirs.map(dir => rm(dir, { recursive: true, force: true })));
+    await rm(testWorkspaceRoot, { recursive: true, force: true });
   });
 
   async function createTempDir(): Promise<string> {
-    const tempDir = await mkdtemp(join(tmpdir(), 'process-lifecycle-manager-'));
+    const tempDir = join(testWorkspaceRoot, `${Date.now()}-${tempDirCounter++}`);
+    await mkdir(tempDir, { recursive: true });
     tempDirs.push(tempDir);
     return tempDir;
   }

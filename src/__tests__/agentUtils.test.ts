@@ -47,7 +47,7 @@ describe('sanitizeConfigWithEnv', () => {
   it('works with the "env" field name (ElectronUIAgent pattern)', () => {
     const config = {
       executablePath: '/usr/bin/app',
-      env: { NODE_ENV: 'test', HOME: '/tmp' },
+      env: { NODE_ENV: 'test', HOME: '/workspace/home' },
     };
     const result = sanitizeConfigWithEnv(config, 'env');
     expect(result.env).toEqual(expect.arrayContaining(['NODE_ENV', 'HOME']));

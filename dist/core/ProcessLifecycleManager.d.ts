@@ -22,6 +22,13 @@ export interface ProcessEvents {
     cleanupComplete: (processCount: number) => void;
     error: (error: Error, processInfo?: ProcessInfo) => void;
 }
+export interface ProcessStartOptions {
+    cwd?: string;
+    workingDirectory?: string;
+    env?: NodeJS.ProcessEnv;
+    shell?: boolean;
+    detached?: boolean;
+}
 /**
  * ProcessLifecycleManager
  *
@@ -48,12 +55,7 @@ export declare class ProcessLifecycleManager extends EventEmitter {
     /**
      * Start a new process with lifecycle management
      */
-    startProcess(command: string, args?: string[], options?: {
-        cwd?: string;
-        env?: NodeJS.ProcessEnv;
-        shell?: boolean;
-        detached?: boolean;
-    }): ChildProcess;
+    startProcess(command: string, args?: string[], options?: ProcessStartOptions): ChildProcess;
     /**
      * Set up event handlers for a child process
      */

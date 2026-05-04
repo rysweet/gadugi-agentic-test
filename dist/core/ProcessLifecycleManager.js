@@ -4,6 +4,35 @@ exports.processLifecycleManager = exports.ProcessLifecycleManager = void 0;
 exports.getProcessLifecycleManager = getProcessLifecycleManager;
 const child_process_1 = require("child_process");
 const events_1 = require("events");
+function validateDirectoryOption(name, value) {
+    if (value === undefined) {
+        return;
+    }
+    if (typeof value !== 'string' || value.trim().length === 0) {
+        throw new Error(`Invalid process ${name}: expected a non-empty string`);
+    }
+}
+function resolveProcessCwd(cwd, workingDirectory) {
+    validateDirectoryOption('cwd', cwd);
+    if (cwd !== undefined) {
+        return cwd;
+    }
+    validateDirectoryOption('workingDirectory', workingDirectory);
+    return workingDirectory;
+}
+function normalizeSpawnOptions(options) {
+    const { cwd, workingDirectory, ...spawnOptions } = options;
+    const resolvedCwd = resolveProcessCwd(cwd, workingDirectory);
+    const normalizedOptions = {
+        ...spawnOptions,
+        detached: true,
+        stdio: 'pipe',
+    };
+    if (resolvedCwd !== undefined) {
+        normalizedOptions.cwd = resolvedCwd;
+    }
+    return normalizedOptions;
+}
 /**
  * ProcessLifecycleManager
  *
@@ -36,13 +65,7 @@ class ProcessLifecycleManager extends events_1.EventEmitter {
         if (this.isShuttingDown) {
             throw new Error('Cannot start new processes during shutdown');
         }
-        // Force detached mode for proper process group management
-        const processOptions = {
-            ...options,
-            detached: true,
-            // Create new process group to prevent inheriting parent's signals
-            stdio: 'pipe',
-        };
+        const processOptions = normalizeSpawnOptions(options);
         let childProcess;
         try {
             childProcess = (0, child_process_1.spawn)(command, args, processOptions);
