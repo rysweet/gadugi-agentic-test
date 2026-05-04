@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2387,6 +2387,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenario-command-working-directory-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scenario command working-directory resolution
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Scenario command working-directory resolution">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#startinteractivesessioncommand-string-promiseinteractivesession" class="md-nav__link">
     <span class="md-ellipsis">
@@ -2575,6 +2592,17 @@
     <span class="md-ellipsis">
       
         CLIConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scenarioagentconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ScenarioAgentConfig
       
     </span>
   </a>
@@ -3336,7 +3364,7 @@
 </code></pre></div>
 <h4 id="methods_1">Methods<a class="headerlink" href="#methods_1" title="Permanent link">&para;</a></h4>
 <h5 id="executescenario-testscenario-promisetestresult_1"><code>execute(scenario: TestScenario): Promise&lt;TestResult&gt;</code><a class="headerlink" href="#executescenario-testscenario-promisetestresult_1" title="Permanent link">&para;</a></h5>
-<p>Execute CLI-based test scenarios.</p>
+<p>Execute CLI-based test scenarios. When the scenario includes agents with cwd configuration, command steps use the deterministic scenario-level working directory selected from the scenario's agent list.</p>
 <h5 id="runcommandcommand-string-options-commandoptions-promisecommandresult"><code>runCommand(command: string, options?: CommandOptions): Promise&lt;CommandResult&gt;</code><a class="headerlink" href="#runcommandcommand-string-options-commandoptions-promisecommandresult" title="Permanent link">&para;</a></h5>
 <p>Execute a single command with monitoring.</p>
 <div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">CommandOptions</span><span class="w"> </span><span class="p">{</span>
@@ -3365,6 +3393,30 @@
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Exit code: </span><span class="si">${</span><span class="nx">result</span><span class="p">.</span><span class="nx">exitCode</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
 <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`Output: </span><span class="si">${</span><span class="nx">result</span><span class="p">.</span><span class="nx">stdout</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
 </code></pre></div></p>
+<p><code>CommandOptions.workingDirectory</code> is the most specific command cwd and takes precedence for that direct command call. Scenario-level cwd resolution supplies the default cwd for command steps executed through <code>execute()</code>.</p>
+<h4 id="scenario-command-working-directory-resolution">Scenario command working-directory resolution<a class="headerlink" href="#scenario-command-working-directory-resolution" title="Permanent link">&para;</a></h4>
+<p>For scenario execution, command cwd is resolved once from the scenario's agents in declaration order:</p>
+<ol>
+<li>Select the first command-capable <code>cli</code> or <code>system</code> agent with a configured cwd.</li>
+<li>If no command-capable agent has cwd configuration, select the first agent of any type with a configured cwd.</li>
+<li>If no agent has cwd configuration, keep the CLI agent's existing default working-directory behavior.</li>
+</ol>
+<p>For each candidate agent, <code>config.workingDirectory</code> is used when it is a non-empty string; otherwise <code>config.cwd</code> is used when it is a non-empty string. If both fields are present, <code>workingDirectory</code> wins. Empty strings and non-string values are not treated as configured cwd values.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;repo-cli&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cli&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">cwd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./ignored&quot;</span>
+<span class="w">      </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./packages/app&quot;</span>
+
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Run</span><span class="nv"> </span><span class="s">tests&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;repo-cli&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;npm</span><span class="nv"> </span><span class="s">test&quot;</span>
+</code></pre></div>
+<p>The <code>npm test</code> command runs from <code>./packages/app</code> because <code>repo-cli</code> is the first command-capable agent with cwd configuration.</p>
 <h5 id="startinteractivesessioncommand-string-promiseinteractivesession"><code>startInteractiveSession(command: string): Promise&lt;InteractiveSession&gt;</code><a class="headerlink" href="#startinteractivesessioncommand-string-promiseinteractivesession" title="Permanent link">&para;</a></h5>
 <p>Start an interactive CLI session.</p>
 <div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">InteractiveSession</span><span class="w"> </span><span class="p">{</span>
@@ -3468,6 +3520,22 @@
 <span class="w">  </span><span class="nx">shell?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                </span><span class="c1">// Default: system shell</span>
 <span class="p">}</span>
 </code></pre></div>
+<h3 id="scenarioagentconfig">ScenarioAgentConfig<a class="headerlink" href="#scenarioagentconfig" title="Permanent link">&para;</a></h3>
+<p>Scenario adaptation preserves each agent's <code>id</code>, <code>type</code>, and full <code>config</code> object for orchestrator execution, including additional unknown config fields. These fields participate in scenario-level command cwd resolution:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">ScenarioAgent</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">id?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">name?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                  </span><span class="c1">// &quot;cli&quot; and &quot;system&quot; are command-capable</span>
+<span class="w">  </span><span class="nx">config?</span><span class="o">:</span><span class="w"> </span><span class="kt">ScenarioAgentConfig</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span><span class="w"> </span><span class="nx">ScenarioAgentConfig</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">workingDirectory?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">     </span><span class="c1">// Canonical scenario command cwd</span>
+<span class="w">  </span><span class="nx">cwd?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                  </span><span class="c1">// Scenario-compatible alias</span>
+<span class="w">  </span><span class="p">[</span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="nx">unknown</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>workingDirectory</code> is the canonical spelling and takes precedence over <code>cwd</code>. <code>cwd</code> exists for scenario compatibility. If neither field is configured on any scenario agent, scenario command execution does not override the CLI agent's default cwd.</p>
 <h3 id="uiconfig">UIConfig<a class="headerlink" href="#uiconfig" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="kd">interface</span><span class="w"> </span><span class="nx">UIConfig</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nx">executablePath?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
@@ -3497,6 +3565,7 @@
 <span class="w">  </span><span class="nx">version?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <span class="w">  </span><span class="nx">tags?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span>
 <span class="w">  </span><span class="kd">interface</span><span class="nx">?</span><span class="o">:</span><span class="w"> </span><span class="kt">TestInterface</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">agents?</span><span class="o">:</span><span class="w"> </span><span class="kt">ScenarioAgent</span><span class="p">[];</span>
 <span class="w">  </span><span class="nx">steps</span><span class="o">:</span><span class="w"> </span><span class="kt">TestStep</span><span class="p">[];</span>
 <span class="w">  </span><span class="nx">cleanup?</span><span class="o">:</span><span class="w"> </span><span class="kt">TestStep</span><span class="p">[];</span>
 <span class="w">  </span><span class="nx">retryOnFailure?</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>

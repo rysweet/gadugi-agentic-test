@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1859,6 +1859,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cli-agent-type-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Agent (type: "cli")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#websocket-agent-type-websocket" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2106,6 +2117,34 @@
   
     <nav class="md-nav" aria-label="Schema Notes">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#command-working-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Working Directories
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Working Directories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tutorial-run-a-scenario-inside-a-project-subdirectory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tutorial: run a scenario inside a project subdirectory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#stable-scenario-ids" class="md-nav__link">
@@ -2465,6 +2504,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cli-agent-type-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Agent (type: "cli")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#websocket-agent-type-websocket" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2714,6 +2764,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#command-working-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Working Directories
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Working Directories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tutorial-run-a-scenario-inside-a-project-subdirectory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tutorial: run a scenario inside a project subdirectory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stable-scenario-ids" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2862,7 +2940,7 @@
 <span class="c1"># Agent definitions</span>
 <span class="nt">agents</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;agent-name&quot;</span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;agent-type&quot;</span><span class="w">  </span><span class="c1"># ui, system, websocket, database, api, network</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;agent-type&quot;</span><span class="w">  </span><span class="c1"># ui, cli, system, websocket, database, api, network</span>
 <span class="w">    </span><span class="nt">config</span><span class="p">:</span>
 <span class="w">      </span><span class="c1"># Agent-specific configuration</span>
 
@@ -2927,7 +3005,8 @@
 <p><strong>Configuration:</strong>
 <div class="highlight"><pre><span></span><code><span class="nt">config</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">shell</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bash&quot;</span><span class="w">           </span><span class="c1"># Shell to use</span>
-<span class="w">  </span><span class="nt">cwd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/directory&quot;</span>
+<span class="w">  </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/directory&quot;</span>
+<span class="w">  </span><span class="nt">cwd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/directory&quot;</span><span class="w">  </span><span class="c1"># Scenario-compatible alias</span>
 <span class="w">  </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60000</span>
 <span class="w">  </span><span class="nt">capture_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">    </span><span class="c1"># Capture stdout/stderr</span>
 </code></pre></div></p>
@@ -2935,6 +3014,23 @@
 - <code>execute_command</code> - Execute shell commands
 - <code>check_process</code> - Check if processes are running
 - <code>file_operations</code> - File system operations</p>
+<h3 id="cli-agent-type-cli">CLI Agent (<code>type: "cli"</code>)<a class="headerlink" href="#cli-agent-type-cli" title="Permanent link">&para;</a></h3>
+<p>Executes command-line test steps and validates stdout, stderr, exit codes, and timeouts.</p>
+<p><strong>Configuration:</strong>
+<div class="highlight"><pre><span></span><code><span class="nt">config</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">shell</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bash&quot;</span>
+<span class="w">  </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/project&quot;</span><span class="w">  </span><span class="c1"># Canonical command cwd</span>
+<span class="w">  </span><span class="nt">cwd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/path/to/project&quot;</span><span class="w">               </span><span class="c1"># Alias for scenario compatibility</span>
+<span class="w">  </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60000</span>
+<span class="w">  </span><span class="nt">environmentVars</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">NODE_ENV</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test&quot;</span>
+</code></pre></div></p>
+<p><strong>Common Actions:</strong>
+- <code>run</code> - Run a command and validate its output
+- <code>execute</code> - Execute a command step
+- <code>multi_command</code> - Execute multiple commands in sequence
+- <code>execute_with_retry</code> - Retry a command until it succeeds or reaches a limit
+- <code>background_process</code> - Start a long-running command for later validation or cleanup</p>
 <h3 id="websocket-agent-type-websocket">WebSocket Agent (<code>type: "websocket"</code>)<a class="headerlink" href="#websocket-agent-type-websocket" title="Permanent link">&para;</a></h3>
 <p>Manages WebSocket connections and real-time communication.</p>
 <p><strong>Configuration:</strong>
@@ -3133,6 +3229,87 @@
 </ol>
 <p>For more information on running scenarios, see the main <a href="../">README</a> in the parent directory.</p>
 <h2 id="schema-notes">Schema Notes<a class="headerlink" href="#schema-notes" title="Permanent link">&para;</a></h2>
+<h3 id="command-working-directories">Command Working Directories<a class="headerlink" href="#command-working-directories" title="Permanent link">&para;</a></h3>
+<p>Scenario command steps use one deterministic scenario-level working directory. During scenario execution, the CLI agent selects the first command-capable <code>type: "cli"</code> or <code>type: "system"</code> agent that defines a configured cwd; if none exists, it falls back to the first scenario agent of any type with cwd configuration. The selected cwd applies consistently to command steps executed through the scenario.</p>
+<p>Use <code>config.workingDirectory</code> for new scenarios. <code>config.cwd</code> is also supported as a scenario-compatible alias:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;repo-cli&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cli&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./packages/app&quot;</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60000</span>
+
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Run</span><span class="nv"> </span><span class="s">package</span><span class="nv"> </span><span class="s">tests&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;repo-cli&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;npm</span><span class="nv"> </span><span class="s">test&quot;</span>
+</code></pre></div>
+<p>The command above executes as if it were started from <code>./packages/app</code> because <code>repo-cli</code> is the first command-capable agent with cwd configuration.</p>
+<p><code>workingDirectory</code> takes precedence when both spellings are present:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;repo-cli&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cli&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">cwd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./ignored&quot;</span>
+<span class="w">      </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./packages/app&quot;</span>
+</code></pre></div>
+<p>In this example, commands run from <code>./packages/app</code>.</p>
+<p>If neither <code>workingDirectory</code> nor <code>cwd</code> is configured, command execution uses the CLI agent's default working-directory behavior, which is normally the process working directory or the working directory supplied by the programmatic CLI agent configuration. Empty strings and non-string values are not treated as configured working directories; invalid paths are passed to command execution and fail explicitly instead of silently falling back.</p>
+<p>Per-command working-directory options, when supplied by the programmatic API, remain more specific than scenario-level configuration. Scenario-level <code>workingDirectory</code> and <code>cwd</code> provide the default cwd for command steps in that scenario.</p>
+<h4 id="tutorial-run-a-scenario-inside-a-project-subdirectory">Tutorial: run a scenario inside a project subdirectory<a class="headerlink" href="#tutorial-run-a-scenario-inside-a-project-subdirectory" title="Permanent link">&para;</a></h4>
+<p>Use a <code>cli</code> agent when the scenario is primarily validating a command-line workflow:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Package</span><span class="nv"> </span><span class="s">Build&quot;</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">app</span><span class="nv"> </span><span class="s">package</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">its</span><span class="nv"> </span><span class="s">workspace</span><span class="nv"> </span><span class="s">directory&quot;</span>
+<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.0.0&quot;</span>
+
+<span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;app-cli&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cli&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">workingDirectory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./packages/app&quot;</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120000</span>
+
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Install</span><span class="nv"> </span><span class="s">dependencies&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;app-cli&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;npm</span><span class="nv"> </span><span class="s">ci&quot;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">package&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;app-cli&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;npm</span><span class="nv"> </span><span class="s">run</span><span class="nv"> </span><span class="s">build&quot;</span>
+<span class="w">    </span><span class="nt">expect</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;exit_code&quot;</span>
+<span class="w">      </span><span class="nt">code</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</code></pre></div>
+<p>Use a <code>system</code> agent when command execution is part of a broader system-interaction scenario:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Repository</span><span class="nv"> </span><span class="s">Health</span><span class="nv"> </span><span class="s">Check&quot;</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Check</span><span class="nv"> </span><span class="s">generated</span><span class="nv"> </span><span class="s">files</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">repository</span><span class="nv"> </span><span class="s">root&quot;</span>
+<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.0.0&quot;</span>
+
+<span class="nt">agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;system-agent&quot;</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;system&quot;</span>
+<span class="w">    </span><span class="nt">config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">cwd</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./fixtures/generated-repo&quot;</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;List</span><span class="nv"> </span><span class="s">generated</span><span class="nv"> </span><span class="s">files&quot;</span>
+<span class="w">    </span><span class="nt">agent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;system-agent&quot;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;execute_command&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;find</span><span class="nv"> </span><span class="s">.</span><span class="nv"> </span><span class="s">-maxdepth</span><span class="nv"> </span><span class="s">2</span><span class="nv"> </span><span class="s">-type</span><span class="nv"> </span><span class="s">f</span><span class="nv"> </span><span class="s">|</span><span class="nv"> </span><span class="s">sort&quot;</span>
+<span class="w">    </span><span class="nt">expect</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;contains&quot;</span>
+<span class="w">      </span><span class="nt">patterns</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;./README.md&quot;</span>
+</code></pre></div>
 <h3 id="stable-scenario-ids">Stable Scenario IDs<a class="headerlink" href="#stable-scenario-ids" title="Permanent link">&para;</a></h3>
 <p>The <code>id</code> field in a scenario definition is now a deterministic slug derived from the scenario <code>name</code>. You do not need to set <code>id</code> manually — the framework generates a stable identifier from the name, so scenario IDs remain consistent across runs and across team members:</p>
 <div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CLI</span><span class="nv"> </span><span class="s">Smoke</span><span class="nv"> </span><span class="s">Test&quot;</span>
