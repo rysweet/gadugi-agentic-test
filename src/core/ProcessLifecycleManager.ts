@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess, SpawnOptions } from 'child_process';
 import { EventEmitter } from 'events';
 
 /**
@@ -23,6 +23,50 @@ export interface ProcessEvents {
   processKilled: (processInfo: ProcessInfo) => void;
   cleanupComplete: (processCount: number) => void;
   error: (error: Error, processInfo?: ProcessInfo) => void;
+}
+
+export interface ProcessStartOptions {
+  cwd?: string;
+  workingDirectory?: string;
+  env?: NodeJS.ProcessEnv;
+  shell?: boolean;
+  detached?: boolean;
+}
+
+function validateDirectoryOption(name: 'cwd' | 'workingDirectory', value: unknown): asserts value is string | undefined {
+  if (value === undefined) {
+    return;
+  }
+
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`Invalid process ${name}: expected a non-empty string`);
+  }
+}
+
+function resolveProcessCwd(cwd: unknown, workingDirectory: unknown): string | undefined {
+  validateDirectoryOption('cwd', cwd);
+  if (cwd !== undefined) {
+    return cwd;
+  }
+
+  validateDirectoryOption('workingDirectory', workingDirectory);
+  return workingDirectory;
+}
+
+function normalizeSpawnOptions(options: ProcessStartOptions): SpawnOptions {
+  const { cwd, workingDirectory, ...spawnOptions } = options;
+  const resolvedCwd = resolveProcessCwd(cwd, workingDirectory);
+  const normalizedOptions: SpawnOptions = {
+    ...spawnOptions,
+    detached: true,
+    stdio: 'pipe',
+  };
+
+  if (resolvedCwd !== undefined) {
+    normalizedOptions.cwd = resolvedCwd;
+  }
+
+  return normalizedOptions;
 }
 
 /**
@@ -59,24 +103,13 @@ export class ProcessLifecycleManager extends EventEmitter {
   public startProcess(
     command: string,
     args: string[] = [],
-    options: {
-      cwd?: string;
-      env?: NodeJS.ProcessEnv;
-      shell?: boolean;
-      detached?: boolean;
-    } = {}
+    options: ProcessStartOptions = {}
   ): ChildProcess {
     if (this.isShuttingDown) {
       throw new Error('Cannot start new processes during shutdown');
     }
 
-    // Force detached mode for proper process group management
-    const processOptions = {
-      ...options,
-      detached: true,
-      // Create new process group to prevent inheriting parent's signals
-      stdio: 'pipe' as const,
-    };
+    const processOptions = normalizeSpawnOptions(options);
 
     let childProcess: ChildProcess;
     try {
