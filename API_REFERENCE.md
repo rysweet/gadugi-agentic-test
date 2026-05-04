@@ -429,7 +429,7 @@ constructor(config: CLIConfig)
 
 ##### `execute(scenario: TestScenario): Promise<TestResult>`
 
-Execute CLI-based test scenarios.
+Execute CLI-based test scenarios. When the scenario includes agents with cwd configuration, command steps use the deterministic scenario-level working directory selected from the scenario's agent list.
 
 ##### `runCommand(command: string, options?: CommandOptions): Promise<CommandResult>`
 
@@ -464,6 +464,36 @@ const result = await cliAgent.runCommand('npm test', {
 console.log(`Exit code: ${result.exitCode}`);
 console.log(`Output: ${result.stdout}`);
 ```
+
+`CommandOptions.workingDirectory` is the most specific command cwd and takes precedence for that direct command call. Scenario-level cwd resolution supplies the default cwd for command steps executed through `execute()`.
+
+#### Scenario command working-directory resolution
+
+For scenario execution, command cwd is resolved once from the scenario's agents in declaration order:
+
+1. Select the first command-capable `cli` or `system` agent with a configured cwd.
+2. If no command-capable agent has cwd configuration, select the first agent of any type with a configured cwd.
+3. If no agent has cwd configuration, keep the CLI agent's existing default working-directory behavior.
+
+For each candidate agent, `config.workingDirectory` is used when it is a non-empty string; otherwise `config.cwd` is used when it is a non-empty string. If both fields are present, `workingDirectory` wins. Empty strings and non-string values are not treated as configured cwd values.
+
+```yaml
+agents:
+  - name: "repo-cli"
+    type: "cli"
+    config:
+      cwd: "./ignored"
+      workingDirectory: "./packages/app"
+
+steps:
+  - name: "Run tests"
+    agent: "repo-cli"
+    action: "execute"
+    params:
+      command: "npm test"
+```
+
+The `npm test` command runs from `./packages/app` because `repo-cli` is the first command-capable agent with cwd configuration.
 
 ##### `startInteractiveSession(command: string): Promise<InteractiveSession>`
 
@@ -616,6 +646,27 @@ interface CLIConfig {
 }
 ```
 
+### ScenarioAgentConfig
+
+Scenario adaptation preserves each agent's `id`, `type`, and full `config` object for orchestrator execution, including additional unknown config fields. These fields participate in scenario-level command cwd resolution:
+
+```typescript
+interface ScenarioAgent {
+  id?: string;
+  name?: string;
+  type: string;                  // "cli" and "system" are command-capable
+  config?: ScenarioAgentConfig;
+}
+
+interface ScenarioAgentConfig {
+  workingDirectory?: string;     // Canonical scenario command cwd
+  cwd?: string;                  // Scenario-compatible alias
+  [key: string]: unknown;
+}
+```
+
+`workingDirectory` is the canonical spelling and takes precedence over `cwd`. `cwd` exists for scenario compatibility. If neither field is configured on any scenario agent, scenario command execution does not override the CLI agent's default cwd.
+
 ### UIConfig
 
 ```typescript
@@ -655,6 +706,7 @@ interface TestScenario {
   version?: string;
   tags?: string[];
   interface?: TestInterface;
+  agents?: ScenarioAgent[];
   steps: TestStep[];
   cleanup?: TestStep[];
   retryOnFailure?: boolean;

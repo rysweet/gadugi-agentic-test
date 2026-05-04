@@ -2,6 +2,13 @@ import { adaptScenarioToComplex } from '../adapters/scenarioAdapter';
 import { ScenarioDefinition } from '../scenarios';
 import { Priority, TestInterface } from '../models/TestModels';
 
+type AdaptedScenarioAgent = {
+  id?: string;
+  name?: string;
+  type: string;
+  config?: Record<string, unknown>;
+};
+
 describe('scenarioAdapter', () => {
   const makeScenario = (overrides: Partial<ScenarioDefinition> = {}): ScenarioDefinition => ({
     name: 'Test Scenario',
@@ -149,6 +156,57 @@ describe('scenarioAdapter', () => {
       }));
 
       expect(result.tags).toEqual(['smoke', 'regression']);
+    });
+
+    it('should preserve scenario agents with identity, type, and full config', () => {
+      const agents = [
+        {
+          id: 'cli-agent',
+          name: 'legacy-cli-name',
+          type: 'cli',
+          config: {
+            cwd: '/workspace/from-cwd',
+            workingDirectory: '/workspace/from-working-directory',
+            env: { NODE_ENV: 'test' },
+            retries: 2
+          }
+        }
+      ] as unknown as ScenarioDefinition['agents'];
+
+      const result = adaptScenarioToComplex(makeScenario({ agents })) as ReturnType<typeof adaptScenarioToComplex> & {
+        agents?: AdaptedScenarioAgent[];
+      };
+
+      expect(result.agents).toEqual([
+        {
+          id: 'cli-agent',
+          name: 'legacy-cli-name',
+          type: 'cli',
+          config: {
+            cwd: '/workspace/from-cwd',
+            workingDirectory: '/workspace/from-working-directory',
+            env: { NODE_ENV: 'test' },
+            retries: 2
+          }
+        }
+      ]);
+    });
+
+    it('should preserve cwd alias and normalize it to workingDirectory', () => {
+      const result = adaptScenarioToComplex(makeScenario({
+        agents: [{ name: 'cli-agent', type: 'cli', config: { cwd: '/workspace/cwd-alias' } }]
+      })) as ReturnType<typeof adaptScenarioToComplex> & { agents?: AdaptedScenarioAgent[] };
+
+      expect(result.agents?.[0]?.config?.cwd).toBe('/workspace/cwd-alias');
+      expect(result.agents?.[0]?.config?.workingDirectory).toBe('/workspace/cwd-alias');
+    });
+
+    it('should preserve workingDirectory in scenario agent config', () => {
+      const result = adaptScenarioToComplex(makeScenario({
+        agents: [{ name: 'cli-agent', type: 'cli', config: { workingDirectory: '/workspace/canonical' } }]
+      })) as ReturnType<typeof adaptScenarioToComplex> & { agents?: AdaptedScenarioAgent[] };
+
+      expect(result.agents?.[0]?.config?.workingDirectory).toBe('/workspace/canonical');
     });
   });
 

@@ -3,8 +3,19 @@
  */
 
 import { ScenarioDefinition as SimpleScenario, TestStep as SimpleStep } from '../scenarios';
-import { OrchestratorScenario as ComplexScenario, OrchestratorStep, Priority, TestInterface } from '../models/TestModels';
+import {
+  OrchestratorScenario as ComplexScenario,
+  OrchestratorScenarioAgent,
+  OrchestratorStep,
+  Priority,
+  TestInterface
+} from '../models/TestModels';
+import { hasWorkingDirectoryConfig, resolveWorkingDirectoryConfig } from '../utils/agentUtils';
 import { v4 as uuidv4 } from 'uuid';
+
+type ScenarioAgentInput = SimpleScenario['agents'][number] & {
+  id?: unknown;
+};
 
 /**
  * Convert simple scenario format (from YAML) to complex format (for TestOrchestrator)
@@ -29,6 +40,10 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     ? simple.cleanup.map(adaptStepToOrchestrator)
     : undefined;
 
+  const agents = simple.agents && Array.isArray(simple.agents)
+    ? simple.agents.map(adaptAgentToOrchestrator)
+    : undefined;
+
   // Build a deterministic ID from the scenario name so that repeated calls
   // with the same scenario produce the same ID (stable across test runs and
   // diffing). Fall back to a random UUID only when no name is provided.
@@ -49,8 +64,34 @@ export function adaptScenarioToComplex(simple: SimpleScenario): ComplexScenario 
     estimatedDuration: simple.config?.timeout ? simple.config.timeout / 1000 : 60,
     tags: simple.metadata?.tags || [],
     enabled: true,
+    ...(agents !== undefined ? { agents } : {}),
     ...(cleanup !== undefined ? { cleanup } : {}),
   };
+}
+
+function adaptAgentToOrchestrator(agent: SimpleScenario['agents'][number]): OrchestratorScenarioAgent {
+  const source = agent as ScenarioAgentInput;
+  const adapted: OrchestratorScenarioAgent = {
+    type: agent.type,
+    ...(typeof source.id === 'string' ? { id: source.id } : {}),
+    ...(typeof agent.name === 'string' ? { name: agent.name } : {}),
+  };
+
+  if (agent.config !== undefined) {
+    const workingDirectory = hasWorkingDirectoryConfig(agent.config)
+      ? resolveWorkingDirectoryConfig(agent.config, getAgentLabel(adapted))
+      : undefined;
+    adapted.config = {
+      ...agent.config,
+      ...(workingDirectory !== undefined ? { workingDirectory } : {}),
+    };
+  }
+
+  return adapted;
+}
+
+function getAgentLabel(agent: OrchestratorScenarioAgent): string {
+  return agent.id || agent.name || agent.type;
 }
 
 /**

@@ -63,10 +63,10 @@ environment:
 # Agent definitions
 agents:
   - name: "agent-name"
-    type: "agent-type"  # ui, system, websocket, database, api, network
+    type: "agent-type"  # ui, cli, system, websocket, database, api, network
     config:
       # Agent-specific configuration
-      
+
 # Test execution steps
 steps:
   - name: "Step Description"
@@ -136,7 +136,8 @@ Executes command-line operations and system interactions.
 ```yaml
 config:
   shell: "bash"           # Shell to use
-  cwd: "/path/to/directory"
+  workingDirectory: "/path/to/directory"
+  cwd: "/path/to/directory"  # Scenario-compatible alias
   timeout: 60000
   capture_output: true    # Capture stdout/stderr
 ```
@@ -145,6 +146,27 @@ config:
 - `execute_command` - Execute shell commands
 - `check_process` - Check if processes are running
 - `file_operations` - File system operations
+
+### CLI Agent (`type: "cli"`)
+Executes command-line test steps and validates stdout, stderr, exit codes, and timeouts.
+
+**Configuration:**
+```yaml
+config:
+  shell: "bash"
+  workingDirectory: "/path/to/project"  # Canonical command cwd
+  cwd: "/path/to/project"               # Alias for scenario compatibility
+  timeout: 60000
+  environmentVars:
+    NODE_ENV: "test"
+```
+
+**Common Actions:**
+- `run` - Run a command and validate its output
+- `execute` - Execute a command step
+- `multi_command` - Execute multiple commands in sequence
+- `execute_with_retry` - Retry a command until it succeeds or reaches a limit
+- `background_process` - Start a long-running command for later validation or cleanup
 
 ### WebSocket Agent (`type: "websocket"`)
 Manages WebSocket connections and real-time communication.
@@ -367,6 +389,106 @@ Scenarios are executed by the TypeScript Agentic Testing System orchestrator. Th
 For more information on running scenarios, see the main [README](../index.md) in the parent directory.
 
 ## Schema Notes
+
+### Command Working Directories
+
+Scenario command steps use one deterministic scenario-level working directory. During scenario execution, the CLI agent selects the first command-capable `type: "cli"` or `type: "system"` agent that defines a configured cwd; if none exists, it falls back to the first scenario agent of any type with cwd configuration. The selected cwd applies consistently to command steps executed through the scenario.
+
+Use `config.workingDirectory` for new scenarios. `config.cwd` is also supported as a scenario-compatible alias:
+
+```yaml
+agents:
+  - name: "repo-cli"
+    type: "cli"
+    config:
+      workingDirectory: "./packages/app"
+      timeout: 60000
+
+steps:
+  - name: "Run package tests"
+    agent: "repo-cli"
+    action: "execute"
+    params:
+      command: "npm test"
+```
+
+The command above executes as if it were started from `./packages/app` because `repo-cli` is the first command-capable agent with cwd configuration.
+
+`workingDirectory` takes precedence when both spellings are present:
+
+```yaml
+agents:
+  - name: "repo-cli"
+    type: "cli"
+    config:
+      cwd: "./ignored"
+      workingDirectory: "./packages/app"
+```
+
+In this example, commands run from `./packages/app`.
+
+If neither `workingDirectory` nor `cwd` is configured, command execution uses the CLI agent's default working-directory behavior, which is normally the process working directory or the working directory supplied by the programmatic CLI agent configuration. Empty strings and non-string values are not treated as configured working directories; invalid paths are passed to command execution and fail explicitly instead of silently falling back.
+
+Per-command working-directory options, when supplied by the programmatic API, remain more specific than scenario-level configuration. Scenario-level `workingDirectory` and `cwd` provide the default cwd for command steps in that scenario.
+
+#### Tutorial: run a scenario inside a project subdirectory
+
+Use a `cli` agent when the scenario is primarily validating a command-line workflow:
+
+```yaml
+name: "Package Build"
+description: "Build the app package from its workspace directory"
+version: "1.0.0"
+
+agents:
+  - name: "app-cli"
+    type: "cli"
+    config:
+      workingDirectory: "./packages/app"
+      timeout: 120000
+
+steps:
+  - name: "Install dependencies"
+    agent: "app-cli"
+    action: "execute"
+    params:
+      command: "npm ci"
+
+  - name: "Build package"
+    agent: "app-cli"
+    action: "execute"
+    params:
+      command: "npm run build"
+    expect:
+      type: "exit_code"
+      code: 0
+```
+
+Use a `system` agent when command execution is part of a broader system-interaction scenario:
+
+```yaml
+name: "Repository Health Check"
+description: "Check generated files from the repository root"
+version: "1.0.0"
+
+agents:
+  - name: "system-agent"
+    type: "system"
+    config:
+      cwd: "./fixtures/generated-repo"
+      timeout: 30000
+
+steps:
+  - name: "List generated files"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "find . -maxdepth 2 -type f | sort"
+    expect:
+      type: "contains"
+      patterns:
+        - "./README.md"
+```
 
 ### Stable Scenario IDs
 

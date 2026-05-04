@@ -302,6 +302,8 @@ npx agentic-test run --ci --artifacts ./reports/ ./scenarios/
 }
 ```
 
+In YAML scenarios, command steps use one deterministic scenario-level command directory. The CLI agent selects the first command-capable `type: "cli"` or `type: "system"` agent with `config.workingDirectory` or `config.cwd`; if none exists, it falls back to the first scenario agent of any type with cwd configuration. Use `config.workingDirectory` for new scenarios; `config.cwd` is accepted as a scenario-compatible alias. If both are set, `workingDirectory` takes precedence. If neither is set, the command uses the existing CLIAgent default working-directory behavior.
+
 ### ComprehensionAgent
 **Purpose**: AI-powered understanding and test generation
 

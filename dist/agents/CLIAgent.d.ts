@@ -24,7 +24,7 @@ export declare class CLIAgent extends BaseAgent {
     protected buildResult(ctx: AgentExecutionContext): unknown;
     protected onAfterExecute(): Promise<void>;
     executeCommand(command: string, args?: string[], options?: Partial<ExecutionContext>): Promise<CommandResult>;
-    executeStep(step: TestStep, stepIndex: number): Promise<StepResult>;
+    executeStep(step: TestStep, stepIndex: number, scenario?: OrchestratorScenario): Promise<StepResult>;
     validateOutput(output: string, expected: unknown): Promise<boolean>;
     waitForOutput(pattern: string, timeout?: number): Promise<string>;
     captureOutput(): {
@@ -36,6 +36,10 @@ export declare class CLIAgent extends BaseAgent {
     cleanup(): Promise<void>;
     private getAllOutput;
     private handleExecuteAction;
+    private withScenarioWorkingDirectory;
+    private resolveScenarioWorkingDirectory;
+    private isCommandCapableScenarioAgent;
+    private getAgentLabel;
     private fileExists;
     private directoryExists;
 }

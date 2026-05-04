@@ -70,12 +70,41 @@ jest.mock('fs/promises', () => ({
 import { CLIAgent, createCLIAgent } from '../agents/CLIAgent';
 import { validateDirectory } from '../utils/fileUtils';
 import * as fs from 'fs/promises';
-import { TestStatus } from '../models/TestModels';
+import { OrchestratorScenario, Priority, TestInterface, TestStatus } from '../models/TestModels';
 
 // ---------------------------------------------------------------------------
 
 function makeStep(action: string, target = 'cmd', value?: string, timeout?: number) {
   return { action, target, value, timeout, description: '' };
+}
+
+type ScenarioAgentConfig = {
+  id?: string;
+  name?: string;
+  type: string;
+  config?: Record<string, unknown>;
+};
+
+type ScenarioWithAgents = OrchestratorScenario & {
+  agents?: ScenarioAgentConfig[];
+};
+
+function makeScenarioWithAgents(agents?: ScenarioAgentConfig[]): ScenarioWithAgents {
+  return {
+    id: 'scenario-cli-working-directory',
+    name: 'CLI working directory scenario',
+    description: 'Verifies scenario agent working directory propagation',
+    priority: Priority.MEDIUM,
+    interface: TestInterface.CLI,
+    prerequisites: [],
+    steps: [makeStep('execute', 'pwd')],
+    verifications: [],
+    expectedOutcome: 'Command executes',
+    estimatedDuration: 1,
+    tags: ['cli'],
+    enabled: true,
+    ...(agents !== undefined ? { agents } : {}),
+  };
 }
 
 beforeEach(() => {
@@ -112,10 +141,10 @@ describe('createCLIAgent()', () => {
 // ===========================================================================
 describe('CLIAgent.initialize()', () => {
   it('validates the working directory and sets isInitialized', async () => {
-    const agent = new CLIAgent({ workingDirectory: '/tmp/workspace' });
+    const agent = new CLIAgent({ workingDirectory: '/workspace/project' });
     await agent.initialize();
 
-    expect(validateDirectory).toHaveBeenCalledWith('/tmp/workspace');
+    expect(validateDirectory).toHaveBeenCalledWith('/workspace/project');
     expect(mockRunnerInstance.setupInteractiveResponses).toHaveBeenCalled();
   });
 
@@ -211,7 +240,7 @@ describe('CLIAgent.executeStep()', () => {
   });
 
   it('change_directory updates working directory', async () => {
-    const result = await agent.executeStep(makeStep('change_directory', '/tmp'), 0);
+    const result = await agent.executeStep(makeStep('change_directory', '/workspace/project'), 0);
     expect(result.status).toBe(TestStatus.PASSED);
   });
 
@@ -230,7 +259,7 @@ describe('CLIAgent.executeStep()', () => {
 
   it('directory_exists returns PASSED when dir stat succeeds', async () => {
     (fs.stat as jest.Mock).mockResolvedValueOnce({ isDirectory: () => true });
-    const result = await agent.executeStep(makeStep('directory_exists', '/tmp'), 0);
+    const result = await agent.executeStep(makeStep('directory_exists', '/workspace/project'), 0);
     expect(result.status).toBe(TestStatus.PASSED);
   });
 
@@ -255,6 +284,102 @@ describe('CLIAgent.executeStep()', () => {
       0
     );
     expect(result.status).toBe(TestStatus.PASSED);
+  });
+});
+
+// ===========================================================================
+// execute() — scenario agent working directory
+// ===========================================================================
+describe('CLIAgent.execute() scenario working directory resolution', () => {
+  let agent: CLIAgent;
+
+  beforeEach(async () => {
+    agent = new CLIAgent();
+    await agent.initialize();
+  });
+
+  it('honors agents[].config.cwd for CLI scenario commands', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'cli-agent', type: 'cli', config: { cwd: '/workspace/from-cwd' } }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-cwd' })
+    );
+  });
+
+  it('honors agents[].config.workingDirectory for CLI scenario commands', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'cli-agent', type: 'cli', config: { workingDirectory: '/workspace/from-working-directory' } }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-working-directory' })
+    );
+  });
+
+  it('uses workingDirectory over cwd when both are configured', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      {
+        id: 'cli-agent',
+        type: 'cli',
+        config: {
+          cwd: '/workspace/from-cwd',
+          workingDirectory: '/workspace/from-working-directory'
+        }
+      }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-working-directory' })
+    );
+  });
+
+  it('considers system scenario agents command-capable for cwd resolution', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'system-agent', type: 'system', config: { cwd: '/workspace/from-system' } }
+    ]));
+
+    expect(mockRunnerInstance.executeCommand).toHaveBeenCalledWith(
+      'pwd',
+      [],
+      expect.objectContaining({ cwd: '/workspace/from-system' })
+    );
+  });
+
+  it('does not add a cwd override when no scenario working directory is configured', async () => {
+    await agent.execute(makeScenarioWithAgents([
+      { id: 'cli-agent', type: 'cli', config: { defaultTimeout: 1000 } }
+    ]));
+
+    const options = mockRunnerInstance.executeCommand.mock.calls[0][2] as Record<string, unknown>;
+    expect(options).not.toHaveProperty('cwd');
+  });
+
+  it('keeps scenario working directory resolution local to each execute call', async () => {
+    mockRunnerInstance.executeCommand.mockImplementation((_command: string, _args: string[], options: Record<string, unknown>) =>
+      Promise.resolve({ exitCode: 0, stdout: String(options.cwd), stderr: '' })
+    );
+
+    await Promise.all([
+      agent.execute(makeScenarioWithAgents([
+        { id: 'cli-agent-a', type: 'cli', config: { cwd: '/workspace/a' } }
+      ])),
+      agent.execute(makeScenarioWithAgents([
+        { id: 'cli-agent-b', type: 'cli', config: { cwd: '/workspace/b' } }
+      ])),
+    ]);
+
+    const cwdValues = mockRunnerInstance.executeCommand.mock.calls.map(
+      call => (call[2] as Record<string, unknown>).cwd
+    );
+    expect(cwdValues).toEqual(expect.arrayContaining(['/workspace/a', '/workspace/b']));
   });
 });
 

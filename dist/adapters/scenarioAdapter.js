@@ -5,6 +5,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adaptScenarioToComplex = adaptScenarioToComplex;
 const TestModels_1 = require("../models/TestModels");
+const agentUtils_1 = require("../utils/agentUtils");
 const uuid_1 = require("uuid");
 /**
  * Convert simple scenario format (from YAML) to complex format (for TestOrchestrator)
@@ -26,6 +27,9 @@ function adaptScenarioToComplex(simple) {
     const cleanup = simple.cleanup && Array.isArray(simple.cleanup)
         ? simple.cleanup.map(adaptStepToOrchestrator)
         : undefined;
+    const agents = simple.agents && Array.isArray(simple.agents)
+        ? simple.agents.map(adaptAgentToOrchestrator)
+        : undefined;
     // Build a deterministic ID from the scenario name so that repeated calls
     // with the same scenario produce the same ID (stable across test runs and
     // diffing). Fall back to a random UUID only when no name is provided.
@@ -45,8 +49,30 @@ function adaptScenarioToComplex(simple) {
         estimatedDuration: simple.config?.timeout ? simple.config.timeout / 1000 : 60,
         tags: simple.metadata?.tags || [],
         enabled: true,
+        ...(agents !== undefined ? { agents } : {}),
         ...(cleanup !== undefined ? { cleanup } : {}),
     };
+}
+function adaptAgentToOrchestrator(agent) {
+    const source = agent;
+    const adapted = {
+        type: agent.type,
+        ...(typeof source.id === 'string' ? { id: source.id } : {}),
+        ...(typeof agent.name === 'string' ? { name: agent.name } : {}),
+    };
+    if (agent.config !== undefined) {
+        const workingDirectory = (0, agentUtils_1.hasWorkingDirectoryConfig)(agent.config)
+            ? (0, agentUtils_1.resolveWorkingDirectoryConfig)(agent.config, getAgentLabel(adapted))
+            : undefined;
+        adapted.config = {
+            ...agent.config,
+            ...(workingDirectory !== undefined ? { workingDirectory } : {}),
+        };
+    }
+    return adapted;
+}
+function getAgentLabel(agent) {
+    return agent.id || agent.name || agent.type;
 }
 /**
  * Convert scenarios/TestStep to models/OrchestratorStep

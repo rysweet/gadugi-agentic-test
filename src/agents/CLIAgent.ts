@@ -11,9 +11,17 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { AgentType } from './index';
-import { OrchestratorScenario, TestStep, TestStatus, StepResult, CommandResult } from '../models/TestModels';
+import {
+  OrchestratorScenario,
+  OrchestratorScenarioAgent,
+  TestStep,
+  TestStatus,
+  StepResult,
+  CommandResult
+} from '../models/TestModels';
 import { createLogger } from '../utils/logger';
 import { delay } from '../utils/async';
+import { hasWorkingDirectoryConfig, resolveWorkingDirectoryConfig } from '../utils/agentUtils';
 import { validateDirectory } from '../utils/fileUtils';
 import { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData, DEFAULT_CLI_CONFIG } from './cli/types';
 import { CLICommandRunner } from './cli/CLICommandRunner';
@@ -21,6 +29,9 @@ import { CLIOutputParser } from './cli/CLIOutputParser';
 import { BaseAgent, ExecutionContext as AgentExecutionContext } from './BaseAgent';
 
 export type { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData };
+
+const COMMAND_ACTIONS = new Set(['execute', 'run', 'command', 'execute_command']);
+const COMMAND_CAPABLE_AGENT_TYPES = new Set(['cli', 'system']);
 
 export class CLIAgent extends BaseAgent {
   public readonly name = 'CLIAgent';
@@ -77,16 +88,16 @@ export class CLIAgent extends BaseAgent {
     return this.runner.executeCommand(command, args, options);
   }
 
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: TestStep, stepIndex: number, scenario?: OrchestratorScenario): Promise<StepResult> {
     const startTime = Date.now();
     try {
       let result: unknown;
       const action = step.action.toLowerCase();
-      if (['execute', 'run', 'command', 'execute_command'].includes(action)) {
-        result = await this.handleExecuteAction(step);
+      if (COMMAND_ACTIONS.has(action)) {
+        result = await this.handleExecuteAction(step, scenario);
       } else if (action === 'execute_with_input') {
         const parts = step.target.split(' ');
-        result = await this.runner.executeCommand(parts[0], parts.slice(1), { input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) });
+        result = await this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory({ input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) }, scenario));
       } else if (action === 'wait_for_output') {
         result = await this.parser.waitForOutput(step.target, () => this.getAllOutput(), step.timeout || this.config.defaultTimeout);
       } else if (action === 'validate_output') {
@@ -148,12 +159,63 @@ export class CLIAgent extends BaseAgent {
       .map(e => e.data).join('');
   }
 
-  private async handleExecuteAction(step: TestStep): Promise<CommandResult> {
+  private async handleExecuteAction(step: TestStep, scenario?: OrchestratorScenario): Promise<CommandResult> {
     const parts = step.target.split(' ');
     const options: Partial<ExecutionContext> = {};
     if (step.timeout) options.timeout = step.timeout;
     if (step.value) { try { options.env = JSON.parse(step.value); } catch { options.input = step.value; } }
-    return this.runner.executeCommand(parts[0], parts.slice(1), options);
+    return this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory(options, scenario));
+  }
+
+  private withScenarioWorkingDirectory(
+    options: Partial<ExecutionContext>,
+    scenario?: OrchestratorScenario
+  ): Partial<ExecutionContext> {
+    if (options.cwd !== undefined || scenario === undefined) {
+      return options;
+    }
+
+    const scenarioWorkingDirectory = this.resolveScenarioWorkingDirectory(scenario);
+    if (scenarioWorkingDirectory === undefined) {
+      return options;
+    }
+
+    return { ...options, cwd: scenarioWorkingDirectory };
+  }
+
+  private resolveScenarioWorkingDirectory(scenario: OrchestratorScenario): string | undefined {
+    if (!scenario.agents || scenario.agents.length === 0) {
+      return undefined;
+    }
+
+    let fallbackAgent: OrchestratorScenarioAgent | undefined;
+    for (const agent of scenario.agents) {
+      if (!this.isCommandCapableScenarioAgent(agent)) {
+        if (fallbackAgent === undefined && hasWorkingDirectoryConfig(agent.config)) {
+          fallbackAgent = agent;
+        }
+        continue;
+      }
+
+      if (hasWorkingDirectoryConfig(agent.config)) {
+        const workingDirectory = resolveWorkingDirectoryConfig(agent.config, this.getAgentLabel(agent));
+        if (workingDirectory !== undefined) {
+          return workingDirectory;
+        }
+      }
+    }
+
+    return fallbackAgent !== undefined
+      ? resolveWorkingDirectoryConfig(fallbackAgent.config, this.getAgentLabel(fallbackAgent))
+      : undefined;
+  }
+
+  private isCommandCapableScenarioAgent(agent: OrchestratorScenarioAgent): boolean {
+    return COMMAND_CAPABLE_AGENT_TYPES.has(agent.type.toLowerCase());
+  }
+
+  private getAgentLabel(agent: OrchestratorScenarioAgent): string {
+    return agent.id || agent.name || agent.type;
   }
 
   private async fileExists(filePath: string): Promise<boolean> {

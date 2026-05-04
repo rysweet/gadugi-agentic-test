@@ -1,14 +1,43 @@
 import { ProcessLifecycleManager } from '../core/ProcessLifecycleManager';
-import { spawn, exec } from 'child_process';
+import { ChildProcess, exec } from 'child_process';
+import { mkdir, rm } from 'fs/promises';
+import { join } from 'path';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
+const testWorkspaceRoot = join(process.cwd(), 'tmp', 'process-lifecycle-manager', String(process.pid));
+let tempDirCounter = 0;
+
+function collectStdout(childProcess: ChildProcess): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+
+    childProcess.stdout?.on('data', chunk => {
+      stdout += chunk.toString();
+    });
+    childProcess.stderr?.on('data', chunk => {
+      stderr += chunk.toString();
+    });
+    childProcess.once('error', reject);
+    childProcess.once('exit', (code, signal) => {
+      if (code === 0) {
+        resolve(stdout);
+        return;
+      }
+
+      reject(new Error(`Process exited with code ${code ?? 'null'} and signal ${signal ?? 'none'}: ${stderr}`));
+    });
+  });
+}
 
 describe('ProcessLifecycleManager', () => {
   let manager: ProcessLifecycleManager;
+  let tempDirs: string[];
 
   beforeEach(() => {
     manager = new ProcessLifecycleManager();
+    tempDirs = [];
     // Add error handler to prevent test crashes
     manager.on('error', () => {
       // Ignore errors in tests - they're expected
@@ -22,7 +51,16 @@ describe('ProcessLifecycleManager', () => {
     // Clean up any remaining processes
     await manager.shutdown();
     manager.destroy(); // Clean up listeners
+    await Promise.all(tempDirs.map(dir => rm(dir, { recursive: true, force: true })));
+    await rm(testWorkspaceRoot, { recursive: true, force: true });
   });
+
+  async function createTempDir(): Promise<string> {
+    const tempDir = join(testWorkspaceRoot, `${Date.now()}-${tempDirCounter++}`);
+    await mkdir(tempDir, { recursive: true });
+    tempDirs.push(tempDir);
+    return tempDir;
+  }
 
   describe('Process Management', () => {
     it('should start and track a process', () => {
@@ -80,6 +118,48 @@ describe('ProcessLifecycleManager', () => {
           done();
         }
       }
+    });
+
+    it('should use cwd as child process working directory', async () => {
+      const tempDir = await createTempDir();
+
+      const childProcess = manager.startProcess(process.execPath, ['-e', 'console.log(process.cwd())'], {
+        cwd: tempDir
+      });
+
+      await expect(collectStdout(childProcess)).resolves.toBe(`${tempDir}\n`);
+    });
+
+    it('should use workingDirectory alias as child process cwd', async () => {
+      const tempDir = await createTempDir();
+
+      const childProcess = manager.startProcess(process.execPath, ['-e', 'console.log(process.cwd())'], {
+        workingDirectory: tempDir
+      });
+
+      await expect(collectStdout(childProcess)).resolves.toBe(`${tempDir}\n`);
+    });
+
+    it('should prefer cwd over workingDirectory', async () => {
+      const cwdDir = await createTempDir();
+      const aliasDir = await createTempDir();
+
+      const childProcess = manager.startProcess(process.execPath, ['-e', 'console.log(process.cwd())'], {
+        cwd: cwdDir,
+        workingDirectory: aliasDir
+      });
+
+      await expect(collectStdout(childProcess)).resolves.toBe(`${cwdDir}\n`);
+    });
+
+    it('should reject empty working directory options', () => {
+      expect(() => {
+        manager.startProcess(process.execPath, [], { cwd: '' });
+      }).toThrow('Invalid process cwd: expected a non-empty string');
+
+      expect(() => {
+        manager.startProcess(process.execPath, [], { workingDirectory: '   ' });
+      }).toThrow('Invalid process workingDirectory: expected a non-empty string');
     });
   });
 

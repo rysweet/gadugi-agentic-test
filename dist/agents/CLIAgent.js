@@ -50,11 +50,14 @@ const index_1 = require("./index");
 const TestModels_1 = require("../models/TestModels");
 const logger_1 = require("../utils/logger");
 const async_1 = require("../utils/async");
+const agentUtils_1 = require("../utils/agentUtils");
 const fileUtils_1 = require("../utils/fileUtils");
 const types_1 = require("./cli/types");
 const CLICommandRunner_1 = require("./cli/CLICommandRunner");
 const CLIOutputParser_1 = require("./cli/CLIOutputParser");
 const BaseAgent_1 = require("./BaseAgent");
+const COMMAND_ACTIONS = new Set(['execute', 'run', 'command', 'execute_command']);
+const COMMAND_CAPABLE_AGENT_TYPES = new Set(['cli', 'system']);
 class CLIAgent extends BaseAgent_1.BaseAgent {
     constructor(config = {}) {
         super();
@@ -98,17 +101,17 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
     async executeCommand(command, args = [], options = {}) {
         return this.runner.executeCommand(command, args, options);
     }
-    async executeStep(step, stepIndex) {
+    async executeStep(step, stepIndex, scenario) {
         const startTime = Date.now();
         try {
             let result;
             const action = step.action.toLowerCase();
-            if (['execute', 'run', 'command', 'execute_command'].includes(action)) {
-                result = await this.handleExecuteAction(step);
+            if (COMMAND_ACTIONS.has(action)) {
+                result = await this.handleExecuteAction(step, scenario);
             }
             else if (action === 'execute_with_input') {
                 const parts = step.target.split(' ');
-                result = await this.runner.executeCommand(parts[0], parts.slice(1), { input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) });
+                result = await this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory({ input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) }, scenario));
             }
             else if (action === 'wait_for_output') {
                 result = await this.parser.waitForOutput(step.target, () => this.getAllOutput(), step.timeout || this.config.defaultTimeout);
@@ -178,7 +181,7 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
             .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
             .map(e => e.data).join('');
     }
-    async handleExecuteAction(step) {
+    async handleExecuteAction(step, scenario) {
         const parts = step.target.split(' ');
         const options = {};
         if (step.timeout)
@@ -191,7 +194,46 @@ class CLIAgent extends BaseAgent_1.BaseAgent {
                 options.input = step.value;
             }
         }
-        return this.runner.executeCommand(parts[0], parts.slice(1), options);
+        return this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory(options, scenario));
+    }
+    withScenarioWorkingDirectory(options, scenario) {
+        if (options.cwd !== undefined || scenario === undefined) {
+            return options;
+        }
+        const scenarioWorkingDirectory = this.resolveScenarioWorkingDirectory(scenario);
+        if (scenarioWorkingDirectory === undefined) {
+            return options;
+        }
+        return { ...options, cwd: scenarioWorkingDirectory };
+    }
+    resolveScenarioWorkingDirectory(scenario) {
+        if (!scenario.agents || scenario.agents.length === 0) {
+            return undefined;
+        }
+        let fallbackAgent;
+        for (const agent of scenario.agents) {
+            if (!this.isCommandCapableScenarioAgent(agent)) {
+                if (fallbackAgent === undefined && (0, agentUtils_1.hasWorkingDirectoryConfig)(agent.config)) {
+                    fallbackAgent = agent;
+                }
+                continue;
+            }
+            if ((0, agentUtils_1.hasWorkingDirectoryConfig)(agent.config)) {
+                const workingDirectory = (0, agentUtils_1.resolveWorkingDirectoryConfig)(agent.config, this.getAgentLabel(agent));
+                if (workingDirectory !== undefined) {
+                    return workingDirectory;
+                }
+            }
+        }
+        return fallbackAgent !== undefined
+            ? (0, agentUtils_1.resolveWorkingDirectoryConfig)(fallbackAgent.config, this.getAgentLabel(fallbackAgent))
+            : undefined;
+    }
+    isCommandCapableScenarioAgent(agent) {
+        return COMMAND_CAPABLE_AGENT_TYPES.has(agent.type.toLowerCase());
+    }
+    getAgentLabel(agent) {
+        return agent.id || agent.name || agent.type;
     }
     async fileExists(filePath) {
         try {

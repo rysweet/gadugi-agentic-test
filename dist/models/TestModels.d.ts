@@ -67,6 +67,30 @@ export interface VerificationStep {
     description?: string;
 }
 /**
+ * Agent configuration preserved from scenario definitions for orchestrator use.
+ */
+export interface OrchestratorScenarioAgentConfig {
+    /** Canonical CLI-agent working directory */
+    workingDirectory?: string;
+    /** Scenario-compatible alias for workingDirectory */
+    cwd?: string;
+    /** Additional agent-specific configuration */
+    [key: string]: unknown;
+}
+/**
+ * Agent declaration preserved from scenario definitions.
+ */
+export interface OrchestratorScenarioAgent {
+    /** Unique identifier from scenario YAML, when present */
+    id?: string;
+    /** Scenario agent name */
+    name?: string;
+    /** Agent type, such as cli, system, tui, or web */
+    type: string;
+    /** Agent-specific configuration */
+    config?: OrchestratorScenarioAgentConfig;
+}
+/**
  * Complete test scenario definition
  */
 /** Internal orchestrator scenario format - use scenarios/OrchestratorScenario for public API */
@@ -95,6 +119,8 @@ export interface OrchestratorScenario {
     tags: string[];
     /** Whether this test is currently enabled */
     enabled: boolean;
+    /** Scenario agent declarations preserved for execution-time config */
+    agents?: OrchestratorScenarioAgent[];
     /** Environment variables or configuration needed */
     environment?: Record<string, string>;
     /** Cleanup steps to run after test completion */
