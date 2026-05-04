@@ -54,7 +54,7 @@ export class MyAgent extends BaseAgent {
   async initialize(): Promise<void> { /* setup */ }
   async cleanup(): Promise<void>    { /* teardown */ }
 
-  async executeStep(step: any, index: number): Promise<StepResult> {
+  async executeStep(step: any, index: number, scenario?: OrchestratorScenario): Promise<StepResult> {
     // dispatch to sub-modules
   }
 
@@ -69,7 +69,7 @@ export class MyAgent extends BaseAgent {
 | Method | Purpose |
 |--------|---------|
 | `execute(scenario)` | Shared loop — runs all steps, collects results |
-| `executeStep(step, index)` | Abstract — subclass dispatches per action |
+| `executeStep(step, index, scenario?)` | Abstract — subclass dispatches per action |
 | `buildResult(scenario, ctx)` | Abstract — subclass assembles final result shape |
 | `applyEnvironment()` | Optional hook — per-agent env setup before loop |
 | `onBeforeExecute()` | Optional lifecycle hook |

@@ -192,12 +192,13 @@ describe('scenarioAdapter', () => {
       ]);
     });
 
-    it('should preserve cwd alias in scenario agent config', () => {
+    it('should preserve cwd alias and normalize it to workingDirectory', () => {
       const result = adaptScenarioToComplex(makeScenario({
         agents: [{ name: 'cli-agent', type: 'cli', config: { cwd: '/workspace/cwd-alias' } }]
       })) as ReturnType<typeof adaptScenarioToComplex> & { agents?: AdaptedScenarioAgent[] };
 
       expect(result.agents?.[0]?.config?.cwd).toBe('/workspace/cwd-alias');
+      expect(result.agents?.[0]?.config?.workingDirectory).toBe('/workspace/cwd-alias');
     });
 
     it('should preserve workingDirectory in scenario agent config', () => {

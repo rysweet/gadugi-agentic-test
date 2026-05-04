@@ -52,7 +52,11 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
    * Subclasses contain all action-dispatch logic here.
    * Declared as protected minimum; subclasses may widen to public.
    */
-  abstract executeStep(step: TestStep, index: number): Promise<StepResult>;
+  abstract executeStep(
+    step: TestStep,
+    index: number,
+    scenario?: OrchestratorScenario
+  ): Promise<StepResult>;
 
   /**
    * Assemble the final result object from the shared execution context.
@@ -122,7 +126,7 @@ export abstract class BaseAgent extends EventEmitter implements IAgent {
     try {
       const stepResults: StepResult[] = [];
       for (let i = 0; i < scenario.steps.length; i++) {
-        const stepResult = await this.executeStep(scenario.steps[i], i);
+        const stepResult = await this.executeStep(scenario.steps[i], i, scenario);
         stepResults.push(stepResult);
         if (
           stepResult.status === TestStatus.FAILED ||

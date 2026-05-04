@@ -14,7 +14,6 @@ import { AgentType } from './index';
 import {
   OrchestratorScenario,
   OrchestratorScenarioAgent,
-  OrchestratorScenarioAgentConfig,
   TestStep,
   TestStatus,
   StepResult,
@@ -22,6 +21,7 @@ import {
 } from '../models/TestModels';
 import { createLogger } from '../utils/logger';
 import { delay } from '../utils/async';
+import { hasWorkingDirectoryConfig, resolveWorkingDirectoryConfig } from '../utils/agentUtils';
 import { validateDirectory } from '../utils/fileUtils';
 import { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData, DEFAULT_CLI_CONFIG } from './cli/types';
 import { CLICommandRunner } from './cli/CLICommandRunner';
@@ -30,6 +30,9 @@ import { BaseAgent, ExecutionContext as AgentExecutionContext } from './BaseAgen
 
 export type { CLIAgentConfig, CLIProcessInfo, ExecutionContext, StreamData };
 
+const COMMAND_ACTIONS = new Set(['execute', 'run', 'command', 'execute_command']);
+const COMMAND_CAPABLE_AGENT_TYPES = new Set(['cli', 'system']);
+
 export class CLIAgent extends BaseAgent {
   public readonly name = 'CLIAgent';
   public readonly type = AgentType.CLI;
@@ -37,7 +40,6 @@ export class CLIAgent extends BaseAgent {
   private config: Required<CLIAgentConfig>;
   private runner: CLICommandRunner;
   private parser: CLIOutputParser;
-  private scenarioWorkingDirectory: string | undefined;
 
   constructor(config: CLIAgentConfig = {}) {
     super();
@@ -67,11 +69,6 @@ export class CLIAgent extends BaseAgent {
     }
   }
 
-  protected onBeforeExecute(scenario: OrchestratorScenario): void {
-    this.scenarioWorkingDirectory = undefined;
-    this.scenarioWorkingDirectory = this.resolveScenarioWorkingDirectory(scenario);
-  }
-
   protected buildResult(ctx: AgentExecutionContext): unknown {
     return {
       ...ctx,
@@ -82,7 +79,6 @@ export class CLIAgent extends BaseAgent {
   }
 
   protected async onAfterExecute(): Promise<void> {
-    this.scenarioWorkingDirectory = undefined;
     await this.runner.killAllProcesses();
   }
 
@@ -92,16 +88,16 @@ export class CLIAgent extends BaseAgent {
     return this.runner.executeCommand(command, args, options);
   }
 
-  async executeStep(step: TestStep, stepIndex: number): Promise<StepResult> {
+  async executeStep(step: TestStep, stepIndex: number, scenario?: OrchestratorScenario): Promise<StepResult> {
     const startTime = Date.now();
     try {
       let result: unknown;
       const action = step.action.toLowerCase();
-      if (['execute', 'run', 'command', 'execute_command'].includes(action)) {
-        result = await this.handleExecuteAction(step);
+      if (COMMAND_ACTIONS.has(action)) {
+        result = await this.handleExecuteAction(step, scenario);
       } else if (action === 'execute_with_input') {
         const parts = step.target.split(' ');
-        result = await this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory({ input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) }));
+        result = await this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory({ input: step.value || '', ...(step.timeout !== undefined ? { timeout: step.timeout } : {}) }, scenario));
       } else if (action === 'wait_for_output') {
         result = await this.parser.waitForOutput(step.target, () => this.getAllOutput(), step.timeout || this.config.defaultTimeout);
       } else if (action === 'validate_output') {
@@ -163,20 +159,28 @@ export class CLIAgent extends BaseAgent {
       .map(e => e.data).join('');
   }
 
-  private async handleExecuteAction(step: TestStep): Promise<CommandResult> {
+  private async handleExecuteAction(step: TestStep, scenario?: OrchestratorScenario): Promise<CommandResult> {
     const parts = step.target.split(' ');
     const options: Partial<ExecutionContext> = {};
     if (step.timeout) options.timeout = step.timeout;
     if (step.value) { try { options.env = JSON.parse(step.value); } catch { options.input = step.value; } }
-    return this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory(options));
+    return this.runner.executeCommand(parts[0], parts.slice(1), this.withScenarioWorkingDirectory(options, scenario));
   }
 
-  private withScenarioWorkingDirectory(options: Partial<ExecutionContext>): Partial<ExecutionContext> {
-    if (options.cwd !== undefined || this.scenarioWorkingDirectory === undefined) {
+  private withScenarioWorkingDirectory(
+    options: Partial<ExecutionContext>,
+    scenario?: OrchestratorScenario
+  ): Partial<ExecutionContext> {
+    if (options.cwd !== undefined || scenario === undefined) {
       return options;
     }
 
-    return { ...options, cwd: this.scenarioWorkingDirectory };
+    const scenarioWorkingDirectory = this.resolveScenarioWorkingDirectory(scenario);
+    if (scenarioWorkingDirectory === undefined) {
+      return options;
+    }
+
+    return { ...options, cwd: scenarioWorkingDirectory };
   }
 
   private resolveScenarioWorkingDirectory(scenario: OrchestratorScenario): string | undefined {
@@ -184,59 +188,34 @@ export class CLIAgent extends BaseAgent {
       return undefined;
     }
 
-    const commandAgent = scenario.agents.find(agent =>
-      this.isCommandCapableScenarioAgent(agent) && this.hasWorkingDirectoryConfig(agent.config)
-    );
-    if (commandAgent) {
-      return this.resolveWorkingDirectoryFromConfig(commandAgent.config, commandAgent);
+    let fallbackAgent: OrchestratorScenarioAgent | undefined;
+    for (const agent of scenario.agents) {
+      if (!this.isCommandCapableScenarioAgent(agent)) {
+        if (fallbackAgent === undefined && hasWorkingDirectoryConfig(agent.config)) {
+          fallbackAgent = agent;
+        }
+        continue;
+      }
+
+      if (hasWorkingDirectoryConfig(agent.config)) {
+        const workingDirectory = resolveWorkingDirectoryConfig(agent.config, this.getAgentLabel(agent));
+        if (workingDirectory !== undefined) {
+          return workingDirectory;
+        }
+      }
     }
 
-    const fallbackAgent = scenario.agents.find(agent => this.hasWorkingDirectoryConfig(agent.config));
-    if (fallbackAgent) {
-      return this.resolveWorkingDirectoryFromConfig(fallbackAgent.config, fallbackAgent);
-    }
-
-    return undefined;
+    return fallbackAgent !== undefined
+      ? resolveWorkingDirectoryConfig(fallbackAgent.config, this.getAgentLabel(fallbackAgent))
+      : undefined;
   }
 
   private isCommandCapableScenarioAgent(agent: OrchestratorScenarioAgent): boolean {
-    return ['cli', 'system'].includes(agent.type.toLowerCase());
+    return COMMAND_CAPABLE_AGENT_TYPES.has(agent.type.toLowerCase());
   }
 
-  private hasWorkingDirectoryConfig(config: OrchestratorScenarioAgentConfig | undefined): boolean {
-    return config !== undefined && ('workingDirectory' in config || 'cwd' in config);
-  }
-
-  private resolveWorkingDirectoryFromConfig(
-    config: OrchestratorScenarioAgentConfig | undefined,
-    agent: OrchestratorScenarioAgent
-  ): string | undefined {
-    if (!config) {
-      return undefined;
-    }
-
-    if ('workingDirectory' in config) {
-      return this.requireNonEmptyWorkingDirectory(config.workingDirectory, 'workingDirectory', agent);
-    }
-
-    if ('cwd' in config) {
-      return this.requireNonEmptyWorkingDirectory(config.cwd, 'cwd', agent);
-    }
-
-    return undefined;
-  }
-
-  private requireNonEmptyWorkingDirectory(
-    value: unknown,
-    fieldName: 'workingDirectory' | 'cwd',
-    agent: OrchestratorScenarioAgent
-  ): string {
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value;
-    }
-
-    const agentLabel = agent.id || agent.name || agent.type;
-    throw new Error(`Invalid scenario agent ${fieldName} for "${agentLabel}": expected a non-empty string`);
+  private getAgentLabel(agent: OrchestratorScenarioAgent): string {
+    return agent.id || agent.name || agent.type;
   }
 
   private async fileExists(filePath: string): Promise<boolean> {

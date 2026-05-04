@@ -10,6 +10,7 @@ import {
   Priority,
   TestInterface
 } from '../models/TestModels';
+import { hasWorkingDirectoryConfig, resolveWorkingDirectoryConfig } from '../utils/agentUtils';
 import { v4 as uuidv4 } from 'uuid';
 
 type ScenarioAgentInput = SimpleScenario['agents'][number] & {
@@ -77,10 +78,20 @@ function adaptAgentToOrchestrator(agent: SimpleScenario['agents'][number]): Orch
   };
 
   if (agent.config !== undefined) {
-    adapted.config = { ...agent.config };
+    const workingDirectory = hasWorkingDirectoryConfig(agent.config)
+      ? resolveWorkingDirectoryConfig(agent.config, getAgentLabel(adapted))
+      : undefined;
+    adapted.config = {
+      ...agent.config,
+      ...(workingDirectory !== undefined ? { workingDirectory } : {}),
+    };
   }
 
   return adapted;
+}
+
+function getAgentLabel(agent: OrchestratorScenarioAgent): string {
+  return agent.id || agent.name || agent.type;
 }
 
 /**

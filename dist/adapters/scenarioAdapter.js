@@ -5,6 +5,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.adaptScenarioToComplex = adaptScenarioToComplex;
 const TestModels_1 = require("../models/TestModels");
+const agentUtils_1 = require("../utils/agentUtils");
 const uuid_1 = require("uuid");
 /**
  * Convert simple scenario format (from YAML) to complex format (for TestOrchestrator)
@@ -60,9 +61,18 @@ function adaptAgentToOrchestrator(agent) {
         ...(typeof agent.name === 'string' ? { name: agent.name } : {}),
     };
     if (agent.config !== undefined) {
-        adapted.config = { ...agent.config };
+        const workingDirectory = (0, agentUtils_1.hasWorkingDirectoryConfig)(agent.config)
+            ? (0, agentUtils_1.resolveWorkingDirectoryConfig)(agent.config, getAgentLabel(adapted))
+            : undefined;
+        adapted.config = {
+            ...agent.config,
+            ...(workingDirectory !== undefined ? { workingDirectory } : {}),
+        };
     }
     return adapted;
+}
+function getAgentLabel(agent) {
+    return agent.id || agent.name || agent.type;
 }
 /**
  * Convert scenarios/TestStep to models/OrchestratorStep

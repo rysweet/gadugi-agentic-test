@@ -20,6 +20,7 @@ type CapturedHooks = {
   applyEnv: boolean;
   afterExecute: boolean;
   afterStatus?: TestStatus;
+  stepScenarioIds: string[];
 };
 
 class TestAgent extends BaseAgent {
@@ -30,6 +31,7 @@ class TestAgent extends BaseAgent {
     beforeExecute: false,
     applyEnv: false,
     afterExecute: false,
+    stepScenarioIds: [],
   };
 
   /** Controls whether steps pass or fail. */
@@ -41,7 +43,10 @@ class TestAgent extends BaseAgent {
 
   async cleanup(): Promise<void> {}
 
-  async executeStep(_step: any, index: number): Promise<StepResult> {
+  async executeStep(_step: any, index: number, scenario?: OrchestratorScenario): Promise<StepResult> {
+    if (scenario !== undefined) {
+      this.hooks.stepScenarioIds.push(scenario.id);
+    }
     if (this.stepBehavior === 'throw') {
       throw new Error(`step ${index} threw`);
     }
@@ -121,6 +126,11 @@ describe('BaseAgent.execute()', () => {
     const result = await agent.execute(makeScenario(3)) as any;
     expect(result.stepResults).toHaveLength(3);
     expect(result.status).toBe(TestStatus.PASSED);
+  });
+
+  it('passes the scenario to each step execution', async () => {
+    await agent.execute(makeScenario(2));
+    expect(agent.hooks.stepScenarioIds).toEqual(['test-scenario', 'test-scenario']);
   });
 
   it('stops at the first FAILED step', async () => {

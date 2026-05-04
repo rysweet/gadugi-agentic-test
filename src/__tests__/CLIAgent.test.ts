@@ -361,6 +361,26 @@ describe('CLIAgent.execute() scenario working directory resolution', () => {
     const options = mockRunnerInstance.executeCommand.mock.calls[0][2] as Record<string, unknown>;
     expect(options).not.toHaveProperty('cwd');
   });
+
+  it('keeps scenario working directory resolution local to each execute call', async () => {
+    mockRunnerInstance.executeCommand.mockImplementation((_command: string, _args: string[], options: Record<string, unknown>) =>
+      Promise.resolve({ exitCode: 0, stdout: String(options.cwd), stderr: '' })
+    );
+
+    await Promise.all([
+      agent.execute(makeScenarioWithAgents([
+        { id: 'cli-agent-a', type: 'cli', config: { cwd: '/workspace/a' } }
+      ])),
+      agent.execute(makeScenarioWithAgents([
+        { id: 'cli-agent-b', type: 'cli', config: { cwd: '/workspace/b' } }
+      ])),
+    ]);
+
+    const cwdValues = mockRunnerInstance.executeCommand.mock.calls.map(
+      call => (call[2] as Record<string, unknown>).cwd
+    );
+    expect(cwdValues).toEqual(expect.arrayContaining(['/workspace/a', '/workspace/b']));
+  });
 });
 
 // ===========================================================================
