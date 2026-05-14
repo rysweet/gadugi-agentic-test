@@ -225,7 +225,7 @@ describe('SystemAgent', () => {
       const metrics = await agent.captureMetrics();
       
       // Should not crash even if Docker is not available
-      expect(metrics.docker).toBeDefined();
+      // metrics.docker may be undefined when Docker daemon is not running
       if (metrics.docker) {
         expect(Array.isArray(metrics.docker)).toBe(true);
       }
