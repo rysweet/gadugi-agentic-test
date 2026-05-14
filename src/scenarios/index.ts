@@ -35,9 +35,21 @@ export class ScenarioLoader {
     const files = await fs.readdir(dirPath);
     const yamlFiles = files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'));
 
-    const scenarios = await Promise.all(
+    const results = await Promise.allSettled(
       yamlFiles.map(f => this.loadFromFile(path.join(dirPath, f)))
     );
+
+    const scenarios: ScenarioDefinition[] = [];
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'fulfilled') {
+        scenarios.push(result.value);
+      } else {
+        const filePath = path.join(dirPath, yamlFiles[i]);
+        const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        console.error(`Warning: Failed to load scenario from ${filePath}: ${reason}`);
+      }
+    }
 
     return scenarios;
   }
