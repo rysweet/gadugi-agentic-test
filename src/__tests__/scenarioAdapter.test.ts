@@ -337,4 +337,88 @@ describe('scenarioAdapter', () => {
       expect(result.steps[0].timeout).toBe(60000);
     });
   });
+
+  describe('adaptStepToOrchestrator — direct target/expected from CLI conversion (issue #202)', () => {
+    it('should prefer direct target over params.command extraction', () => {
+      const result = adaptScenarioToComplex(makeScenario({
+        steps: [{
+          name: 'cli step',
+          agent: 'cli-agent',
+          action: 'command',
+          target: 'node --version',
+          params: { command: 'node --version' }
+        }]
+      }));
+
+      expect(result.steps[0].action).toBe('command');
+      expect(result.steps[0].target).toBe('node --version');
+    });
+
+    it('should pass through expected field from CLI step to OrchestratorStep', () => {
+      const result = adaptScenarioToComplex(makeScenario({
+        steps: [{
+          name: 'cli step with expected',
+          agent: 'cli-agent',
+          action: 'command',
+          target: 'echo hello',
+          expected: 'hello',
+          params: { command: 'echo hello' }
+        }]
+      }));
+
+      expect(result.steps[0].expected).toBe('hello');
+    });
+
+    it('should not set expected when step has no expected field', () => {
+      const result = adaptScenarioToComplex(makeScenario({
+        steps: [{
+          name: 'cli step no expected',
+          agent: 'cli-agent',
+          action: 'command',
+          target: 'ls -la',
+          params: { command: 'ls -la' }
+        }]
+      }));
+
+      expect(result.steps[0].expected).toBeUndefined();
+    });
+
+    it('should handle a full CLI scenario from legacy conversion format', () => {
+      // This simulates what convertLegacyFormat produces for a CLI scenario
+      const result = adaptScenarioToComplex({
+        name: 'CLI Integration Test',
+        agents: [{ name: 'cli-agent', type: 'cli', config: {} }],
+        steps: [
+          {
+            name: 'node --version',
+            agent: 'cli-agent',
+            action: 'command',
+            target: 'node --version',
+            expected: 'v',
+            params: { command: 'node --version' },
+            timeout: 30000
+          },
+          {
+            name: 'npm --version',
+            agent: 'cli-agent',
+            action: 'command',
+            target: 'npm --version',
+            params: { command: 'npm --version' },
+            timeout: 30000
+          }
+        ],
+        assertions: [],
+        metadata: { tags: ['legacy-format'] }
+      });
+
+      expect(result.steps).toHaveLength(2);
+      expect(result.steps[0].action).toBe('command');
+      expect(result.steps[0].target).toBe('node --version');
+      expect(result.steps[0].expected).toBe('v');
+      expect(result.steps[0].timeout).toBe(30000);
+      expect(result.steps[1].action).toBe('command');
+      expect(result.steps[1].target).toBe('npm --version');
+      expect(result.steps[1].expected).toBeUndefined();
+    });
+  });
 });

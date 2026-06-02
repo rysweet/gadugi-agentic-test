@@ -100,26 +100,27 @@ function getAgentLabel(agent: OrchestratorScenarioAgent): string {
 function adaptStepToOrchestrator(simpleStep: SimpleStep, _stepIndex: number): OrchestratorStep {
   const params = simpleStep.params || {};
 
-  // Build target string based on params and step type
-  let target = '';
+  // Prefer direct target/expected from step (set by legacy CLI conversion)
+  let target = simpleStep.target || '';
   let value = '';
 
-  if (params['command']) {
-    // For spawn/spawn_tui actions: combine command and args into target
-    if (Array.isArray(params['args'])) {
-      target = `${params['command']} ${(params['args'] as unknown[]).join(' ')}`;
+  if (!target) {
+    if (params['command']) {
+      // For spawn/spawn_tui actions: combine command and args into target
+      if (Array.isArray(params['args'])) {
+        target = `${params['command']} ${(params['args'] as unknown[]).join(' ')}`;
+      } else {
+        target = String(params['command']);
+      }
+    } else if (params['text'] !== undefined || params['duration'] !== undefined) {
+      // For actions that operate on the spawned session
+      value = params['text'] !== undefined ? String(params['text']) : String(params['duration'] ?? '');
+      target = ''; // TUIAgent will use the active session
     } else {
-      target = String(params['command']);
+      // Fallback: use first param value as target
+      const firstValue = Object.values(params)[0];
+      target = String(firstValue ?? '');
     }
-  } else if (params['text'] !== undefined || params['duration'] !== undefined) {
-    // For actions that operate on the spawned session
-    // Use a special marker that TUIAgent can interpret as "use the active session"
-    value = params['text'] !== undefined ? String(params['text']) : String(params['duration'] ?? '');
-    target = ''; // TUIAgent will use the active session
-  } else {
-    // Fallback: use first param value as target
-    const firstValue = Object.values(params)[0];
-    target = String(firstValue ?? '');
   }
 
   return {
@@ -127,6 +128,7 @@ function adaptStepToOrchestrator(simpleStep: SimpleStep, _stepIndex: number): Or
     target,
     value,
     ...(simpleStep.timeout !== undefined ? { timeout: simpleStep.timeout } : {}),
+    ...(simpleStep.expected !== undefined ? { expected: simpleStep.expected } : {}),
   };
 }
 

@@ -84,7 +84,7 @@ describe('registerValidateCommand', () => {
   describe('single file mode (--file)', () => {
     it('validates single file and reports it as valid', async () => {
       mockValidateYamlFile.mockResolvedValue({ valid: true, errors: [] });
-      mockLoadFromFile.mockResolvedValue({ name: 'MyScenario', steps: [], assertions: [] });
+      mockLoadFromFile.mockResolvedValue([{ name: 'MyScenario', steps: [], assertions: [] }]);
 
       await invokeValidate(['--file', './scenarios/test.yaml']);
 
@@ -97,7 +97,7 @@ describe('registerValidateCommand', () => {
 
     it('reports scenario name when single file is valid', async () => {
       mockValidateYamlFile.mockResolvedValue({ valid: true, errors: [] });
-      mockLoadFromFile.mockResolvedValue({ name: 'LoginTest', steps: [], assertions: [] });
+      mockLoadFromFile.mockResolvedValue([{ name: 'LoginTest', steps: [], assertions: [] }]);
 
       await invokeValidate(['--file', './scenarios/login.yaml']);
 
@@ -144,7 +144,7 @@ describe('registerValidateCommand', () => {
     it('validates all YAML files in the directory (filters by extension)', async () => {
       mockFs.readdir.mockResolvedValue(['a.yaml', 'b.yml', 'c.txt'] as unknown as fs.Dirent[]);
       mockValidateYamlFile.mockResolvedValue({ valid: true, errors: [] });
-      mockLoadFromFile.mockResolvedValue({ name: 'Scen', steps: [], assertions: [] });
+      mockLoadFromFile.mockResolvedValue([{ name: 'Scen', steps: [], assertions: [] }]);
 
       await invokeValidate(['--directory', './scenarios']);
 
@@ -204,7 +204,7 @@ describe('registerValidateCommand', () => {
     it('reports all files valid and does not exit when no errors found', async () => {
       mockFs.readdir.mockResolvedValue(['good.yaml'] as unknown as fs.Dirent[]);
       mockValidateYamlFile.mockResolvedValue({ valid: true, errors: [] });
-      mockLoadFromFile.mockResolvedValue({ name: 'GoodScenario', steps: [], assertions: [] });
+      mockLoadFromFile.mockResolvedValue([{ name: 'GoodScenario', steps: [], assertions: [] }]);
 
       await invokeValidate(['--directory', './scenarios']);
 

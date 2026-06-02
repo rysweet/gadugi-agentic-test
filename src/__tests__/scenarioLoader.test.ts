@@ -34,8 +34,10 @@ assertions:
 `;
       mockFs.readFile.mockResolvedValue(yamlContent);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/login.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/login.yaml');
 
+      expect(scenarios).toHaveLength(1);
+      const scenario = scenarios[0];
       expect(scenario.name).toBe('Login Test');
       expect(scenario.description).toBe('Test the login flow');
       expect(scenario.steps).toHaveLength(1);
@@ -59,10 +61,11 @@ scenario:
 `;
       mockFs.readFile.mockResolvedValue(wrappedYaml);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/wrapped.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/wrapped.yaml');
 
-      expect(scenario.name).toBe('Wrapped Scenario');
-      expect(scenario.steps).toHaveLength(1);
+      expect(scenarios).toHaveLength(1);
+      expect(scenarios[0].name).toBe('Wrapped Scenario');
+      expect(scenarios[0].steps).toHaveLength(1);
     });
 
     it('should convert legacy format with application/scenarios', async () => {
@@ -88,9 +91,11 @@ scenarios:
 `;
       mockFs.readFile.mockResolvedValue(legacyYaml);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/legacy.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/legacy.yaml');
 
-      expect(scenario.name).toBe('Legacy Suite');
+      expect(scenarios).toHaveLength(1);
+      const scenario = scenarios[0];
+      expect(scenario.name).toBe('First Scenario');
       expect(scenario.steps).toHaveLength(1);
       expect(scenario.steps[0].agent).toBe('tui-agent');
       expect(scenario.metadata?.tags).toContain('legacy-format');
@@ -255,9 +260,10 @@ scenarios:
 `;
       mockFs.readFile.mockResolvedValue(legacyYaml);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/timeout.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/timeout.yaml');
 
-      expect(scenario.config?.timeout).toBe(60000);
+      expect(scenarios).toHaveLength(1);
+      expect(scenarios[0].config?.timeout).toBe(60000);
     });
 
     it('should handle legacy scenario without assertions', async () => {
@@ -271,9 +277,295 @@ scenarios:
 `;
       mockFs.readFile.mockResolvedValue(legacyYaml);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/no-assertions.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/no-assertions.yaml');
 
-      expect(scenario.assertions).toEqual([]);
+      expect(scenarios).toHaveLength(1);
+      expect(scenarios[0].assertions).toEqual([]);
+    });
+
+    it('should load all scenarios from legacy format (not just the first)', async () => {
+      const legacyYaml = `
+name: Multi Suite
+application:
+  timeout: 60
+scenarios:
+  - name: Scenario A
+    steps:
+      - action: launch
+        input: app.exe
+        conditions: []
+  - name: Scenario B
+    steps:
+      - action: run
+        input: test.sh
+        conditions: []
+`;
+      mockFs.readFile.mockResolvedValue(legacyYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/multi.yaml');
+
+      expect(scenarios).toHaveLength(2);
+      expect(scenarios[0].name).toBe('Scenario A');
+      expect(scenarios[1].name).toBe('Scenario B');
+    });
+
+    it('should use cli-agent for scenarios with type: cli', async () => {
+      const cliYaml = `
+scenarios:
+  - name: CLI Test
+    type: cli
+    steps:
+      - type: command
+        command: "node --version"
+        expected: "v"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/cli.yaml');
+
+      expect(scenarios).toHaveLength(1);
+      const scenario = scenarios[0];
+      expect(scenario.agents[0].name).toBe('cli-agent');
+      expect(scenario.agents[0].type).toBe('cli');
+      expect(scenario.steps[0].agent).toBe('cli-agent');
+      expect(scenario.steps[0].action).toBe('command');
+      expect(scenario.steps[0].target).toBe('node --version');
+      expect(scenario.steps[0].expected).toBe('v');
+    });
+
+    it('should default to tui-agent for scenarios without type', async () => {
+      const tuiYaml = `
+scenarios:
+  - name: TUI Test
+    steps:
+      - action: launch
+        input: app.exe
+        conditions: []
+`;
+      mockFs.readFile.mockResolvedValue(tuiYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/tui.yaml');
+
+      expect(scenarios[0].agents[0].name).toBe('tui-agent');
+      expect(scenarios[0].agents[0].type).toBe('tui');
+    });
+  });
+
+  describe('convertLegacyFormat — CLI step edge cases (issue #202)', () => {
+    it('should map expected_output field to step.expected', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Expected Output Test
+    type: cli
+    steps:
+      - type: command
+        command: "echo hello"
+        expected_output: "hello"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/expected-output.yaml');
+
+      expect(scenarios[0].steps[0].expected).toBe('hello');
+    });
+
+    it('should prefer expected_output over expected when both present', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Dual Expected Test
+    type: cli
+    steps:
+      - type: command
+        command: "node --version"
+        expected_output: "from_expected_output"
+        expected: "from_expected"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/dual-expected.yaml');
+
+      expect(scenarios[0].steps[0].expected).toBe('from_expected_output');
+    });
+
+    it('should handle CLI step with type: command but missing command field', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Missing Command Test
+    type: cli
+    steps:
+      - type: command
+        description: "A step without a command"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/missing-cmd.yaml');
+
+      // action should still be 'command' (mapped from type)
+      expect(scenarios[0].steps[0].action).toBe('command');
+      // target should NOT be set when command field is missing
+      expect(scenarios[0].steps[0].target).toBeUndefined();
+    });
+
+    it('should support mixed CLI and TUI scenarios in the same file', async () => {
+      const mixedYaml = `
+scenarios:
+  - name: CLI Part
+    type: cli
+    steps:
+      - type: command
+        command: "node --version"
+  - name: TUI Part
+    steps:
+      - action: launch
+        input: app.exe
+        conditions: []
+`;
+      mockFs.readFile.mockResolvedValue(mixedYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/mixed.yaml');
+
+      expect(scenarios).toHaveLength(2);
+      expect(scenarios[0].agents[0].type).toBe('cli');
+      expect(scenarios[0].steps[0].action).toBe('command');
+      expect(scenarios[1].agents[0].type).toBe('tui');
+      expect(scenarios[1].steps[0].action).toBe('launch');
+    });
+
+    it('should inherit suite-level type: cli when scenario has no own type', async () => {
+      const suiteCliYaml = `
+type: cli
+scenarios:
+  - name: Inherited CLI Test
+    steps:
+      - type: command
+        command: "echo hi"
+`;
+      mockFs.readFile.mockResolvedValue(suiteCliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/suite-cli.yaml');
+
+      expect(scenarios[0].agents[0].name).toBe('cli-agent');
+      expect(scenarios[0].agents[0].type).toBe('cli');
+    });
+
+    it('should propagate suite-level version to all scenarios', async () => {
+      const suiteYaml = `
+version: "2.1"
+scenarios:
+  - name: S1
+    type: cli
+    steps:
+      - type: command
+        command: "echo 1"
+  - name: S2
+    type: cli
+    steps:
+      - type: command
+        command: "echo 2"
+`;
+      mockFs.readFile.mockResolvedValue(suiteYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/versioned.yaml');
+
+      expect(scenarios).toHaveLength(2);
+      expect(scenarios[0].version).toBe('2.1');
+      expect(scenarios[1].version).toBe('2.1');
+    });
+
+    it('should use step description as name fallback', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Name Fallback Test
+    type: cli
+    steps:
+      - type: command
+        command: "node --version"
+        description: "Check node version"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/name-fallback.yaml');
+
+      expect(scenarios[0].steps[0].name).toBe('Check node version');
+    });
+
+    it('should use command string as step name when no description', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Command Name Test
+    type: cli
+    steps:
+      - type: command
+        command: "npm test"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/cmd-name.yaml');
+
+      expect(scenarios[0].steps[0].name).toBe('npm test');
+    });
+
+    it('should store command in params.command for downstream consumers', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Params Command Test
+    type: cli
+    steps:
+      - type: command
+        command: "node --version"
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/params-cmd.yaml');
+
+      expect(scenarios[0].steps[0].params?.['command']).toBe('node --version');
+    });
+
+    it('should extract per-step timeout from conditions array', async () => {
+      const cliYaml = `
+scenarios:
+  - name: Step Timeout Test
+    type: cli
+    steps:
+      - type: command
+        command: "slow-command"
+        conditions:
+          - timeout: 90
+`;
+      mockFs.readFile.mockResolvedValue(cliYaml);
+
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/step-timeout.yaml');
+
+      expect(scenarios[0].steps[0].timeout).toBe(90000);
+    });
+  });
+
+  describe('loadFromDirectory with legacy multi-scenario files (issue #202)', () => {
+    it('should flatten multiple scenarios from a single legacy file into the directory result', async () => {
+      mockFs.readdir.mockResolvedValue([
+        'multi.yaml',
+      ] as unknown as Awaited<ReturnType<typeof fs.readdir>>);
+
+      const multiYaml = `
+scenarios:
+  - name: Scenario A
+    type: cli
+    steps:
+      - type: command
+        command: "echo A"
+  - name: Scenario B
+    type: cli
+    steps:
+      - type: command
+        command: "echo B"
+`;
+      mockFs.readFile.mockResolvedValue(multiYaml);
+
+      const scenarios = await ScenarioLoader.loadFromDirectory('/scenarios');
+
+      expect(scenarios).toHaveLength(2);
+      expect(scenarios[0].name).toBe('Scenario A');
+      expect(scenarios[1].name).toBe('Scenario B');
     });
   });
 
@@ -331,8 +623,9 @@ assertions:
 
       const scenario = await ScenarioLoader.loadFromFile('/scenarios/safe.yaml');
 
-      expect(scenario.name).toBe('Safe Scenario');
-      expect(scenario.steps).toHaveLength(1);
+      expect(scenario).toHaveLength(1);
+      expect(scenario[0].name).toBe('Safe Scenario');
+      expect(scenario[0].steps).toHaveLength(1);
     });
   });
 
@@ -350,10 +643,11 @@ steps:
 `;
       mockFs.readFile.mockResolvedValue(minimalYaml);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/minimal.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/minimal.yaml');
 
-      expect(scenario.name).toBe('Minimal');
-      expect(scenario.steps).toHaveLength(1);
+      expect(scenarios).toHaveLength(1);
+      expect(scenarios[0].name).toBe('Minimal');
+      expect(scenarios[0].steps).toHaveLength(1);
     });
 
     it('should accept scenario with steps as non-empty array', async () => {
@@ -372,9 +666,10 @@ steps:
 `;
       mockFs.readFile.mockResolvedValue(yaml);
 
-      const scenario = await ScenarioLoader.loadFromFile('/scenarios/array-steps.yaml');
+      const scenarios = await ScenarioLoader.loadFromFile('/scenarios/array-steps.yaml');
 
-      expect(scenario.steps).toHaveLength(2);
+      expect(scenarios).toHaveLength(1);
+      expect(scenarios[0].steps).toHaveLength(2);
     });
   });
 });

@@ -9,6 +9,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Fixed
+- **Legacy CLI scenario loading** — `convertLegacyFormat()` now correctly maps
+  `type: command` steps to `action: 'command'` with the command string set as
+  `target` and `expected_output` as `expected`. Previously, `action` was set to
+  an empty string, causing CLIAgent to throw "Unsupported CLI action: " (#202)
+- **Agent type detection** — Legacy scenarios with top-level `type: cli` now get
+  a `cli-agent` (type `'cli'`) instead of always defaulting to `tui-agent`
+- **Multi-scenario loading** — `convertLegacyFormat()` now processes ALL
+  scenarios in the `scenarios:` array, not just the first one
+
+### Changed
+- `ScenarioLoader.loadFromFile()` return type is now `Promise<ScenarioDefinition[]>`
+  (always an array). Canonical and wrapped formats return `[scenario]`, legacy
+  format returns all scenarios from the array.
+- `TestStep` interface now has optional `target` and `expected` fields for direct
+  CLI command passing without params extraction
+- `loadFromDirectory()` flattens all per-file arrays into a single
+  `ScenarioDefinition[]`
+
 ### Added
 - `docs/ARCHITECTURE.md` — comprehensive architecture reference
 

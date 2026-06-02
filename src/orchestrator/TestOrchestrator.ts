@@ -285,7 +285,8 @@ export class TestOrchestrator extends EventEmitter {
     if (scenarioFiles && scenarioFiles.length > 0) {
       for (const file of scenarioFiles) {
         try {
-          scenarios.push(adaptScenarioToComplex(await ScenarioLoader.loadFromFile(file)));
+          const loaded = await ScenarioLoader.loadFromFile(file);
+          scenarios.push(...loaded.map(adaptScenarioToComplex));
         } catch (error) {
           logger.error(`Failed to load scenarios from ${file}:`, error);
         }
@@ -294,9 +295,12 @@ export class TestOrchestrator extends EventEmitter {
       try {
         const files = await fs.readdir(scenarioDir);
         for (const file of files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'))) {
-          scenarios.push(adaptScenarioToComplex(
-            await ScenarioLoader.loadFromFile(path.join(scenarioDir, file))
-          ));
+          try {
+            const loaded = await ScenarioLoader.loadFromFile(path.join(scenarioDir, file));
+            scenarios.push(...loaded.map(adaptScenarioToComplex));
+          } catch (error) {
+            logger.error(`Failed to load scenarios from ${file}:`, error);
+          }
         }
       } catch (error) {
         logger.error('Failed to load scenarios from directory:', error);
