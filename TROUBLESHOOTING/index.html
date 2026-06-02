@@ -2197,6 +2197,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#issue-unsupported-cli-action-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "Unsupported CLI action" Error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-only-first-scenario-in-file-executes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Only First Scenario in File Executes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-cli-scenario-gets-wrong-agent-type-tui-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: CLI Scenario Gets Wrong Agent Type (tui-agent)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#issue-tests-pass-locally-but-fail-in-ci" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3027,6 +3060,39 @@
   
     <nav class="md-nav" aria-label="Test Execution Problems">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#issue-unsupported-cli-action-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: "Unsupported CLI action" Error
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-only-first-scenario-in-file-executes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: Only First Scenario in File Executes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#issue-cli-scenario-gets-wrong-agent-type-tui-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issue: CLI Scenario Gets Wrong Agent Type (tui-agent)
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#issue-tests-pass-locally-but-fail-in-ci" class="md-nav__link">
@@ -4009,6 +4075,50 @@ which<span class="w"> </span>node
 </ol>
 <hr />
 <h2 id="test-execution-problems">Test Execution Problems<a class="headerlink" href="#test-execution-problems" title="Permanent link">&para;</a></h2>
+<h3 id="issue-unsupported-cli-action-error">Issue: "Unsupported CLI action" Error<a class="headerlink" href="#issue-unsupported-cli-action-error" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- Error message: <code>Unsupported CLI action:</code> (empty action)
+- Occurs when running legacy-format scenarios with <code>type: command</code> steps
+- All scenarios in the file fail</p>
+<p><strong>Cause:</strong>
+This occurred in versions prior to the fix for issue #202. The legacy format converter did not correctly map <code>type: command</code> steps to the <code>'command'</code> action that the CLIAgent recognizes.</p>
+<p><strong>Solution:</strong>
+Update to the latest version. The converter now correctly maps <code>type: command</code> + <code>command:</code> fields to <code>action: 'command'</code> with the command string set as <code>target</code>. Verify your scenario file uses the correct legacy format:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># ✅ Correct legacy CLI step format</span>
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">npm test</span>
+<span class="w">    </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test</span><span class="nv"> </span><span class="s">result:</span><span class="nv"> </span><span class="s">ok&quot;</span>
+
+<span class="c1"># ❌ These will not work — no &#39;command&#39; field</span>
+<span class="nt">steps</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">run</span>
+</code></pre></div>
+<h3 id="issue-only-first-scenario-in-file-executes">Issue: Only First Scenario in File Executes<a class="headerlink" href="#issue-only-first-scenario-in-file-executes" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- A YAML file with multiple scenarios in a <code>scenarios:</code> array only runs one test
+- Remaining scenarios are silently ignored</p>
+<p><strong>Cause:</strong>
+This was fixed in issue #202. The legacy format converter now processes <strong>all</strong> scenarios in the <code>scenarios:</code> array, not just the first one. <code>loadFromFile()</code> returns <code>ScenarioDefinition[]</code> — one entry per scenario.</p>
+<p><strong>Solution:</strong>
+Update to the latest version. All scenarios in the array are now loaded and executed.</p>
+<h3 id="issue-cli-scenario-gets-wrong-agent-type-tui-agent">Issue: CLI Scenario Gets Wrong Agent Type (tui-agent)<a class="headerlink" href="#issue-cli-scenario-gets-wrong-agent-type-tui-agent" title="Permanent link">&para;</a></h3>
+<p><strong>Symptoms:</strong>
+- A <code>type: cli</code> scenario is assigned a <code>tui-agent</code> instead of <code>cli-agent</code>
+- Step execution fails because the TUI agent cannot handle CLI commands</p>
+<p><strong>Cause:</strong>
+This was fixed in issue #202. The converter now checks the suite-level <code>type</code> field: <code>type: cli</code> produces a <code>cli-agent</code>, while <code>type: tui</code> (or omitted) produces a <code>tui-agent</code>.</p>
+<p><strong>Solution:</strong>
+Update to the latest version and ensure your scenario file has <code>type: cli</code> at the top level:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-cli-tests</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cli</span><span class="w">          </span><span class="c1"># ← this determines the agent type</span>
+<span class="nt">scenarios</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test-1</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo hello</span>
+</code></pre></div>
 <h3 id="issue-tests-pass-locally-but-fail-in-ci">Issue: Tests Pass Locally but Fail in CI<a class="headerlink" href="#issue-tests-pass-locally-but-fail-in-ci" title="Permanent link">&para;</a></h3>
 <p><strong>Symptoms:</strong>
 - Green tests locally, red in CI

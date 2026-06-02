@@ -1919,6 +1919,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#legacy-cli-scenario-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy CLI Scenario Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-new-scenarios" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2564,6 +2575,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#legacy-cli-scenario-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy CLI Scenario Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-new-scenarios" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3083,6 +3105,13 @@
 - <code>block_port</code> - Block network ports
 - <code>unblock_port</code> - Restore network access
 - <code>simulate_latency</code> - Add network delays</p>
+<h2 id="legacy-cli-scenario-format">Legacy CLI Scenario Format<a class="headerlink" href="#legacy-cli-scenario-format" title="Permanent link">&para;</a></h2>
+<p>For scenarios using the <code>scenarios:</code> array format (used by amplihack-rs test suites), see the <a href="../docs/scenarios-README.md#legacy-cli-scenario-format-scenarios-array">full legacy format documentation</a> in the docs directory.</p>
+<p>Quick reference:
+- Top-level <code>type: cli</code> → generates a <code>cli-agent</code> for all scenarios
+- Steps use <code>type: command</code> + <code>command:</code> + <code>expected_output:</code> fields
+- <strong>All</strong> scenarios in the array are loaded and executed
+- <code>ScenarioLoader.loadFromFile()</code> returns <code>ScenarioDefinition[]</code> (always an array)</p>
 <h2 id="writing-new-scenarios">Writing New Scenarios<a class="headerlink" href="#writing-new-scenarios" title="Permanent link">&para;</a></h2>
 <h3 id="1-define-the-scenario-purpose">1. Define the Scenario Purpose<a class="headerlink" href="#1-define-the-scenario-purpose" title="Permanent link">&para;</a></h3>
 <p>Start by clearly defining what your scenario will test:
@@ -3092,7 +3121,7 @@
 <h3 id="2-choose-appropriate-agents">2. Choose Appropriate Agents<a class="headerlink" href="#2-choose-appropriate-agents" title="Permanent link">&para;</a></h3>
 <p>Select the agents needed for your test:
 - UI testing: <code>ui-agent</code>
-- CLI operations: <code>system-agent</code>
+- CLI operations: <code>cli-agent</code> (or <code>system-agent</code> for broader system tasks)
 - Real-time updates: <code>websocket-agent</code>
 - Database operations: <code>database-agent</code>
 - API testing: <code>api-agent</code>

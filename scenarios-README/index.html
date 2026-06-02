@@ -2074,6 +2074,111 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#legacy-cli-scenario-format-scenarios-array" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy CLI Scenario Format (scenarios: array)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Legacy CLI Scenario Format (scenarios: array)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#format-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Format Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-legacy-conversion-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How Legacy Conversion Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-step-mapping-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Step Mapping Details
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#agent-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent Selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#return-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return Type
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#running-legacy-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running Legacy Scenarios
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-amplihack-rs-test-scenario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: amplihack-rs Test Scenario
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-new-scenarios" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2593,6 +2698,185 @@
 - <code>block_port</code> - Block network ports
 - <code>unblock_port</code> - Restore network access
 - <code>simulate_latency</code> - Add network delays</p>
+<h2 id="legacy-cli-scenario-format-scenarios-array">Legacy CLI Scenario Format (<code>scenarios:</code> array)<a class="headerlink" href="#legacy-cli-scenario-format-scenarios-array" title="Permanent link">&para;</a></h2>
+<p>gadugi-test supports a compact "legacy" YAML format used by external projects (e.g. amplihack-rs test suites). This format uses a top-level <code>scenarios:</code> array instead of the canonical single-scenario structure. <strong>All scenarios in the array are loaded and executed</strong> — not just the first one.</p>
+<h3 id="format-structure">Format Structure<a class="headerlink" href="#format-structure" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-test-suite</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Suite-level description</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cli</span><span class="w">                              </span><span class="c1"># suite type: &quot;cli&quot; or &quot;tui&quot;</span>
+<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1.0.0&quot;</span>
+<span class="nt">tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smoke</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">install</span><span class="p p-Indicator">]</span>
+
+<span class="nt">application</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span><span class="w">                         </span><span class="c1"># seconds — converted to ms internally</span>
+
+<span class="nt">scenarios</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">first-test</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">First test in the suite</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo &quot;hello world&quot;</span>
+<span class="w">        </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hello</span><span class="nv"> </span><span class="s">world&quot;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">second-test</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Second test in the suite</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">npm --version</span>
+<span class="w">        </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">             </span><span class="c1"># any non-error exit</span>
+</code></pre></div>
+<h3 id="how-legacy-conversion-works">How Legacy Conversion Works<a class="headerlink" href="#how-legacy-conversion-works" title="Permanent link">&para;</a></h3>
+<p>When <code>ScenarioLoader.loadFromFile()</code> detects a <code>scenarios:</code> array at the top level, it converts <strong>every</strong> entry into a full <code>ScenarioDefinition</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Legacy field</th>
+<th>Canonical equivalent</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Top-level <code>type: cli</code></td>
+<td><code>agents: [{ name: 'cli-agent', type: 'cli', config: {} }]</code></td>
+<td><code>type: tui</code> (or omitted) produces a <code>tui-agent</code> instead</td>
+</tr>
+<tr>
+<td>Top-level <code>version</code></td>
+<td><code>version</code> on each scenario</td>
+<td>Propagated to all scenarios in the array</td>
+</tr>
+<tr>
+<td><code>application.timeout</code> (seconds)</td>
+<td><code>config.timeout</code> (milliseconds)</td>
+<td>Multiplied by 1000; defaults to 120000ms</td>
+</tr>
+<tr>
+<td>Scenario <code>name</code></td>
+<td><code>name</code></td>
+<td>Falls back to suite-level <code>name</code></td>
+</tr>
+<tr>
+<td>Scenario <code>description</code></td>
+<td><code>description</code></td>
+<td>Falls back to suite-level <code>description</code></td>
+</tr>
+<tr>
+<td>Step <code>type: command</code></td>
+<td><code>action: 'command'</code></td>
+<td>The step type determines the action</td>
+</tr>
+<tr>
+<td>Step <code>command</code></td>
+<td><code>target</code> + <code>params.command</code></td>
+<td>The command string is set as the direct <code>target</code> on the step</td>
+</tr>
+<tr>
+<td>Step <code>expected_output</code></td>
+<td><code>expected</code></td>
+<td>Stored directly on the <code>TestStep</code> for validation</td>
+</tr>
+<tr>
+<td>Step <code>conditions[0].timeout</code></td>
+<td><code>timeout</code> (ms)</td>
+<td>Per-step timeout, converted from seconds</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cli-step-mapping-details">CLI Step Mapping Details<a class="headerlink" href="#cli-step-mapping-details" title="Permanent link">&para;</a></h3>
+<p>Steps with <code>type: command</code> in the legacy format are mapped to the <code>'command'</code> action, which the <code>CLIAgent</code> recognizes as a command-execution action (alongside <code>'execute'</code>, <code>'run'</code>, and <code>'execute_command'</code>).</p>
+<p>The <code>target</code> field carries the command string directly on the <code>TestStep</code>, so the scenario adapter can pass it to the orchestrator without extracting it from <code>params</code>. The <code>expected</code> field carries the expected output for post-execution validation.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Legacy format step:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cargo test --lib 2&gt;&amp;1 | tail -1</span>
+<span class="w">  </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test</span><span class="nv"> </span><span class="s">result:</span><span class="nv"> </span><span class="s">ok&quot;</span>
+
+<span class="c1"># Converts to TestStep:</span>
+<span class="c1"># {</span>
+<span class="c1">#   name: &quot;cargo test --lib 2&gt;&amp;1 | tail -1&quot;,</span>
+<span class="c1">#   agent: &quot;cli-agent&quot;,</span>
+<span class="c1">#   action: &quot;command&quot;,</span>
+<span class="c1">#   target: &quot;cargo test --lib 2&gt;&amp;1 | tail -1&quot;,</span>
+<span class="c1">#   expected: &quot;test result: ok&quot;,</span>
+<span class="c1">#   params: { command: &quot;cargo test --lib 2&gt;&amp;1 | tail -1&quot; },</span>
+<span class="c1">#   timeout: 30000</span>
+<span class="c1"># }</span>
+</code></pre></div>
+<h3 id="agent-selection">Agent Selection<a class="headerlink" href="#agent-selection" title="Permanent link">&para;</a></h3>
+<p>The agent type is determined by the <strong>suite-level</strong> <code>type</code> field (per-scenario <code>type</code> can override, but is rarely used):</p>
+<table>
+<thead>
+<tr>
+<th>Suite <code>type</code></th>
+<th>Agent name</th>
+<th>Agent type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cli</code></td>
+<td><code>cli-agent</code></td>
+<td><code>cli</code></td>
+</tr>
+<tr>
+<td><code>tui</code> (or omitted)</td>
+<td><code>tui-agent</code></td>
+<td><code>tui</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="return-type">Return Type<a class="headerlink" href="#return-type" title="Permanent link">&para;</a></h3>
+<p><code>ScenarioLoader.loadFromFile()</code> always returns <code>Promise&lt;ScenarioDefinition[]&gt;</code>:</p>
+<ul>
+<li><strong>Canonical format</strong> (top-level <code>name</code> + <code>steps</code>): returns <code>[scenario]</code></li>
+<li><strong>Wrapped format</strong> (<code>scenario: { ... }</code>): returns <code>[scenario]</code></li>
+<li><strong>Legacy format</strong> (<code>scenarios: [...]</code>): returns all scenarios from the array</li>
+</ul>
+<p><code>loadFromDirectory()</code> flattens all results into a single <code>ScenarioDefinition[]</code>.</p>
+<h3 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h3>
+<p>The <code>gadugi-test validate</code> command runs two-phase validation on legacy scenario files:</p>
+<ol>
+<li><strong>YAML structure</strong> — <code>parser.validateYamlFile()</code> checks that the file parses as valid YAML and contains an object (not a scalar or array at root).</li>
+<li><strong>Scenario loading</strong> — <code>ScenarioLoader.loadFromFile()</code> processes the legacy format, converting all scenarios. Missing <code>name</code> or <code>steps</code> on the canonical path will throw, but legacy <code>convertLegacyFormat</code> is lenient — a step with <code>type: command</code> but no <code>command</code> field will produce a step with an empty <code>target</code> and no <code>params.command</code>, which fails at execution time (CLIAgent receives no command to run) rather than at load time.</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> Always include a <code>command:</code> field on every <code>type: command</code> step. The converter does not reject missing commands — it silently produces empty targets.</p>
+</blockquote>
+<h3 id="running-legacy-scenarios">Running Legacy Scenarios<a class="headerlink" href="#running-legacy-scenarios" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run all scenarios from a directory (each file may contain multiple scenarios)</span>
+gadugi-test<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>tests/scenarios/
+
+<span class="c1"># Run a single file containing multiple scenarios</span>
+gadugi-test<span class="w"> </span>run<span class="w"> </span>tests/scenarios/my-test-suite.yaml
+
+<span class="c1"># The validate command also handles multi-scenario files</span>
+gadugi-test<span class="w"> </span>validate<span class="w"> </span>tests/scenarios/my-test-suite.yaml
+</code></pre></div>
+<h3 id="example-amplihack-rs-test-scenario">Example: amplihack-rs Test Scenario<a class="headerlink" href="#example-amplihack-rs-test-scenario" title="Permanent link">&para;</a></h3>
+<p>A real-world example testing CLI tool behavior:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">issue-679-node-version-and-config</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">  </span><span class="no">Verifies amplihack install validates Node.js version requirements and</span>
+<span class="w">  </span><span class="no">repairs malformed Copilot CLI config.json.</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cli</span>
+<span class="nt">tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">install</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">prerequisites</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">copilot</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">node</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">config</span><span class="p p-Indicator">]</span>
+
+<span class="nt">scenarios</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parse-node-major-version-unit-tests-pass</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">All parse_node_major_version unit tests pass</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cargo test -p amplihack-utils --lib -- parse_node_major_version 2&gt;&amp;1 | tail -1</span>
+<span class="w">        </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test</span><span class="nv"> </span><span class="s">result:</span><span class="nv"> </span><span class="s">ok&quot;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">empty-config-json-is-recovered</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Empty config.json triggers recovery instead of parse error</span>
+<span class="w">    </span><span class="nt">steps</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">command</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cargo test -p amplihack-cli --lib -- empty_config_json_is_recovered 2&gt;&amp;1 | tail -1</span>
+<span class="w">        </span><span class="nt">expected_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;test</span><span class="nv"> </span><span class="s">result:</span><span class="nv"> </span><span class="s">ok&quot;</span>
+</code></pre></div>
+<p>This file produces <strong>two</strong> <code>ScenarioDefinition</code> objects, each with a <code>cli-agent</code> and a single step with <code>action: 'command'</code>.</p>
 <h2 id="writing-new-scenarios">Writing New Scenarios<a class="headerlink" href="#writing-new-scenarios" title="Permanent link">&para;</a></h2>
 <h3 id="1-define-the-scenario-purpose">1. Define the Scenario Purpose<a class="headerlink" href="#1-define-the-scenario-purpose" title="Permanent link">&para;</a></h3>
 <p>Start by clearly defining what your scenario will test:
@@ -2602,7 +2886,7 @@
 <h3 id="2-choose-appropriate-agents">2. Choose Appropriate Agents<a class="headerlink" href="#2-choose-appropriate-agents" title="Permanent link">&para;</a></h3>
 <p>Select the agents needed for your test:
 - UI testing: <code>ui-agent</code>
-- CLI operations: <code>system-agent</code>
+- CLI operations: <code>cli-agent</code> (or <code>system-agent</code> for broader system tasks)
 - Real-time updates: <code>websocket-agent</code>
 - Database operations: <code>database-agent</code>
 - API testing: <code>api-agent</code>
