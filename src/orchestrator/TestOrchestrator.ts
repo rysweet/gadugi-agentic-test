@@ -9,7 +9,6 @@
 
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import * as fs from 'fs/promises';
 import {
   OrchestratorScenario,
   TestResult,
@@ -279,34 +278,35 @@ export class TestOrchestrator extends EventEmitter {
   }
 
   private async loadScenarios(scenarioFiles?: string[]): Promise<OrchestratorScenario[]> {
-    const scenarios: OrchestratorScenario[] = [];
     const scenarioDir = path.join(process.cwd(), 'scenarios');
 
+    let definitions: ScenarioDefinition[];
+
     if (scenarioFiles && scenarioFiles.length > 0) {
-      for (const file of scenarioFiles) {
-        try {
-          const loaded = await ScenarioLoader.loadFromFile(file);
-          scenarios.push(...loaded.map(adaptScenarioToComplex));
-        } catch (error) {
-          logger.error(`Failed to load scenarios from ${file}:`, error);
+      // Load explicit files in parallel
+      const results = await Promise.allSettled(
+        scenarioFiles.map(f => ScenarioLoader.loadFromFile(f))
+      );
+      definitions = [];
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result.status === 'fulfilled') {
+          definitions.push(...result.value);
+        } else {
+          logger.error(`Failed to load scenarios from ${scenarioFiles[i]}:`, result.reason);
         }
       }
     } else {
       try {
-        const files = await fs.readdir(scenarioDir);
-        for (const file of files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'))) {
-          try {
-            const loaded = await ScenarioLoader.loadFromFile(path.join(scenarioDir, file));
-            scenarios.push(...loaded.map(adaptScenarioToComplex));
-          } catch (error) {
-            logger.error(`Failed to load scenarios from ${file}:`, error);
-          }
-        }
+        // Reuse loadFromDirectory which already parallelizes via Promise.allSettled
+        definitions = await ScenarioLoader.loadFromDirectory(scenarioDir);
       } catch (error) {
         logger.error('Failed to load scenarios from directory:', error);
+        definitions = [];
       }
     }
 
+    const scenarios = definitions.map(adaptScenarioToComplex);
     logger.info(`Loaded ${scenarios.length} total test scenarios`);
     return scenarios;
   }
