@@ -2,9 +2,12 @@
  * Scenarios module - Test scenario management
  */
 export declare class ScenarioLoader {
-    static loadFromFile(filePath: string): Promise<ScenarioDefinition>;
+    static loadFromFile(filePath: string): Promise<ScenarioDefinition[]>;
     static loadFromDirectory(dirPath: string): Promise<ScenarioDefinition[]>;
     private static convertLegacyFormat;
+    private static convertLegacyStep;
+    /** Convert a seconds value (from YAML) to milliseconds, with a fallback default. */
+    private static parseTimeoutMs;
     private static validateScenario;
 }
 export interface ScenarioDefinition {
@@ -39,6 +42,10 @@ export interface TestStep {
     name: string;
     agent: string;
     action: string;
+    /** Direct target (e.g. CLI command string) — preferred over params extraction */
+    target?: string;
+    /** Expected output or result for validation */
+    expected?: string;
     params?: Record<string, unknown>;
     timeout?: number;
     wait_for?: WaitCondition;

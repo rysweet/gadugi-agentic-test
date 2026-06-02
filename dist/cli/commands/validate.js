@@ -70,8 +70,9 @@ function registerValidateCommand(program) {
                         errors: result.errors,
                     });
                     if (result.valid) {
-                        const scenario = await scenarios_1.ScenarioLoader.loadFromFile(options.file);
-                        (0, output_1.logSuccess)(`Scenario "${scenario.name}" is valid`);
+                        const scenarios = await scenarios_1.ScenarioLoader.loadFromFile(options.file);
+                        const names = scenarios.map(s => `"${s.name}"`).join(', ');
+                        (0, output_1.logSuccess)(`${scenarios.length} scenario(s) valid: ${names}`);
                     }
                 }
                 catch (error) {

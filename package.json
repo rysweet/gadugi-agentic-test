@@ -1,6 +1,6 @@
 {
   "name": "@gadugi/agentic-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Intelligent multi-agent testing framework for Electron, CLI, and web applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

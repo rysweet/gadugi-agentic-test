@@ -45,7 +45,6 @@ exports.TestOrchestrator = void 0;
 exports.createTestOrchestrator = createTestOrchestrator;
 const events_1 = require("events");
 const path = __importStar(require("path"));
-const fs = __importStar(require("fs/promises"));
 const TestModels_1 = require("../models/TestModels");
 const ElectronUIAgent_1 = require("../agents/ElectronUIAgent");
 const CLIAgent_1 = require("../agents/CLIAgent");
@@ -242,29 +241,33 @@ class TestOrchestrator extends events_1.EventEmitter {
         }
     }
     async loadScenarios(scenarioFiles) {
-        const scenarios = [];
         const scenarioDir = path.join(process.cwd(), 'scenarios');
+        let definitions;
         if (scenarioFiles && scenarioFiles.length > 0) {
-            for (const file of scenarioFiles) {
-                try {
-                    scenarios.push((0, scenarioAdapter_1.adaptScenarioToComplex)(await scenarios_1.ScenarioLoader.loadFromFile(file)));
+            // Load explicit files in parallel
+            const results = await Promise.allSettled(scenarioFiles.map(f => scenarios_1.ScenarioLoader.loadFromFile(f)));
+            definitions = [];
+            for (let i = 0; i < results.length; i++) {
+                const result = results[i];
+                if (result.status === 'fulfilled') {
+                    definitions.push(...result.value);
                 }
-                catch (error) {
-                    logger_1.logger.error(`Failed to load scenarios from ${file}:`, error);
+                else {
+                    logger_1.logger.error(`Failed to load scenarios from ${scenarioFiles[i]}:`, result.reason);
                 }
             }
         }
         else {
             try {
-                const files = await fs.readdir(scenarioDir);
-                for (const file of files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'))) {
-                    scenarios.push((0, scenarioAdapter_1.adaptScenarioToComplex)(await scenarios_1.ScenarioLoader.loadFromFile(path.join(scenarioDir, file))));
-                }
+                // Reuse loadFromDirectory which already parallelizes via Promise.allSettled
+                definitions = await scenarios_1.ScenarioLoader.loadFromDirectory(scenarioDir);
             }
             catch (error) {
                 logger_1.logger.error('Failed to load scenarios from directory:', error);
+                definitions = [];
             }
         }
+        const scenarios = definitions.map(scenarioAdapter_1.adaptScenarioToComplex);
         logger_1.logger.info(`Loaded ${scenarios.length} total test scenarios`);
         return scenarios;
     }
