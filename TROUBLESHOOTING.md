@@ -531,6 +531,66 @@ which node
 
 ## Test Execution Problems
 
+### Issue: "Unsupported CLI action" Error
+
+**Symptoms:**
+- Error message: `Unsupported CLI action: ` (empty action)
+- Occurs when running legacy-format scenarios with `type: command` steps
+- All scenarios in the file fail
+
+**Cause:**
+This occurred in versions prior to the fix for issue #202. The legacy format converter did not correctly map `type: command` steps to the `'command'` action that the CLIAgent recognizes.
+
+**Solution:**
+Update to the latest version. The converter now correctly maps `type: command` + `command:` fields to `action: 'command'` with the command string set as `target`. Verify your scenario file uses the correct legacy format:
+
+```yaml
+# ✅ Correct legacy CLI step format
+steps:
+  - type: command
+    command: npm test
+    expected_output: "test result: ok"
+
+# ❌ These will not work — no 'command' field
+steps:
+  - type: command
+    action: run
+```
+
+### Issue: Only First Scenario in File Executes
+
+**Symptoms:**
+- A YAML file with multiple scenarios in a `scenarios:` array only runs one test
+- Remaining scenarios are silently ignored
+
+**Cause:**
+This was fixed in issue #202. The legacy format converter now processes **all** scenarios in the `scenarios:` array, not just the first one. `loadFromFile()` returns `ScenarioDefinition[]` — one entry per scenario.
+
+**Solution:**
+Update to the latest version. All scenarios in the array are now loaded and executed.
+
+### Issue: CLI Scenario Gets Wrong Agent Type (tui-agent)
+
+**Symptoms:**
+- A `type: cli` scenario is assigned a `tui-agent` instead of `cli-agent`
+- Step execution fails because the TUI agent cannot handle CLI commands
+
+**Cause:**
+This was fixed in issue #202. The converter now checks the suite-level `type` field: `type: cli` produces a `cli-agent`, while `type: tui` (or omitted) produces a `tui-agent`.
+
+**Solution:**
+Update to the latest version and ensure your scenario file has `type: cli` at the top level:
+
+```yaml
+name: my-cli-tests
+type: cli          # ← this determines the agent type
+scenarios:
+  - name: test-1
+    steps:
+      - type: command
+        command: echo hello
+```
+
 ### Issue: Tests Pass Locally but Fail in CI
 
 **Symptoms:**

@@ -236,6 +236,16 @@ config:
 - `unblock_port` - Restore network access
 - `simulate_latency` - Add network delays
 
+## Legacy CLI Scenario Format
+
+For scenarios using the `scenarios:` array format (used by amplihack-rs test suites), see the [full legacy format documentation](../docs/scenarios-README.md#legacy-cli-scenario-format-scenarios-array) in the docs directory.
+
+Quick reference:
+- Top-level `type: cli` → generates a `cli-agent` for all scenarios
+- Steps use `type: command` + `command:` + `expected_output:` fields
+- **All** scenarios in the array are loaded and executed
+- `ScenarioLoader.loadFromFile()` returns `ScenarioDefinition[]` (always an array)
+
 ## Writing New Scenarios
 
 ### 1. Define the Scenario Purpose
@@ -247,7 +257,7 @@ Start by clearly defining what your scenario will test:
 ### 2. Choose Appropriate Agents
 Select the agents needed for your test:
 - UI testing: `ui-agent`
-- CLI operations: `system-agent`
+- CLI operations: `cli-agent` (or `system-agent` for broader system tasks)
 - Real-time updates: `websocket-agent`
 - Database operations: `database-agent`
 - API testing: `api-agent`

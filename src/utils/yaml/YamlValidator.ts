@@ -62,6 +62,8 @@ export class YamlValidator {
 
   /**
    * Light structural validation of a YAML file without full scenario parsing.
+   * Checks basic YAML structure and validates that CLI steps with type: command
+   * have the required 'command' field.
    */
   async validateFile(filePath: string): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
@@ -77,12 +79,42 @@ export class YamlValidator {
 
       if (typeof parsed !== 'object') {
         errors.push('YAML must contain an object or array');
+        return { valid: false, errors };
       }
+
+      const doc = parsed as Record<string, unknown>;
+      this.validateCliSteps(doc, errors);
 
       return { valid: errors.length === 0, errors };
     } catch (error: unknown) {
       errors.push(`Failed to parse YAML: ${error instanceof Error ? error.message : String(error)}`);
       return { valid: false, errors };
+    }
+  }
+
+  /**
+   * Validate that CLI steps with type: command have the required 'command' field.
+   */
+  private validateCliSteps(doc: Record<string, unknown>, errors: string[]): void {
+    const scenarios = Array.isArray(doc['scenarios']) ? doc['scenarios'] as Record<string, unknown>[] : [];
+
+    for (const scenario of scenarios) {
+      if (typeof scenario !== 'object' || scenario === null) continue;
+
+      const scenarioName = String(scenario['name'] || 'unnamed');
+      const steps = Array.isArray(scenario['steps']) ? scenario['steps'] as Record<string, unknown>[] : [];
+
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        if (typeof step !== 'object' || step === null) continue;
+
+        const stepType = String(step['type'] || '').toLowerCase();
+        if (stepType === 'command' && !step['command']) {
+          errors.push(
+            `Scenario "${scenarioName}" step ${i}: type is 'command' but required 'command' field is missing`
+          );
+        }
+      }
     }
   }
 

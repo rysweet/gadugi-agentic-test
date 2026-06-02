@@ -11,7 +11,7 @@ type RawYaml = Record<string, unknown>;
 
 // Scenario loader utility
 export class ScenarioLoader {
-  static async loadFromFile(filePath: string): Promise<ScenarioDefinition> {
+  static async loadFromFile(filePath: string): Promise<ScenarioDefinition[]> {
     const content = await fs.readFile(filePath, 'utf-8');
     const raw = yaml.load(content, { schema: yaml.JSON_SCHEMA }) as RawYaml;
 
@@ -20,14 +20,11 @@ export class ScenarioLoader {
     // Format 2: Top-level application, scenarios array (legacy format)
     // Format 3: scenario: { name, steps, ... } (wrapped format)
     if (raw['scenario'] && typeof raw['scenario'] === 'object') {
-      // Wrapped format - unwrap and validate
-      return this.validateScenario(raw['scenario'] as RawYaml);
+      return [this.validateScenario(raw['scenario'] as RawYaml)];
     } else if (raw['scenarios'] && Array.isArray(raw['scenarios'])) {
-      // Legacy format with application/scenarios - convert
       return this.convertLegacyFormat(raw);
     } else {
-      // Canonical format - validate directly
-      return this.validateScenario(raw);
+      return [this.validateScenario(raw)];
     }
   }
 
@@ -43,7 +40,7 @@ export class ScenarioLoader {
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       if (result.status === 'fulfilled') {
-        scenarios.push(result.value);
+        scenarios.push(...result.value);
       } else {
         const filePath = path.join(dirPath, yamlFiles[i]);
         const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
@@ -54,45 +51,78 @@ export class ScenarioLoader {
     return scenarios;
   }
 
-  private static convertLegacyFormat(raw: RawYaml): ScenarioDefinition {
-    // Legacy format has application + scenarios array
-    // Convert first scenario to new format (for now, only load first scenario)
-    const scenarios = raw['scenarios'] as RawYaml[];
-    const firstScenario = scenarios[0];
+  private static convertLegacyFormat(raw: RawYaml): ScenarioDefinition[] {
+    const rawScenarios = raw['scenarios'] as RawYaml[];
     const application = raw['application'] as RawYaml | undefined;
+    const suiteVersion = raw['version'] !== undefined ? String(raw['version']) : undefined;
+    const suiteTimeout = this.parseTimeoutMs(application?.['timeout'], 120000);
 
-    const descStr = raw['description'] !== undefined ? String(raw['description']) : firstScenario['description'] !== undefined ? String(firstScenario['description']) : undefined;
-    const verStr = raw['version'] !== undefined ? String(raw['version']) : undefined;
+    return rawScenarios.map((scenario: RawYaml) => {
+      const scenarioType = String(scenario['type'] || raw['type'] || '').toLowerCase();
+      const isCli = scenarioType === 'cli';
+      const agentName = isCli ? 'cli-agent' : 'tui-agent';
+      const agentType = isCli ? 'cli' : 'tui';
+
+      const descStr = scenario['description'] !== undefined
+        ? String(scenario['description'])
+        : raw['description'] !== undefined
+          ? String(raw['description'])
+          : undefined;
+
+      return {
+        name: String(scenario['name'] || raw['name'] || ''),
+        ...(descStr !== undefined ? { description: descStr } : {}),
+        ...(suiteVersion !== undefined ? { version: suiteVersion } : {}),
+        config: { timeout: suiteTimeout },
+        environment: { requires: [] },
+        agents: [{ name: agentName, type: agentType, config: {} }],
+        steps: Array.isArray(scenario['steps'])
+          ? (scenario['steps'] as RawYaml[]).map((s: RawYaml) =>
+              this.convertLegacyStep(s, agentName))
+          : [],
+        assertions: Array.isArray(scenario['assertions'])
+          ? (scenario['assertions'] as RawYaml[]).map((a: RawYaml) => ({
+              name: String(a['description'] || a['type'] || ''),
+              type: String(a['type'] || ''),
+              agent: agentName,
+              params: { value: a['value'], description: a['description'] }
+            }))
+          : [],
+        cleanup: [],
+        metadata: {
+          tags: ['legacy-format'],
+          priority: 'medium'
+        }
+      };
+    });
+  }
+
+  private static convertLegacyStep(s: RawYaml, agentName: string): TestStep {
+    const stepType = String(s['type'] || s['action'] || '').toLowerCase();
+    const isCommand = stepType === 'command';
+    const expectedRaw = s['expected_output'] ?? s['expected'];
+    const conditions = Array.isArray(s['conditions']) ? s['conditions'] as RawYaml[] : [];
+
     return {
-      name: String(raw['name'] || firstScenario['name'] || ''),
-      ...(descStr !== undefined ? { description: descStr } : {}),
-      ...(verStr !== undefined ? { version: verStr } : {}),
-      config: { timeout: (typeof application?.['timeout'] === 'number' ? application['timeout'] * 1000 : 0) || 120000 },
-      environment: { requires: [] },
-      agents: [{ name: 'tui-agent', type: 'tui', config: {} }],
-      steps: (firstScenario['steps'] as RawYaml[]).map((s: RawYaml) => ({
-        name: String(s['description'] || s['action'] || ''),
-        agent: 'tui-agent',
-        action: String(s['action'] || ''),
-        params: { input: s['input'], conditions: s['conditions'] },
-        timeout: (Array.isArray(s['conditions']) && s['conditions'].length > 0 && typeof (s['conditions'] as RawYaml[])[0]['timeout'] === 'number'
-          ? ((s['conditions'] as RawYaml[])[0]['timeout'] as number) * 1000
-          : 0) || 30000
-      })),
-      assertions: Array.isArray(firstScenario['assertions'])
-        ? (firstScenario['assertions'] as RawYaml[]).map((a: RawYaml) => ({
-            name: String(a['description'] || a['type'] || ''),
-            type: String(a['type'] || ''),
-            agent: 'tui-agent',
-            params: { value: a['value'], description: a['description'] }
-          }))
-        : [],
-      cleanup: [],
-      metadata: {
-        tags: ['legacy-format'],
-        priority: 'medium'
-      }
+      name: String(s['description'] || s['command'] || s['action'] || ''),
+      agent: agentName,
+      action: isCommand ? 'command' : String(s['action'] || stepType),
+      ...(isCommand && s['command'] ? { target: String(s['command']) } : {}),
+      ...(expectedRaw !== undefined ? { expected: String(expectedRaw) } : {}),
+      params: {
+        input: s['input'],
+        conditions: s['conditions'],
+        ...(s['command'] ? { command: String(s['command']) } : {})
+      },
+      timeout: this.parseTimeoutMs(conditions[0]?.['timeout'], 30000)
     };
+  }
+
+  /** Convert a seconds value (from YAML) to milliseconds, with a fallback default. */
+  private static parseTimeoutMs(seconds: unknown, defaultMs: number): number {
+    return typeof seconds === 'number' && seconds > 0
+      ? seconds * 1000
+      : defaultMs;
   }
 
   private static validateScenario(scenario: RawYaml): ScenarioDefinition {
@@ -147,6 +177,10 @@ export interface TestStep {
   name: string;
   agent: string;
   action: string;
+  /** Direct target (e.g. CLI command string) — preferred over params extraction */
+  target?: string;
+  /** Expected output or result for validation */
+  expected?: string;
   params?: Record<string, unknown>;
   timeout?: number;
   wait_for?: WaitCondition;

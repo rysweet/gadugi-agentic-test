@@ -236,6 +236,149 @@ config:
 - `unblock_port` - Restore network access
 - `simulate_latency` - Add network delays
 
+## Legacy CLI Scenario Format (`scenarios:` array)
+
+gadugi-test supports a compact "legacy" YAML format used by external projects (e.g. amplihack-rs test suites). This format uses a top-level `scenarios:` array instead of the canonical single-scenario structure. **All scenarios in the array are loaded and executed** — not just the first one.
+
+### Format Structure
+
+```yaml
+name: my-test-suite
+description: Suite-level description
+type: cli                              # suite type: "cli" or "tui"
+version: "1.0.0"
+tags: [smoke, install]
+
+application:
+  timeout: 120                         # seconds — converted to ms internally
+
+scenarios:
+  - name: first-test
+    description: First test in the suite
+    steps:
+      - type: command
+        command: echo "hello world"
+        expected_output: "hello world"
+
+  - name: second-test
+    description: Second test in the suite
+    steps:
+      - type: command
+        command: npm --version
+        expected_output: ""             # any non-error exit
+```
+
+### How Legacy Conversion Works
+
+When `ScenarioLoader.loadFromFile()` detects a `scenarios:` array at the top level, it converts **every** entry into a full `ScenarioDefinition`:
+
+| Legacy field | Canonical equivalent | Notes |
+|---|---|---|
+| Top-level `type: cli` | `agents: [{ name: 'cli-agent', type: 'cli', config: {} }]` | `type: tui` (or omitted) produces a `tui-agent` instead |
+| Top-level `version` | `version` on each scenario | Propagated to all scenarios in the array |
+| `application.timeout` (seconds) | `config.timeout` (milliseconds) | Multiplied by 1000; defaults to 120000ms |
+| Scenario `name` | `name` | Falls back to suite-level `name` |
+| Scenario `description` | `description` | Falls back to suite-level `description` |
+| Step `type: command` | `action: 'command'` | The step type determines the action |
+| Step `command` | `target` + `params.command` | The command string is set as the direct `target` on the step |
+| Step `expected_output` | `expected` | Stored directly on the `TestStep` for validation |
+| Step `conditions[0].timeout` | `timeout` (ms) | Per-step timeout, converted from seconds |
+
+### CLI Step Mapping Details
+
+Steps with `type: command` in the legacy format are mapped to the `'command'` action, which the `CLIAgent` recognizes as a command-execution action (alongside `'execute'`, `'run'`, and `'execute_command'`).
+
+The `target` field carries the command string directly on the `TestStep`, so the scenario adapter can pass it to the orchestrator without extracting it from `params`. The `expected` field carries the expected output for post-execution validation.
+
+```yaml
+# Legacy format step:
+- type: command
+  command: cargo test --lib 2>&1 | tail -1
+  expected_output: "test result: ok"
+
+# Converts to TestStep:
+# {
+#   name: "cargo test --lib 2>&1 | tail -1",
+#   agent: "cli-agent",
+#   action: "command",
+#   target: "cargo test --lib 2>&1 | tail -1",
+#   expected: "test result: ok",
+#   params: { command: "cargo test --lib 2>&1 | tail -1" },
+#   timeout: 30000
+# }
+```
+
+### Agent Selection
+
+The agent type is determined by the **suite-level** `type` field (per-scenario `type` can override, but is rarely used):
+
+| Suite `type` | Agent name | Agent type |
+|---|---|---|
+| `cli` | `cli-agent` | `cli` |
+| `tui` (or omitted) | `tui-agent` | `tui` |
+
+### Return Type
+
+`ScenarioLoader.loadFromFile()` always returns `Promise<ScenarioDefinition[]>`:
+
+- **Canonical format** (top-level `name` + `steps`): returns `[scenario]`
+- **Wrapped format** (`scenario: { ... }`): returns `[scenario]`
+- **Legacy format** (`scenarios: [...]`): returns all scenarios from the array
+
+`loadFromDirectory()` flattens all results into a single `ScenarioDefinition[]`.
+
+### Validation
+
+The `gadugi-test validate` command runs two-phase validation on legacy scenario files:
+
+1. **YAML structure** — `parser.validateYamlFile()` checks that the file parses as valid YAML and contains an object (not a scalar or array at root).
+2. **Scenario loading** — `ScenarioLoader.loadFromFile()` processes the legacy format, converting all scenarios. Missing `name` or `steps` on the canonical path will throw, but legacy `convertLegacyFormat` is lenient — a step with `type: command` but no `command` field will produce a step with an empty `target` and no `params.command`, which fails at execution time (CLIAgent receives no command to run) rather than at load time.
+
+> **Tip:** Always include a `command:` field on every `type: command` step. The converter does not reject missing commands — it silently produces empty targets.
+
+### Running Legacy Scenarios
+
+```bash
+# Run all scenarios from a directory (each file may contain multiple scenarios)
+gadugi-test run -d tests/scenarios/
+
+# Run a single file containing multiple scenarios
+gadugi-test run tests/scenarios/my-test-suite.yaml
+
+# The validate command also handles multi-scenario files
+gadugi-test validate tests/scenarios/my-test-suite.yaml
+```
+
+### Example: amplihack-rs Test Scenario
+
+A real-world example testing CLI tool behavior:
+
+```yaml
+name: issue-679-node-version-and-config
+description: |
+  Verifies amplihack install validates Node.js version requirements and
+  repairs malformed Copilot CLI config.json.
+type: cli
+tags: [install, prerequisites, copilot, node, config]
+
+scenarios:
+  - name: parse-node-major-version-unit-tests-pass
+    description: All parse_node_major_version unit tests pass
+    steps:
+      - type: command
+        command: cargo test -p amplihack-utils --lib -- parse_node_major_version 2>&1 | tail -1
+        expected_output: "test result: ok"
+
+  - name: empty-config-json-is-recovered
+    description: Empty config.json triggers recovery instead of parse error
+    steps:
+      - type: command
+        command: cargo test -p amplihack-cli --lib -- empty_config_json_is_recovered 2>&1 | tail -1
+        expected_output: "test result: ok"
+```
+
+This file produces **two** `ScenarioDefinition` objects, each with a `cli-agent` and a single step with `action: 'command'`.
+
 ## Writing New Scenarios
 
 ### 1. Define the Scenario Purpose
@@ -247,7 +390,7 @@ Start by clearly defining what your scenario will test:
 ### 2. Choose Appropriate Agents
 Select the agents needed for your test:
 - UI testing: `ui-agent`
-- CLI operations: `system-agent`
+- CLI operations: `cli-agent` (or `system-agent` for broader system tasks)
 - Real-time updates: `websocket-agent`
 - Database operations: `database-agent`
 - API testing: `api-agent`
