@@ -1,0 +1,166 @@
+{
+  "_comment": "Pre-existing high/critical npm audit advisories acknowledged as of this PR. The audit gate (scripts/audit-gate.mjs) fails CI only when a high/critical advisory appears that is NOT listed here. Remediate and prune entries as upstream fixes land; do not add new entries without review.",
+  "generated": "2026-06-30",
+  "advisories": [
+    {
+      "id": 1113544,
+      "name": "minimatch",
+      "severity": "high"
+    },
+    {
+      "id": 1113545,
+      "name": "minimatch",
+      "severity": "high"
+    },
+    {
+      "id": 1113546,
+      "name": "minimatch",
+      "severity": "high"
+    },
+    {
+      "id": 1113552,
+      "name": "minimatch",
+      "severity": "high"
+    },
+    {
+      "id": 1113553,
+      "name": "minimatch",
+      "severity": "high"
+    },
+    {
+      "id": 1114526,
+      "name": "flatted",
+      "severity": "high"
+    },
+    {
+      "id": 1115154,
+      "name": "socket.io-parser",
+      "severity": "high"
+    },
+    {
+      "id": 1115357,
+      "name": "flatted",
+      "severity": "high"
+    },
+    {
+      "id": 1115538,
+      "name": "handlebars",
+      "severity": "high"
+    },
+    {
+      "id": 1115539,
+      "name": "handlebars",
+      "severity": "critical"
+    },
+    {
+      "id": 1115552,
+      "name": "picomatch",
+      "severity": "high"
+    },
+    {
+      "id": 1115554,
+      "name": "picomatch",
+      "severity": "high"
+    },
+    {
+      "id": 1115693,
+      "name": "handlebars",
+      "severity": "high"
+    },
+    {
+      "id": 1115694,
+      "name": "handlebars",
+      "severity": "high"
+    },
+    {
+      "id": 1117465,
+      "name": "handlebars",
+      "severity": "high"
+    },
+    {
+      "id": 1117576,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1117591,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1117593,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1117870,
+      "name": "fast-uri",
+      "severity": "high"
+    },
+    {
+      "id": 1117884,
+      "name": "fast-uri",
+      "severity": "high"
+    },
+    {
+      "id": 1118607,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1119667,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120162,
+      "name": "systeminformation",
+      "severity": "high"
+    },
+    {
+      "id": 1120547,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120643,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120645,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120647,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120649,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120650,
+      "name": "axios",
+      "severity": "high"
+    },
+    {
+      "id": 1120730,
+      "name": "ws",
+      "severity": "high"
+    },
+    {
+      "id": 1120743,
+      "name": "form-data",
+      "severity": "high"
+    },
+    {
+      "id": 1121797,
+      "name": "linkify-it",
+      "severity": "high"
+    }
+  ]
+}
