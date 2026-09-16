@@ -33,6 +33,9 @@ jobs:
       - name: Verify CLI works
         run: node dist/cli.js --version
 
+      - name: Verify distributable package
+        run: npm run test:package
+
       - name: Publish to NPM
         run: npm publish --access public
         env:

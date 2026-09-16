@@ -46,6 +46,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
 const dotenv = __importStar(require("dotenv"));
 const chalk_1 = __importDefault(require("chalk"));
+const fs_1 = require("fs");
+const path_1 = __importDefault(require("path"));
 const output_1 = require("./cli/output");
 const run_1 = require("./cli/commands/run");
 const watch_1 = require("./cli/commands/watch");
@@ -62,10 +64,11 @@ catch (_error) {
     // Silently ignore if .env doesn't exist
 }
 const program = new commander_1.Command();
+const packageMetadata = JSON.parse((0, fs_1.readFileSync)(path_1.default.resolve(__dirname, '..', 'package.json'), 'utf8'));
 program
-    .name('agentic-test')
+    .name('gadugi-test')
     .description('TypeScript Agentic Testing System for Electron applications')
-    .version('1.0.0');
+    .version(packageMetadata.version);
 // Global options
 program
     .option('--verbose', 'Enable verbose logging')

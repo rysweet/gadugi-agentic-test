@@ -21,6 +21,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:package": "node scripts/package-smoke-test.mjs",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "start": "node dist/cli.js",
@@ -91,6 +92,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/rysweet/gadugi-agentic-test"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "author": "Ryan Sweet",
   "license": "MIT",

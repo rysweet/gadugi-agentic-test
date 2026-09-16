@@ -194,17 +194,16 @@ export function getPackageJsonTemplate(projectName: string): string {
       version: '1.0.0',
       description: 'Agentic testing project',
       scripts: {
-        test: 'agentic-test run',
-        'test:watch': 'agentic-test watch',
-        'test:validate': 'agentic-test validate',
-        'test:list': 'agentic-test list',
+        test: 'gadugi-test run',
+        'test:watch': 'gadugi-test watch',
+        'test:validate': 'gadugi-test validate',
+        'test:list': 'gadugi-test list',
         lint: 'echo "Add your linting command here"',
         start: 'echo "Add your start command here"',
       },
-      dependencies: {
-        '@azure-tenant-grapher/agentic-testing': '^1.0.0',
+      devDependencies: {
+        '@gadugi/agentic-test': 'github:rysweet/gadugi-agentic-test',
       },
-      devDependencies: {},
       keywords: ['testing', 'agentic', 'automation'],
       author: '',
       license: 'MIT',
@@ -251,7 +250,7 @@ npm install
 npm test
 
 # Run specific scenario
-agentic-test run --scenario example-basic
+gadugi-test run --scenario example-basic
 
 # Run in watch mode
 npm run test:watch
@@ -310,10 +309,10 @@ enabled: true
 ## Troubleshooting
 
 - Check the \`reports/\` directory for detailed test results
-- Enable debug logging: \`agentic-test run --debug\`
-- Validate scenario syntax: \`agentic-test validate --strict\`
+- Enable debug logging: \`gadugi-test run --debug\`
+- Validate scenario syntax: \`gadugi-test validate --strict\`
 
-For more information, see the [Agentic Testing System documentation](https://github.com/Azure/azure-tenant-grapher).
+For more information, see the [Gadugi Agentic Test documentation](https://github.com/rysweet/gadugi-agentic-test).
 `;
 }
 

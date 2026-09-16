@@ -1,8 +1,45 @@
 import { EventEmitter } from 'events';
-import * as pty from 'node-pty-prebuilt-multiarch';
+import { createRequire } from 'module';
 import { ProcessLifecycleManager, ProcessInfo } from './ProcessLifecycleManager';
 import { adaptiveWaiter, waitForTerminalReady, waitForOutput } from './AdaptiveWaiter';
 import { logger } from '../utils/logger';
+
+interface PtyProcess {
+  pid: number;
+  write(data: string): void;
+  resize(cols: number, rows: number): void;
+  kill(signal?: string): void;
+  onData(listener: (data: string) => void): void;
+  onExit(listener: (event: { exitCode: number; signal?: number }) => void): void;
+}
+
+interface PtyModule {
+  spawn(
+    file: string,
+    args: string[],
+    options: {
+      name: string;
+      cols: number;
+      rows: number;
+      cwd: string;
+      env: { [key: string]: string };
+    }
+  ): PtyProcess;
+}
+
+const requireModule = createRequire(__filename);
+
+function loadPtyModule(): PtyModule {
+  try {
+    return requireModule('node-pty-prebuilt-multiarch') as PtyModule;
+  } catch (error) {
+    const detail = error instanceof Error ? `: ${error.message}` : '';
+    throw new Error(
+      'PTY support requires the optional node-pty-prebuilt-multiarch dependency. '
+      + `Install native build tools and reinstall @gadugi/agentic-test${detail}`
+    );
+  }
+}
 
 /**
  * Terminal dimensions
@@ -41,7 +78,7 @@ export interface PtyTerminalEvents {
  * with integrated ProcessLifecycleManager to prevent zombie processes.
  */
 export class PtyTerminal extends EventEmitter {
-  private ptyProcess: pty.IPty | null = null;
+  private ptyProcess: PtyProcess | null = null;
   private processInfo: ProcessInfo | null = null;
   private processManager: ProcessLifecycleManager;
   private config: Required<PtyTerminalConfig>;
@@ -111,6 +148,7 @@ export class PtyTerminal extends EventEmitter {
 
     try {
       // Create PTY process
+      const pty = loadPtyModule();
       this.ptyProcess = pty.spawn(this.config.shell, [], {
         name: 'xterm-color',
         cols: this.config.dimensions.cols,
@@ -303,13 +341,7 @@ export class PtyTerminal extends EventEmitter {
     }
 
     try {
-      // Use the process manager to kill if we have process info
-      if (this.processInfo && this.processManager) {
-        await this.processManager.killProcess(this.processInfo.pid, signal as NodeJS.Signals);
-      } else {
-        // Fallback to direct PTY kill
-        this.ptyProcess.kill(signal);
-      }
+      this.ptyProcess.kill(signal);
     } catch (error) {
       this.emit('error', error as Error);
     }

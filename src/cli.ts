@@ -10,6 +10,8 @@
 import { Command } from 'commander';
 import * as dotenv from 'dotenv';
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import path from 'path';
 import { logError, logInfo, logWarning } from './cli/output';
 import { registerRunCommand } from './cli/commands/run';
 import { registerWatchCommand } from './cli/commands/watch';
@@ -27,11 +29,14 @@ try {
 }
 
 const program = new Command();
+const packageMetadata = JSON.parse(
+  readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
+) as { version: string };
 
 program
-  .name('agentic-test')
+  .name('gadugi-test')
   .description('TypeScript Agentic Testing System for Electron applications')
-  .version('1.0.0');
+  .version(packageMetadata.version);
 
 // Global options
 program
