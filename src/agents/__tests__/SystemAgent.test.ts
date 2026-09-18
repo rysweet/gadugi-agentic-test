@@ -5,7 +5,12 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { SystemAgent, createSystemAgent, SystemAgentConfig } from '../SystemAgent';
+import {
+  SystemAgent,
+  SystemAgentConfig,
+  SystemMetrics,
+  createSystemAgent,
+} from '../SystemAgent';
 import { AgentType } from '../index';
 
 describe('SystemAgent', () => {
@@ -27,6 +32,12 @@ describe('SystemAgent', () => {
     agent = createSystemAgent({
       fileSystemMonitoring: { enabled: false, watchPaths: [], excludePatterns: [] },
       performanceBaseline: { captureBaseline: false, baselineDuration: 1000, comparisonThreshold: 20 },
+      cleanup: {
+        killZombieProcesses: false,
+        cleanTempFiles: false,
+        tempDirPatterns: [],
+        processNamePatterns: [],
+      },
     });
   });
 
@@ -183,7 +194,18 @@ describe('SystemAgent', () => {
           enabled: true,
           watchPaths: [tempDir],
           excludePatterns: [/node_modules/]
-        }
+        },
+        performanceBaseline: {
+          captureBaseline: false,
+          baselineDuration: 1000,
+          comparisonThreshold: 20,
+        },
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
       };
       agent = createSystemAgent(config);
       await agent.initialize();
@@ -205,6 +227,34 @@ describe('SystemAgent', () => {
     it('should handle cleanup when not initialized', async () => {
       await expect(agent.cleanup()).resolves.not.toThrow();
     });
+
+    it('does not terminate matching processes outside its own process tree', async () => {
+      const unrelatedPid = process.pid + 1000;
+      const processKill = jest.spyOn(process, 'kill').mockImplementation(() => true);
+      const metrics: SystemMetrics = {
+        timestamp: new Date(),
+        cpu: { usage: 1, loadAverage: [], cores: 1 },
+        memory: { total: 1, free: 1, used: 0, percentage: 0, available: 1 },
+        disk: { usage: [] },
+        network: { interfaces: [] },
+        processes: [{
+          pid: unrelatedPid,
+          ppid: 1,
+          name: 'test-unrelated',
+          command: 'npm test',
+          cpu: 0,
+          memory: 0,
+          state: 'running',
+        }],
+        system: { uptime: 1, platform: 'test', arch: 'test', hostname: 'test' },
+      };
+      jest.spyOn(agent, 'captureMetrics').mockResolvedValue(metrics);
+
+      await agent.cleanup();
+
+      expect(processKill).not.toHaveBeenCalledWith(unrelatedPid, 'SIGTERM');
+      processKill.mockRestore();
+    });
   });
 
   describe('Docker Monitoring', () => {
@@ -216,6 +266,12 @@ describe('SystemAgent', () => {
         },
         fileSystemMonitoring: { enabled: false, watchPaths: [], excludePatterns: [] },
         performanceBaseline: { captureBaseline: false, baselineDuration: 1000, comparisonThreshold: 20 },
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
       };
       agent = createSystemAgent(config);
       await agent.initialize();
@@ -241,6 +297,12 @@ describe('SystemAgent', () => {
           comparisonThreshold: 20
         },
         fileSystemMonitoring: { enabled: false, watchPaths: [], excludePatterns: [] },
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
       };
       agent = createSystemAgent(config);
       await agent.initialize();
@@ -278,6 +340,12 @@ describe('SystemAgent', () => {
           excludePatterns: []
         },
         performanceBaseline: { captureBaseline: false, baselineDuration: 1000, comparisonThreshold: 20 },
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
       });
 
       // Should not throw but may log warnings

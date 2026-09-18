@@ -33,11 +33,42 @@ jest.mock('chokidar', () => ({
 }));
 
 import * as os from 'os';
-import { SystemAgent, createSystemAgent } from '../SystemAgent';
+import { SystemAgent, SystemMetrics, createSystemAgent } from '../SystemAgent';
 import { AgentType } from '../index';
+
+function createMetrics(): SystemMetrics {
+  return {
+    timestamp: new Date(),
+    cpu: { usage: 1, loadAverage: [0, 0, 0], cores: os.cpus().length },
+    memory: {
+      total: os.totalmem(),
+      free: os.freemem(),
+      used: os.totalmem() - os.freemem(),
+      percentage: 50,
+      available: os.freemem(),
+    },
+    disk: { usage: [] },
+    network: { interfaces: [] },
+    processes: [{
+      pid: process.pid,
+      name: 'node',
+      command: 'jest',
+      cpu: 0,
+      memory: 0,
+      state: 'running',
+    }],
+    system: {
+      uptime: os.uptime(),
+      platform: os.platform(),
+      arch: os.arch(),
+      hostname: os.hostname(),
+    },
+  };
+}
 
 describe('SystemAgent - Standalone Tests', () => {
   let agent: SystemAgent;
+  let captureMetricsSpy: jest.SpyInstance;
 
   beforeEach(() => {
     agent = createSystemAgent({
@@ -51,8 +82,17 @@ describe('SystemAgent - Standalone Tests', () => {
         enabled: false,
         watchPaths: [],
         excludePatterns: []
-      }
+      },
+      cleanup: {
+        killZombieProcesses: false,
+        cleanTempFiles: false,
+        tempDirPatterns: [],
+        processNamePatterns: [],
+      },
     });
+    captureMetricsSpy = jest
+      .spyOn(agent, 'captureMetrics')
+      .mockImplementation(async () => createMetrics());
   });
 
   afterEach(async () => {
@@ -290,7 +330,14 @@ describe('SystemAgent - Standalone Tests', () => {
 
   describe('Cleanup and Error Handling', () => {
     it('should cleanup without initialization', async () => {
-      const uninitializedAgent = createSystemAgent();
+      const uninitializedAgent = createSystemAgent({
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
+      });
       await expect(uninitializedAgent.cleanup()).resolves.not.toThrow();
     });
 
@@ -343,6 +390,7 @@ describe('SystemAgent - Standalone Tests', () => {
 
   describe('Real System Integration', () => {
     beforeEach(async () => {
+      captureMetricsSpy.mockRestore();
       await agent.initialize();
     });
 

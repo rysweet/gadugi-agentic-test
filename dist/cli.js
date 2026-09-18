@@ -54,6 +54,7 @@ const list_1 = require("./cli/commands/list");
 const init_1 = require("./cli/commands/init");
 const help_1 = require("./cli/commands/help");
 const cli_path_utils_1 = require("./cli-path-utils");
+const packageMetadata_1 = require("./packageMetadata");
 // Load environment variables from .env file if it exists
 try {
     dotenv.config();
@@ -63,9 +64,9 @@ catch (_error) {
 }
 const program = new commander_1.Command();
 program
-    .name('agentic-test')
+    .name('gadugi-test')
     .description('TypeScript Agentic Testing System for Electron applications')
-    .version('1.0.0');
+    .version(packageMetadata_1.packageMetadata.version);
 // Global options
 program
     .option('--verbose', 'Enable verbose logging')

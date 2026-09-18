@@ -18,6 +18,7 @@ import { registerListCommand } from './cli/commands/list';
 import { registerInitCommand } from './cli/commands/init';
 import { registerHelpCommand } from './cli/commands/help';
 import { safeResolvePath, CLIPathError } from './cli-path-utils';
+import { packageMetadata } from './packageMetadata';
 
 // Load environment variables from .env file if it exists
 try {
@@ -29,9 +30,9 @@ try {
 const program = new Command();
 
 program
-  .name('agentic-test')
+  .name('gadugi-test')
   .description('TypeScript Agentic Testing System for Electron applications')
-  .version('1.0.0');
+  .version(packageMetadata.version);
 
 // Global options
 program

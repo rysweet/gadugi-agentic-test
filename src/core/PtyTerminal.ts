@@ -1,8 +1,45 @@
 import { EventEmitter } from 'events';
-import * as pty from 'node-pty-prebuilt-multiarch';
+import { createRequire } from 'module';
 import { ProcessLifecycleManager, ProcessInfo } from './ProcessLifecycleManager';
 import { adaptiveWaiter, waitForTerminalReady, waitForOutput } from './AdaptiveWaiter';
 import { logger } from '../utils/logger';
+
+interface PtyProcess {
+  pid: number;
+  write(data: string): void;
+  resize(cols: number, rows: number): void;
+  kill(signal?: string): void;
+  onData(listener: (data: string) => void): void;
+  onExit(listener: (event: { exitCode: number; signal?: number }) => void): void;
+}
+
+interface PtyModule {
+  spawn(
+    file: string,
+    args: string[],
+    options: {
+      name: string;
+      cols: number;
+      rows: number;
+      cwd: string;
+      env: { [key: string]: string };
+    }
+  ): PtyProcess;
+}
+
+const requireModule = createRequire(__filename);
+
+function loadPtyModule(): PtyModule {
+  try {
+    return requireModule('node-pty-prebuilt-multiarch') as PtyModule;
+  } catch (error) {
+    const detail = error instanceof Error ? `: ${error.message}` : '';
+    throw new Error(
+      'PTY support requires the optional node-pty-prebuilt-multiarch dependency. '
+      + `Install native build tools and reinstall @gadugi/agentic-test${detail}`
+    );
+  }
+}
 
 /**
  * Terminal dimensions
@@ -41,13 +78,30 @@ export interface PtyTerminalEvents {
  * with integrated ProcessLifecycleManager to prevent zombie processes.
  */
 export class PtyTerminal extends EventEmitter {
-  private ptyProcess: pty.IPty | null = null;
+  private ptyProcess: PtyProcess | null = null;
   private processInfo: ProcessInfo | null = null;
   private processManager: ProcessLifecycleManager;
   private config: Required<PtyTerminalConfig>;
   private isDestroyed = false;
   private outputBuffer = '';
   private inputHistory: string[] = [];
+  private readonly processExitedHandler = (
+    processInfo: ProcessInfo,
+    code: number | null,
+    signal: string | null
+  ): void => {
+    if (processInfo.pid === this.processInfo?.pid) {
+      this.emit('exit', code, signal);
+    }
+  };
+  private readonly processErrorHandler = (
+    error: Error,
+    processInfo?: ProcessInfo
+  ): void => {
+    if (processInfo?.pid === this.processInfo?.pid) {
+      this.emit('error', error);
+    }
+  };
 
   constructor(
     config: PtyTerminalConfig = {},
@@ -84,17 +138,8 @@ export class PtyTerminal extends EventEmitter {
    * Set up event handlers for the process manager
    */
   private setupProcessManagerEvents(): void {
-    this.processManager.on('processExited', (processInfo, code, signal) => {
-      if (processInfo.pid === this.processInfo?.pid) {
-        this.emit('exit', code, signal);
-      }
-    });
-
-    this.processManager.on('error', (error, processInfo) => {
-      if (processInfo?.pid === this.processInfo?.pid) {
-        this.emit('error', error);
-      }
-    });
+    this.processManager.on('processExited', this.processExitedHandler);
+    this.processManager.on('error', this.processErrorHandler);
   }
 
   /**
@@ -111,6 +156,7 @@ export class PtyTerminal extends EventEmitter {
 
     try {
       // Create PTY process
+      const pty = loadPtyModule();
       this.ptyProcess = pty.spawn(this.config.shell, [], {
         name: 'xterm-color',
         cols: this.config.dimensions.cols,
@@ -279,7 +325,7 @@ export class PtyTerminal extends EventEmitter {
    * Check if the agent is running
    */
   public isRunning(): boolean {
-    return this.ptyProcess !== null && !this.isDestroyed && this.processInfo?.status === 'running';
+    return this.ptyProcess !== null && this.processInfo?.status === 'running';
   }
 
   /**
@@ -298,20 +344,15 @@ export class PtyTerminal extends EventEmitter {
    * Kill the terminal process
    */
   public async kill(signal: string = 'SIGTERM'): Promise<void> {
-    if (!this.ptyProcess || this.isDestroyed) {
+    if (!this.ptyProcess) {
       return;
     }
 
     try {
-      // Use the process manager to kill if we have process info
-      if (this.processInfo && this.processManager) {
-        await this.processManager.killProcess(this.processInfo.pid, signal as NodeJS.Signals);
-      } else {
-        // Fallback to direct PTY kill
-        this.ptyProcess.kill(signal);
-      }
+      this.ptyProcess.kill(signal);
     } catch (error) {
       this.emit('error', error as Error);
+      throw error;
     }
   }
 
@@ -325,11 +366,10 @@ export class PtyTerminal extends EventEmitter {
 
     this.isDestroyed = true;
 
-    // Remove listeners registered in setupProcessManagerEvents() to prevent
-    // dangling references after this terminal is destroyed.
-    this.processManager.removeAllListeners('processExited');
-    this.processManager.removeAllListeners('error');
+    this.processManager.off('processExited', this.processExitedHandler);
+    this.processManager.off('error', this.processErrorHandler);
 
+    let cleanupError: Error | undefined;
     try {
       // Kill the process if it's running
       if (this.isRunning()) {
@@ -349,14 +389,30 @@ export class PtyTerminal extends EventEmitter {
         // Force kill if still running after timeout
         if (!result.success && this.isRunning()) {
           await this.kill('SIGKILL');
+          const forcedResult = await adaptiveWaiter.waitForCondition(
+            () => !this.isRunning(),
+            {
+              initialDelay: 25,
+              maxDelay: 100,
+              timeout: 2000,
+              jitter: 0.1
+            }
+          );
+          if (!forcedResult.success) {
+            throw new Error(`PTY process ${this.processInfo?.pid ?? 'unknown'} did not exit`);
+          }
         }
       }
-
-      // Clean up PTY
+    } catch (error) {
+      cleanupError = error instanceof Error ? error : new Error(String(error));
+    } finally {
       if (this.ptyProcess) {
         try {
-          this.ptyProcess.kill();
+          if (this.isRunning()) {
+            this.ptyProcess.kill('SIGKILL');
+          }
         } catch (error) {
+          cleanupError ??= error instanceof Error ? error : new Error(String(error));
           logger.warn('Error killing PTY process during cleanup:', error);
         }
         this.ptyProcess = null;
@@ -368,8 +424,11 @@ export class PtyTerminal extends EventEmitter {
       this.inputHistory = [];
 
       this.emit('destroyed');
-    } catch (error) {
-      this.emit('error', error as Error);
+    }
+
+    if (cleanupError) {
+      this.emit('error', cleanupError);
+      throw cleanupError;
     }
   }
 }

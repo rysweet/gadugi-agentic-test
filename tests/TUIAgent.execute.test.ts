@@ -21,6 +21,12 @@ jest.mock('child_process', () => ({
   }),
 }));
 
+jest.mock('pidusage', () => jest.fn().mockResolvedValue({
+  cpu: 1,
+  memory: 1024,
+  pids: [],
+}));
+
 describe('TUIAgent execute and menu navigation', () => {
   let agent: TUIAgent;
   let mockProcess: Partial<ChildProcess>;

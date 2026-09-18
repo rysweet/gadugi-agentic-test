@@ -119,7 +119,7 @@ function registerInitCommand(program) {
             console.log(chalk_1.default.gray('2.'), 'cp .env.example .env');
             console.log(chalk_1.default.gray('3.'), 'npm install');
             console.log(chalk_1.default.gray('4.'), 'Edit scenarios in the scenarios/ directory');
-            console.log(chalk_1.default.gray('5.'), 'Run tests with: agentic-test run');
+            console.log(chalk_1.default.gray('5.'), 'Run tests with: gadugi-test run');
             console.log();
         }
         catch (error) {

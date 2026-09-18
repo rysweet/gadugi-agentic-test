@@ -111,16 +111,28 @@ npm install -g windows-build-tools
 # Select "Desktop development with C++" workload
 ```
 
-### From NPM (Recommended)
+### From GitHub
 ```bash
-# Install globally for CLI access
-npm install -g @gadugi/agentic-test
+# Install in a project
+npm install --save-dev github:rysweet/gadugi-agentic-test
 
-# Or install locally in your project
-npm install @gadugi/agentic-test
+# Verify the project-local CLI
+npx gadugi-test --version
 ```
 
-### From GitHub (Development)
+The package is not yet published to npm. Pin a commit SHA for reproducible
+automation:
+
+```bash
+npm install --save-dev github:rysweet/gadugi-agentic-test#<commit-sha>
+```
+
+The terminal agent uses an optional native PTY dependency. Web, API, and
+non-interactive CLI features remain installable when that native module is
+unavailable. TUI sessions report an actionable error directing users to install
+their platform's native build tools and reinstall.
+
+### Development checkout
 ```bash
 # Clone the repository
 git clone https://github.com/rysweet/gadugi-agentic-test.git
@@ -239,16 +251,16 @@ cleanup:
 
 ```bash
 # Run specific scenario
-npx agentic-test run ./scenarios/user-registration.yaml
+npx gadugi-test run ./scenarios/user-registration.yaml
 
 # Run all scenarios in a directory
-npx agentic-test run ./scenarios/
+npx gadugi-test run ./scenarios/
 
 # Run with custom configuration
-npx agentic-test run --config ./config/test-config.json ./scenarios/
+npx gadugi-test run --config ./config/test-config.json ./scenarios/
 
 # Run in CI mode (headless, artifact generation)
-npx agentic-test run --ci --artifacts ./reports/ ./scenarios/
+npx gadugi-test run --ci --artifacts ./reports/ ./scenarios/
 ```
 
 ## 🤝 Available Agents
