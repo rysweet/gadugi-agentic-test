@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const installRoot = await mkdtemp(path.join(tmpdir(), 'gadugi-package-smoke-'));
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmCliPath = process.env.npm_execpath;
 const { version } = JSON.parse(await readFile(path.join(repositoryRoot, 'package.json'), 'utf8'));
 let tarballPath;
 
@@ -27,9 +27,15 @@ function run(command, args, options = {}) {
   return result.stdout;
 }
 
+function runNpm(args, options = {}) {
+  if (!npmCliPath) {
+    throw new Error('npm_execpath is unavailable; run this check through npm run test:package');
+  }
+  return run(process.execPath, [npmCliPath, ...args], options);
+}
+
 try {
-  const packOutput = run(
-    npmCommand,
+  const packOutput = runNpm(
     ['pack', '--json', '--ignore-scripts'],
     { capture: true }
   );
@@ -47,13 +53,11 @@ try {
     JSON.stringify({ name: 'gadugi-package-smoke', private: true })
   );
 
-  run(
-    npmCommand,
+  runNpm(
     ['install', '--ignore-scripts', '--omit=optional', '--no-audit', '--no-fund', tarballPath],
     { cwd: installRoot }
   );
-  const cliVersion = run(
-    npmCommand,
+  const cliVersion = runNpm(
     ['exec', '--offline', '--', 'gadugi-test', '--version'],
     { cwd: installRoot, capture: true }
   );
@@ -88,8 +92,7 @@ try {
   const generatedProjects = new Map();
   for (const template of ['basic', 'electron', 'advanced']) {
     const generatedRoot = path.join(installRoot, `generated-${template}`);
-    run(
-      npmCommand,
+    runNpm(
       [
         'exec', '--offline', '--', 'gadugi-test', 'init',
         '--directory', generatedRoot,
@@ -97,8 +100,7 @@ try {
       ],
       { cwd: installRoot }
     );
-    run(
-      npmCommand,
+    runNpm(
       [
         'exec', '--offline', '--', 'gadugi-test', 'validate',
         '--directory', path.join(generatedRoot, 'scenarios'),
@@ -122,12 +124,11 @@ try {
   generatedPackage.devDependencies['@gadugi/agentic-test'] = pathToFileURL(tarballPath).href;
   await writeFile(generatedPackagePath, JSON.stringify(generatedPackage, null, 2));
   await rm(path.join(installRoot, 'node_modules'), { recursive: true, force: true });
-  run(
-    npmCommand,
+  runNpm(
     ['install', '--ignore-scripts', '--omit=optional', '--no-audit', '--no-fund'],
     { cwd: generatedRoot }
   );
-  run(npmCommand, ['run', 'test:validate'], { cwd: generatedRoot });
+  runNpm(['run', 'test:validate'], { cwd: generatedRoot });
 
   console.log(
     'Packaged CLI, library import, optional PTY fallback, and generated project verified.'
