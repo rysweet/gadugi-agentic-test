@@ -4,6 +4,7 @@
  */
 
 import * as path from 'path';
+import { packageMetadata } from '../../packageMetadata';
 
 export function getConfigTemplate(template: string): string {
   return `# Agentic Testing System Configuration
@@ -86,101 +87,106 @@ AGENTIC_REPORT_DIR=./reports
 export function getScenarioTemplates(template: string): Record<string, string> {
   const templates: Record<string, string> = {};
 
-  templates['example-basic.yaml'] = `id: example-basic
-name: Basic Example Test
-description: A simple test scenario to demonstrate basic functionality
-priority: MEDIUM
-interface: CLI
-prerequisites: []
-tags: [example, basic]
+  templates['example-basic.yaml'] = `name: "Basic Example Test"
+description: "A simple cross-platform command test"
+version: "1.0.0"
+config:
+  timeout: 30000
+  retries: 0
+  parallel: false
+agents:
+  - name: "system-agent"
+    type: "system"
+    config:
+      workingDirectory: "."
+      timeout: 10000
 steps:
-  - action: run
-    target: version
-    description: Check version
-    expected: success
-verifications:
-  - type: output
-    target: stdout
-    expected: "version"
-    operator: contains
-    description: Version output should contain version info
-estimatedDuration: 30
-enabled: true
+  - name: "Check Node.js version"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "node --version"
+    expect:
+      exit_code: 0
+metadata:
+  tags: ["example", "basic"]
+  priority: "medium"
 `;
 
   if (template === 'electron' || template === 'advanced') {
-    templates['example-ui.yaml'] = `id: example-ui
-name: UI Interaction Test
-description: Test user interface interactions
-priority: HIGH
-interface: UI
-prerequisites: []
-tags: [ui, interaction, ${template}]
+    templates['example-ui.yaml'] = `name: "UI Interaction Test"
+description: "Demonstrates UI interaction syntax"
+version: "1.0.0"
+config:
+  timeout: 60000
+  retries: 1
+  parallel: false
+agents:
+  - name: "ui-agent"
+    type: "ui"
+    config:
+      browser: "chromium"
+      headless: false
+      viewport:
+        width: 1280
+        height: 720
+      timeout: 30000
 steps:
-  - action: click
-    target: "#start-button"
-    description: Click the start button
-    waitFor: 1000
-  - action: type
-    target: "#input-field"
-    value: "test input"
-    description: Enter test data
-  - action: click
-    target: "#submit-button"
-    description: Submit the form
-    waitFor: 2000
-verifications:
-  - type: element
-    target: "#result-message"
-    expected: "Success"
-    operator: contains
-    description: Success message should appear
-estimatedDuration: 60
-enabled: true
+  - name: "Click the start button"
+    agent: "ui-agent"
+    action: "click"
+    params:
+      selector: "#start-button"
+    wait_for:
+      selector: "#input-field"
+      state: "visible"
+  - name: "Enter test data"
+    agent: "ui-agent"
+    action: "fill"
+    params:
+      selector: "#input-field"
+      value: "test input"
+  - name: "Submit the form"
+    agent: "ui-agent"
+    action: "click"
+    params:
+      selector: "#submit-button"
+metadata:
+  tags: ["ui", "interaction", "${template}"]
+  priority: "high"
 `;
   }
 
   if (template === 'advanced') {
-    templates['example-integration.yaml'] = `id: example-integration
-name: Integration Test Suite
-description: Complex integration test with multiple steps
-priority: CRITICAL
-interface: CLI
-prerequisites: ["database-setup", "api-server"]
-tags: [integration, api, database, advanced]
-environment:
-  TEST_MODE: integration
-  API_URL: http://localhost:3000/api
+    templates['example-integration.yaml'] = `name: "Integration Test Suite"
+description: "Demonstrates a multi-step integration scenario"
+version: "1.0.0"
+config:
+  timeout: 60000
+  retries: 1
+  parallel: false
+agents:
+  - name: "system-agent"
+    type: "system"
+    config:
+      workingDirectory: "."
+      timeout: 30000
 steps:
-  - action: run
-    target: "setup"
-    description: Setup test environment
+  - name: "Inspect the runtime"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "node --version"
     timeout: 10000
-  - action: run
-    target: "test-api"
-    description: Test API endpoints
-    timeout: 30000
-  - action: run
-    target: "test-database"
-    description: Test database operations
-    timeout: 15000
-verifications:
-  - type: output
-    target: stdout
-    expected: "All tests passed"
-    operator: contains
-    description: All integration tests should pass
-  - type: file
-    target: "./reports/integration-results.json"
-    expected: true
-    operator: exists
-    description: Integration report should be generated
-cleanup:
-  - action: run
-    target: "cleanup"
-    description: Clean up test environment
-estimatedDuration: 180
-enabled: true
+  - name: "Inspect the package manager"
+    agent: "system-agent"
+    action: "execute_command"
+    params:
+      command: "npm --version"
+    timeout: 10000
+metadata:
+  tags: ["integration", "advanced"]
+  priority: "high"
 `;
   }
 
@@ -202,7 +208,7 @@ export function getPackageJsonTemplate(projectName: string): string {
         start: 'echo "Add your start command here"',
       },
       devDependencies: {
-        '@gadugi/agentic-test': 'github:rysweet/gadugi-agentic-test',
+        '@gadugi/agentic-test': packageMetadata.version,
       },
       keywords: ['testing', 'agentic', 'automation'],
       author: '',
@@ -223,7 +229,7 @@ This project was initialized with the Agentic Testing System using the **${templ
 
 ### Prerequisites
 
-- Node.js (>= 18.0.0)
+- Node.js (>= 20.0.0)
 - npm or yarn
 
 ### Installation

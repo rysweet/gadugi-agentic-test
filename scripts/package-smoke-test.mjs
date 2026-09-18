@@ -1,11 +1,12 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const installRoot = await mkdtemp(path.join(tmpdir(), 'gadugi-package-smoke-'));
+const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const { version } = JSON.parse(await readFile(path.join(repositoryRoot, 'package.json'), 'utf8'));
 let tarballPath;
 
@@ -28,7 +29,7 @@ function run(command, args, options = {}) {
 
 try {
   const packOutput = run(
-    'npm',
+    npmCommand,
     ['pack', '--json', '--ignore-scripts'],
     { capture: true }
   );
@@ -47,13 +48,13 @@ try {
   );
 
   run(
-    'npm',
+    npmCommand,
     ['install', '--ignore-scripts', '--omit=optional', '--no-audit', '--no-fund', tarballPath],
     { cwd: installRoot }
   );
   const cliVersion = run(
-    process.execPath,
-    [path.join(installRoot, 'node_modules', '@gadugi', 'agentic-test', 'dist', 'cli.js'), '--version'],
+    npmCommand,
+    ['exec', '--offline', '--', 'gadugi-test', '--version'],
     { cwd: installRoot, capture: true }
   );
   if (cliVersion.trim() !== version) {
@@ -84,7 +85,53 @@ try {
     { cwd: installRoot }
   );
 
-  console.log('Packaged CLI, library import, and optional PTY fallback verified.');
+  const generatedProjects = new Map();
+  for (const template of ['basic', 'electron', 'advanced']) {
+    const generatedRoot = path.join(installRoot, `generated-${template}`);
+    run(
+      npmCommand,
+      [
+        'exec', '--offline', '--', 'gadugi-test', 'init',
+        '--directory', generatedRoot,
+        '--template', template,
+      ],
+      { cwd: installRoot }
+    );
+    run(
+      npmCommand,
+      [
+        'exec', '--offline', '--', 'gadugi-test', 'validate',
+        '--directory', path.join(generatedRoot, 'scenarios'),
+      ],
+      { cwd: installRoot }
+    );
+    generatedProjects.set(template, generatedRoot);
+  }
+
+  const generatedRoot = generatedProjects.get('basic');
+  const generatedPackagePath = path.join(generatedRoot, 'package.json');
+  const generatedPackage = JSON.parse(await readFile(generatedPackagePath, 'utf8'));
+  if (generatedPackage.devDependencies?.['@gadugi/agentic-test'] !== version) {
+    throw new Error('Generated project does not pin the installed Gadugi version');
+  }
+  const generatedReadme = await readFile(path.join(generatedRoot, 'README.md'), 'utf8');
+  if (!generatedReadme.includes('Node.js (>= 20.0.0)')) {
+    throw new Error('Generated project documents an unsupported Node.js version');
+  }
+
+  generatedPackage.devDependencies['@gadugi/agentic-test'] = pathToFileURL(tarballPath).href;
+  await writeFile(generatedPackagePath, JSON.stringify(generatedPackage, null, 2));
+  await rm(path.join(installRoot, 'node_modules'), { recursive: true, force: true });
+  run(
+    npmCommand,
+    ['install', '--ignore-scripts', '--omit=optional', '--no-audit', '--no-fund'],
+    { cwd: generatedRoot }
+  );
+  run(npmCommand, ['run', 'test:validate'], { cwd: generatedRoot });
+
+  console.log(
+    'Packaged CLI, library import, optional PTY fallback, and generated project verified.'
+  );
 } finally {
   await rm(installRoot, { recursive: true, force: true });
   if (tarballPath) {

@@ -62,20 +62,27 @@ describe('A1a: ResourceOptimizer.destroy() removes sub-optimizer listeners', () 
 // A1b: PtyTerminal listener cleanup
 // ---------------------------------------------------------------------------
 describe('A1b: PtyTerminal.destroy() removes processManager listeners', () => {
-  it('should remove all listeners from processManager during destroy()', async () => {
+  it('should remove only its own listeners from a shared processManager', async () => {
     const pm = new ProcessLifecycleManager();
-    const terminal = new PtyTerminal({}, pm);
+    const externalExitListener = jest.fn();
+    const externalErrorListener = jest.fn();
+    pm.on('processExited', externalExitListener);
+    pm.on('error', externalErrorListener);
+    const firstTerminal = new PtyTerminal({}, pm);
+    const secondTerminal = new PtyTerminal({}, pm);
 
-    // PtyTerminal.setupProcessManagerEvents registers 2 listeners
-    expect(pm.listenerCount('processExited') + pm.listenerCount('error')).toBeGreaterThan(0);
+    expect(pm.listenerCount('processExited')).toBe(3);
+    expect(pm.listenerCount('error')).toBe(3);
 
-    await terminal.destroy();
+    await firstTerminal.destroy();
+
+    expect(pm.listenerCount('processExited')).toBe(2);
+    expect(pm.listenerCount('error')).toBe(2);
+    expect(pm.listeners('processExited')).toContain(externalExitListener);
+    expect(pm.listeners('error')).toContain(externalErrorListener);
+
+    await secondTerminal.destroy();
     await pm.shutdown();
-
-    // After destroy, no listeners should remain on the processManager
-    expect(pm.listenerCount('processExited')).toBe(0);
-    expect(pm.listenerCount('error')).toBe(0);
-
     pm.destroy();
   }, 10000);
 });

@@ -11,8 +11,37 @@ jest.mock('../../utils/screenshot', () => ({
   }))
 }));
 
-import { SystemAgent, createSystemAgent, SystemAgentConfig } from '../SystemAgent';
+import {
+  SystemAgent,
+  SystemAgentConfig,
+  SystemMetrics,
+  createSystemAgent,
+} from '../SystemAgent';
 import { AgentType } from '../index';
+
+function createMetrics(): SystemMetrics {
+  return {
+    timestamp: new Date(),
+    cpu: { usage: 1, loadAverage: [0, 0, 0], cores: 1 },
+    memory: { total: 1024, free: 512, used: 512, percentage: 50, available: 512 },
+    disk: { usage: [] },
+    network: { interfaces: [] },
+    processes: [{
+      pid: process.pid,
+      name: 'node',
+      command: 'jest',
+      cpu: 0,
+      memory: 0,
+      state: 'running',
+    }],
+    system: {
+      uptime: 1,
+      platform: process.platform,
+      arch: process.arch,
+      hostname: 'test-host',
+    },
+  };
+}
 
 describe('SystemAgent - Basic Tests', () => {
   let agent: SystemAgent;
@@ -29,8 +58,15 @@ describe('SystemAgent - Basic Tests', () => {
         enabled: false, // Disable for basic tests
         watchPaths: [],
         excludePatterns: []
-      }
+      },
+      cleanup: {
+        killZombieProcesses: false,
+        cleanTempFiles: false,
+        tempDirPatterns: [],
+        processNamePatterns: [],
+      },
     });
+    jest.spyOn(agent, 'captureMetrics').mockImplementation(async () => createMetrics());
   });
 
   afterEach(async () => {
@@ -83,7 +119,18 @@ describe('SystemAgent - Basic Tests', () => {
           enabled: true,
           watchPaths: ['/nonexistent/path'],
           excludePatterns: []
-        }
+        },
+        performanceBaseline: {
+          captureBaseline: false,
+          baselineDuration: 1000,
+          comparisonThreshold: 20,
+        },
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
       });
 
       // Should not throw, but may log warnings
@@ -285,7 +332,14 @@ describe('SystemAgent - Basic Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle cleanup without initialization', async () => {
-      const uninitializedAgent = createSystemAgent();
+      const uninitializedAgent = createSystemAgent({
+        cleanup: {
+          killZombieProcesses: false,
+          cleanTempFiles: false,
+          tempDirPatterns: [],
+          processNamePatterns: [],
+        },
+      });
       await expect(uninitializedAgent.cleanup()).resolves.not.toThrow();
     });
 

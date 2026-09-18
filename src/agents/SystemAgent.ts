@@ -212,7 +212,20 @@ export class SystemAgent extends EventEmitter implements IAgent {
       }
       const { processNamePatterns } = this.config.cleanup || {};
       if (processNamePatterns) {
-        for (const proc of currentMetrics.processes.filter(p => processNamePatterns.some(pat => p.name.match(pat)))) {
+        const descendants = new Set<number>();
+        const frontier = [process.pid];
+        while (frontier.length > 0) {
+          const parentPid = frontier.pop();
+          for (const proc of currentMetrics.processes) {
+            if (proc.ppid === parentPid && !descendants.has(proc.pid)) {
+              descendants.add(proc.pid);
+              frontier.push(proc.pid);
+            }
+          }
+        }
+        for (const proc of currentMetrics.processes.filter(
+          p => descendants.has(p.pid) && processNamePatterns.some(pat => p.name.match(pat))
+        )) {
           try { process.kill(proc.pid, 'SIGTERM'); this.logger.info(`Terminated process: ${proc.name} (PID: ${proc.pid})`); }
           catch (e) { this.logger.warn(`Failed to terminate process ${proc.pid}`, { error: e }); }
         }

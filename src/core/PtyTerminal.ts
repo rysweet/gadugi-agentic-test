@@ -85,6 +85,23 @@ export class PtyTerminal extends EventEmitter {
   private isDestroyed = false;
   private outputBuffer = '';
   private inputHistory: string[] = [];
+  private readonly processExitedHandler = (
+    processInfo: ProcessInfo,
+    code: number | null,
+    signal: string | null
+  ): void => {
+    if (processInfo.pid === this.processInfo?.pid) {
+      this.emit('exit', code, signal);
+    }
+  };
+  private readonly processErrorHandler = (
+    error: Error,
+    processInfo?: ProcessInfo
+  ): void => {
+    if (processInfo?.pid === this.processInfo?.pid) {
+      this.emit('error', error);
+    }
+  };
 
   constructor(
     config: PtyTerminalConfig = {},
@@ -121,17 +138,8 @@ export class PtyTerminal extends EventEmitter {
    * Set up event handlers for the process manager
    */
   private setupProcessManagerEvents(): void {
-    this.processManager.on('processExited', (processInfo, code, signal) => {
-      if (processInfo.pid === this.processInfo?.pid) {
-        this.emit('exit', code, signal);
-      }
-    });
-
-    this.processManager.on('error', (error, processInfo) => {
-      if (processInfo?.pid === this.processInfo?.pid) {
-        this.emit('error', error);
-      }
-    });
+    this.processManager.on('processExited', this.processExitedHandler);
+    this.processManager.on('error', this.processErrorHandler);
   }
 
   /**
@@ -317,7 +325,7 @@ export class PtyTerminal extends EventEmitter {
    * Check if the agent is running
    */
   public isRunning(): boolean {
-    return this.ptyProcess !== null && !this.isDestroyed && this.processInfo?.status === 'running';
+    return this.ptyProcess !== null && this.processInfo?.status === 'running';
   }
 
   /**
@@ -336,7 +344,7 @@ export class PtyTerminal extends EventEmitter {
    * Kill the terminal process
    */
   public async kill(signal: string = 'SIGTERM'): Promise<void> {
-    if (!this.ptyProcess || this.isDestroyed) {
+    if (!this.ptyProcess) {
       return;
     }
 
@@ -344,6 +352,7 @@ export class PtyTerminal extends EventEmitter {
       this.ptyProcess.kill(signal);
     } catch (error) {
       this.emit('error', error as Error);
+      throw error;
     }
   }
 
@@ -357,11 +366,10 @@ export class PtyTerminal extends EventEmitter {
 
     this.isDestroyed = true;
 
-    // Remove listeners registered in setupProcessManagerEvents() to prevent
-    // dangling references after this terminal is destroyed.
-    this.processManager.removeAllListeners('processExited');
-    this.processManager.removeAllListeners('error');
+    this.processManager.off('processExited', this.processExitedHandler);
+    this.processManager.off('error', this.processErrorHandler);
 
+    let cleanupError: Error | undefined;
     try {
       // Kill the process if it's running
       if (this.isRunning()) {
@@ -381,14 +389,30 @@ export class PtyTerminal extends EventEmitter {
         // Force kill if still running after timeout
         if (!result.success && this.isRunning()) {
           await this.kill('SIGKILL');
+          const forcedResult = await adaptiveWaiter.waitForCondition(
+            () => !this.isRunning(),
+            {
+              initialDelay: 25,
+              maxDelay: 100,
+              timeout: 2000,
+              jitter: 0.1
+            }
+          );
+          if (!forcedResult.success) {
+            throw new Error(`PTY process ${this.processInfo?.pid ?? 'unknown'} did not exit`);
+          }
         }
       }
-
-      // Clean up PTY
+    } catch (error) {
+      cleanupError = error instanceof Error ? error : new Error(String(error));
+    } finally {
       if (this.ptyProcess) {
         try {
-          this.ptyProcess.kill();
+          if (this.isRunning()) {
+            this.ptyProcess.kill('SIGKILL');
+          }
         } catch (error) {
+          cleanupError ??= error instanceof Error ? error : new Error(String(error));
           logger.warn('Error killing PTY process during cleanup:', error);
         }
         this.ptyProcess = null;
@@ -400,8 +424,11 @@ export class PtyTerminal extends EventEmitter {
       this.inputHistory = [];
 
       this.emit('destroyed');
-    } catch (error) {
-      this.emit('error', error as Error);
+    }
+
+    if (cleanupError) {
+      this.emit('error', cleanupError);
+      throw cleanupError;
     }
   }
 }

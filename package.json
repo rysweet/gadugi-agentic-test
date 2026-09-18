@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "tsc --skipLibCheck --noEmitOnError false && npm run postbuild",
-    "postbuild": "chmod +x dist/cli.js dist/runners/smart-cli.js 2>/dev/null || true",
+    "postbuild": "node scripts/postbuild.mjs",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",

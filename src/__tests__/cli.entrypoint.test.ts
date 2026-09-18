@@ -75,8 +75,8 @@ describe('cli.ts — Commander program structure', () => {
     expect(typeof program.name).toBe('function');
   });
 
-  it('has the correct program name "agentic-test"', () => {
-    expect(program.name()).toBe('agentic-test');
+  it('has the correct program name "gadugi-test"', () => {
+    expect(program.name()).toBe('gadugi-test');
   });
 
   it('description contains "Agentic Testing System"', () => {

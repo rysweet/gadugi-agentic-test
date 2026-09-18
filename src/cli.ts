@@ -10,8 +10,6 @@
 import { Command } from 'commander';
 import * as dotenv from 'dotenv';
 import chalk from 'chalk';
-import { readFileSync } from 'fs';
-import path from 'path';
 import { logError, logInfo, logWarning } from './cli/output';
 import { registerRunCommand } from './cli/commands/run';
 import { registerWatchCommand } from './cli/commands/watch';
@@ -20,6 +18,7 @@ import { registerListCommand } from './cli/commands/list';
 import { registerInitCommand } from './cli/commands/init';
 import { registerHelpCommand } from './cli/commands/help';
 import { safeResolvePath, CLIPathError } from './cli-path-utils';
+import { packageMetadata } from './packageMetadata';
 
 // Load environment variables from .env file if it exists
 try {
@@ -29,9 +28,6 @@ try {
 }
 
 const program = new Command();
-const packageMetadata = JSON.parse(
-  readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')
-) as { version: string };
 
 program
   .name('gadugi-test')
